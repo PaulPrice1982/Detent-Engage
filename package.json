@@ -2,7 +2,7 @@
   "name": "@detent/agentic-website-assistant",
   "version": "1.0.0",
   "private": true,
-  "description": "Detent Agentic Website Assistant \u2014 multi-tenant, multi-CRM governed conversational sales assistant.",
+  "description": "Detent Agentic Website Assistant — multi-tenant, multi-CRM governed conversational sales assistant.",
   "license": "UNLICENSED",
   "type": "module",
   "engines": {
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "ioredis": "5.11.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },

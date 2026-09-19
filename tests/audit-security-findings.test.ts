@@ -46,26 +46,26 @@ describe('SEC-2 · abuse control on the visitor API', () => {
       clock,
     );
     const input = { keyId: 'ak_1', ip: '198.51.100.7', sessionId: 'sess_1' };
-    expect(limiter.checkMessage(input).allowed).toBe(true);
-    expect(limiter.checkMessage(input).allowed).toBe(true);
-    expect(limiter.checkMessage(input).allowed).toBe(true);
+    expect((await limiter.checkMessage(input)).allowed).toBe(true);
+    expect((await limiter.checkMessage(input)).allowed).toBe(true);
+    expect((await limiter.checkMessage(input)).allowed).toBe(true);
 
-    const refused = limiter.checkMessage(input);
+    const refused = await limiter.checkMessage(input);
     expect(refused.allowed).toBe(false);
     expect(refused.scope).toBe('session');
     expect(refused.retryAfterSeconds).toBeGreaterThan(0);
   });
 
-  it('caps the total number of messages in one session, whatever the rate', () => {
+  it('caps the total number of messages in one session, whatever the rate', async () => {
     const clock = new FixedClock(new Date('2026-09-04T09:00:00.000Z'));
     const limiter = new RequestRateLimiter(
       { ...new RequestRateLimiter().limits, maxMessagesPerSession: 2 },
       clock,
     );
     const input = { keyId: 'ak_1', ip: '198.51.100.7', sessionId: 'sess_2' };
-    expect(limiter.checkMessage(input).allowed).toBe(true);
-    expect(limiter.checkMessage(input).allowed).toBe(true);
-    expect(limiter.checkMessage(input).scope).toBe('session_total');
+    expect((await limiter.checkMessage(input)).allowed).toBe(true);
+    expect((await limiter.checkMessage(input)).allowed).toBe(true);
+    expect((await limiter.checkMessage(input)).scope).toBe('session_total');
   });
 
   it('checks the spend cap before the model is called, not after', async () => {

@@ -74,21 +74,32 @@ export interface RateLimitVerdict {
  * window; nothing else about the limiter changes, and per-replica limiting
  * becomes per-tenant limiting.
  */
+/**
+ * Where the counters live.
+ *
+ * Asynchronous because the implementation that matters is not in this process.
+ * A limit enforced per instance is not a limit: on a three-instance autoscale
+ * deployment it is three times the number written in the policy, and it rises
+ * every time the platform adds an instance, which it does under exactly the
+ * load the limit exists for. A caller that shares one Redis across instances
+ * enforces one budget, and that cannot be done through a synchronous call.
+ */
 export interface CounterStore {
   /** Increment `key` within a window, returning the count and when it resets. */
-  hit(key: string, windowMs: number, nowMs: number): { count: number; resetAt: number };
+  hit(key: string, windowMs: number, nowMs: number): Promise<{ count: number; resetAt: number }>;
   /** Monotonic total for `key`, ignoring windows. */
-  total(key: string): number;
+  total(key: string): Promise<number>;
   /** Drop expired windowed counters. Returns how many went. */
-  sweep(nowMs: number, keep: (key: string) => boolean): number;
-  forget(key: string): void;
-  readonly size: number;
+  sweep(nowMs: number, keep: (key: string) => boolean): Promise<number>;
+  forget(key: string): Promise<void>;
+  /** Approximate, and only ever used for a gauge. */
+  size(): Promise<number>;
 }
 
 export class InMemoryCounterStore implements CounterStore {
   private readonly counters = new Map<string, Counter>();
 
-  hit(key: string, windowMs: number, nowMs: number): { count: number; resetAt: number } {
+  async hit(key: string, windowMs: number, nowMs: number): Promise<{ count: number; resetAt: number }> {
     const counter = this.counters.get(key);
     if (!counter || counter.resetAt <= nowMs) {
       const fresh = { count: 1, resetAt: nowMs + windowMs, total: (counter?.total ?? 0) + 1 };
@@ -100,9 +111,9 @@ export class InMemoryCounterStore implements CounterStore {
     return { count: counter.count, resetAt: counter.resetAt };
   }
 
-  total(key: string): number { return this.counters.get(key)?.total ?? 0; }
+  async total(key: string): Promise<number> { return this.counters.get(key)?.total ?? 0; }
 
-  sweep(nowMs: number, keep: (key: string) => boolean): number {
+  async sweep(nowMs: number, keep: (key: string) => boolean): Promise<number> {
     let removed = 0;
     for (const [key, counter] of this.counters) {
       if (counter.resetAt <= nowMs && !keep(key)) { this.counters.delete(key); removed += 1; }
@@ -110,9 +121,9 @@ export class InMemoryCounterStore implements CounterStore {
     return removed;
   }
 
-  forget(key: string): void { this.counters.delete(key); }
+  async forget(key: string): Promise<void> { this.counters.delete(key); }
 
-  get size(): number { return this.counters.size; }
+  async size(): Promise<number> { return this.counters.size; }
 }
 
 /**
@@ -136,56 +147,58 @@ export class RequestRateLimiter {
 
   get limits(): RateLimitPolicy { return this.policy; }
 
-  private hit(key: string, rule: RateLimitRule): RateLimitVerdict {
+  private async hit(key: string, rule: RateLimitRule): Promise<RateLimitVerdict> {
     const now = this.clock.nowMs();
-    const { count, resetAt } = this.counters.hit(key, rule.windowMs, now);
+    const { count, resetAt } = await this.counters.hit(key, rule.windowMs, now);
     if (count > rule.limit) {
       return { allowed: false, retryAfterSeconds: Math.ceil((resetAt - now) / 1000) };
     }
     return { allowed: true };
   }
 
-  private totalFor(key: string): number {
+  private async totalFor(key: string): Promise<number> {
     return this.counters.total(key);
   }
 
   /** A visitor message. Checked before the model is called, never after. */
-  checkMessage(input: { keyId: string; ip: string; sessionId: string }): RateLimitVerdict {
-    const sessionTotal = this.totalFor(`s:${input.sessionId}`);
+  async checkMessage(
+    input: { keyId: string; ip: string; sessionId: string },
+  ): Promise<RateLimitVerdict> {
+    const sessionTotal = await this.totalFor(`s:${input.sessionId}`);
     if (sessionTotal >= this.policy.maxMessagesPerSession) {
       return { allowed: false, scope: 'session_total' };
     }
-    const key = this.hit(`k:${input.keyId}`, this.policy.perKey);
+    const key = await this.hit(`k:${input.keyId}`, this.policy.perKey);
     if (!key.allowed) return { ...key, scope: 'key' };
-    const ip = this.hit(`i:${input.ip}`, this.policy.perIp);
+    const ip = await this.hit(`i:${input.ip}`, this.policy.perIp);
     if (!ip.allowed) return { ...ip, scope: 'ip' };
-    const session = this.hit(`s:${input.sessionId}`, this.policy.perSession);
+    const session = await this.hit(`s:${input.sessionId}`, this.policy.perSession);
     if (!session.allowed) return { ...session, scope: 'session' };
     return { allowed: true };
   }
 
   /** Opening a session is the cheaper call, and the one a bot farm repeats. */
-  checkSessionOpen(input: { keyId: string; ip: string }): RateLimitVerdict {
-    const key = this.hit(`k:${input.keyId}`, this.policy.perKey);
+  async checkSessionOpen(input: { keyId: string; ip: string }): Promise<RateLimitVerdict> {
+    const key = await this.hit(`k:${input.keyId}`, this.policy.perKey);
     if (!key.allowed) return { ...key, scope: 'key' };
-    const ip = this.hit(`o:${input.ip}`, this.policy.sessionsPerIp);
+    const ip = await this.hit(`o:${input.ip}`, this.policy.sessionsPerIp);
     if (!ip.allowed) return { ...ip, scope: 'session_open' };
     return { allowed: true };
   }
 
   /** Drop expired counters. Called on a timer by the HTTP server. */
-  sweep(): number {
+  async sweep(): Promise<number> {
     // A session's monotonic total must outlive its window, or the hard ceiling
     // resets every minute and stops being a ceiling.
     return this.counters.sweep(this.clock.nowMs(), (key) => key.startsWith('s:'));
   }
 
   /** Forget a session's counters once the conversation ends. */
-  forgetSession(sessionId: string): void {
-    this.counters.forget(`s:${sessionId}`);
+  async forgetSession(sessionId: string): Promise<void> {
+    await this.counters.forget(`s:${sessionId}`);
   }
 
-  get size(): number { return this.counters.size; }
+  async size(): Promise<number> { return this.counters.size(); }
 }
 
 export function rateLimitError(verdict: RateLimitVerdict): AwaError {

@@ -191,7 +191,7 @@ export class Api {
       if (!this.platform.features.selfServeTrial || !this.selfServe) {
         return json(501, { error: 'NOT_FOUND', message: 'Self-serve trials are not enabled on this deployment.' });
       }
-      const allowed = this.limiter.checkSessionOpen({ keyId: 'trial', ip: request.ip ?? 'unknown' });
+      const allowed = await this.limiter.checkSessionOpen({ keyId: 'trial', ip: request.ip ?? 'unknown' });
       if (!allowed.allowed) throw rateLimitError(allowed);
       const result = await this.selfServe.startTrial((request.body ?? {}) as never);
       this.logger.info('trial started', { correlationId, tenantId: result.tenantId });
@@ -243,7 +243,7 @@ export class Api {
     const ip = request.ip ?? 'unknown';
 
     if (request.method === 'POST' && rest.length === 0) {
-      const opened = this.limiter.checkSessionOpen({ keyId: principal.keyId, ip });
+      const opened = await this.limiter.checkSessionOpen({ keyId: principal.keyId, ip });
       if (!opened.allowed) throw rateLimitError(opened);
 
       const body = (request.body ?? {}) as {
@@ -350,7 +350,7 @@ export class Api {
           message: `A message must be ${this.limiter.limits.maxInputChars} characters or fewer.`,
         });
       }
-      const allowed = this.limiter.checkMessage({ keyId: principal.keyId, ip, sessionId: session.id });
+      const allowed = await this.limiter.checkMessage({ keyId: principal.keyId, ip, sessionId: session.id });
       if (!allowed.allowed) throw rateLimitError(allowed);
 
       const turnInput = {
@@ -439,7 +439,7 @@ export class Api {
         payload: { scope: 'session_transcript', requestedInConversation: true },
       });
       this.platform.sessions.end(session.id);
-      this.limiter.forgetSession(session.id);
+      await this.limiter.forgetSession(session.id);
       return json(200, { forgotten: true });
     }
 
