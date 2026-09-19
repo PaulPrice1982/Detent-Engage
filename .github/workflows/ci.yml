@@ -1,0 +1,151 @@
+# The gate that stops the baseline going red again.
+#
+# The delivered archive claimed to be typechecked and tested and was neither:
+# it did not compile, 58 of its tests failed, and nine packages were absent
+# from the build entirely so twenty-two suites never loaded and their failures
+# were never counted. None of that is visible without a clean clone, which is
+# what this is.
+#
+# The Postgres job is the one that matters most. Two suites skip themselves
+# without TEST_DATABASE_URL, and an adapter verified only against a fake proves
+# that the fake agrees with itself. It runs as an ordinary owner role, never as
+# a superuser: a superuser bypasses row level security entirely, and that is
+# exactly how a schema with no isolation on five of its tables passed for
+# months.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # A dependency published days ago has not been looked at by anybody. The
+  # delivered lockfile pinned an SDK released the day before, which the default
+  # supply-chain policy of newer pnpm refuses outright.
+  PNPM_MINIMUM_RELEASE_AGE: '10080' # minutes, i.e. 7 days
+
+jobs:
+  build:
+    name: typecheck and test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '24']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      # Frozen, so a lockfile that does not match the manifests fails here
+      # rather than resolving to something nobody tested.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test:vitest
+      - name: no secret reaches a log
+        run: node tools/secret-lint.mjs
+
+  postgres:
+    name: real database
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: create an unprivileged owner, as a managed database hands you
+        env:
+          PGPASSWORD: postgres
+        run: |
+          # NOCREATEROLE and NOSUPERUSER on purpose. RDS, Cloud SQL and Neon
+          # give the application an ordinary owner, and FORCE ROW LEVEL
+          # SECURITY exists precisely to constrain an owner. Running these as
+          # postgres would pass whether or not a single policy existed.
+          psql -h localhost -U postgres -c \
+            "CREATE ROLE appowner LOGIN PASSWORD 'appowner' NOCREATEROLE NOSUPERUSER NOBYPASSRLS;"
+          psql -h localhost -U postgres -c "CREATE DATABASE detent_test OWNER appowner;"
+
+      - name: migrations apply, and apply again
+        env:
+          DATABASE_URL: postgres://appowner:appowner@localhost:5432/detent_test
+        run: |
+          node tools/migrate.mjs
+          # Idempotent or it cannot recover a database whose ledger was lost,
+          # which is the failure that held the live site down.
+          node tools/migrate.mjs
+          node tools/migrate.mjs --status
+
+      - name: the suite, with nothing skipped
+        env:
+          TEST_DATABASE_URL: postgres://appowner:appowner@localhost:5432/detent_test
+        run: pnpm test:vitest
+
+  redis:
+    name: shared counters
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: rate limits hold across instances
+        env:
+          TEST_REDIS_URL: redis://localhost:6379
+        run: pnpm test:vitest
+
+  supply-chain:
+    name: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Reported, not enforced, until somebody owns the triage. A gate nobody
+      # can clear is a gate that gets switched off.
+      - run: pnpm audit --audit-level high || true
+      - name: nothing published in the last seven days
+        run: node tools/check-dependency-age.mjs

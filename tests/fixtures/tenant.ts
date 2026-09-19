@@ -1,4 +1,4 @@
-import { FixedClock, type TenantConfig } from '@detent/awa-core';
+import { FixedClock, type Logger, type TenantConfig } from '@detent/awa-core';
 import { SandboxConnector } from '@detent/awa-connectors';
 import { ScriptedModelProvider, type ScriptedTurn } from '@detent/awa-agent';
 import { Platform, Api, ApiKeyService } from '@detent/awa-server';
@@ -29,6 +29,8 @@ export async function buildHarness(options: {
   /** Retry policy, so a reconciliation test does not sleep through a backoff. */
   adapter?: { maxAttempts?: number; sleep?: (ms: number) => Promise<void> };
   reconciliationMaxAttempts?: number;
+  /** Supplied by the log sweep, which asserts on everything written. */
+  logger?: Logger;
 } = {}): Promise<Harness> {
   const tenantId = options.tenantId ?? 't_acme';
   const clock = new FixedClock(new Date('2026-09-04T09:00:00.000Z'));
@@ -39,6 +41,7 @@ export async function buildHarness(options: {
     connectors: [crm],
     adapter: options.adapter,
     reconciliationMaxAttempts: options.reconciliationMaxAttempts,
+    ...(options.logger ? { logger: options.logger } : {}),
   });
 
   platform.tenants.create({
@@ -96,7 +99,7 @@ export async function buildHarness(options: {
   platform.corpus.publish(tenantId, chunk.id, 'marketing@acme.co.uk');
 
   const keys = new ApiKeyService();
-  const api = new Api(platform, keys);
+  const api = new Api(platform, options.logger ? { keys, logger: options.logger } : keys);
   const widgetKey = keys.issue(tenantId, 'widget').key;
   const adminKey = keys.issue(tenantId, 'tenant_admin').key;
   const platformKey = keys.issue('*platform*', 'platform_admin').key;

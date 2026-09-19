@@ -93,7 +93,18 @@ export class Api {
     try {
       const response = await this.route(request, correlationId);
       this.observe(request, response.status, started);
-      return response;
+      // One line per request, so an on-call engineer can find a request at all.
+      // Deliberately the route label rather than the path, and no body and no
+      // headers: a log line is the easiest place in a system to leak a
+      // credential, and an authorisation header travels on every request.
+      this.logger.info('request', {
+        correlationId,
+        method: request.method,
+        path: routeLabel(request.path),
+        status: response.status,
+        durationMs: Date.now() - started,
+      });
+      return this.withRequestId(response, correlationId);
     } catch (cause) {
       if (isAwaError(cause)) {
         this.logger.warn('request refused', {
@@ -106,7 +117,7 @@ export class Api {
           correlation_id: cause.correlationId ?? correlationId,
         });
         this.observe(request, response.status, started);
-        return response;
+        return this.withRequestId(response, cause.correlationId ?? correlationId);
       }
       this.logger.error('unhandled error', {
         correlationId, path: request.path, method: request.method,
@@ -114,13 +125,27 @@ export class Api {
         stack: cause instanceof Error ? cause.stack : undefined,
       });
       this.observe(request, 500, started);
-      return json(500, {
+      return this.withRequestId(json(500, {
         error: 'INTERNAL',
         message: 'Something went wrong at our end.',
         // Returned so a visitor's screenshot is enough to find the log line.
         correlation_id: correlationId,
-      });
+      }), correlationId);
     }
+  }
+
+  /**
+   * The correlation id on the response as well as in the log.
+   *
+   * Without it the id exists only in a log line the caller cannot see, so
+   * "which request was that" has no answer from the outside: a customer
+   * reporting a problem can quote the header instead of a timestamp.
+   */
+  private withRequestId(response: ApiResponse, correlationId: string): ApiResponse {
+    return {
+      ...response,
+      headers: { ...(response.headers ?? {}), 'x-request-id': correlationId },
+    };
   }
 
   private observe(request: ApiRequest, status: number, startedMs: number): void {
