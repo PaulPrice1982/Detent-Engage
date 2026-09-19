@@ -5,11 +5,14 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
-    "@detent/awa-core": "workspace:*",
     "@detent/awa-audit": "workspace:*",
-    "@detent/awa-policy": "workspace:*",
-    "@detent/awa-outcomes": "workspace:*"
+    "@detent/awa-connectors": "workspace:*",
+    "@detent/awa-core": "workspace:*",
+    "@detent/awa-outcomes": "workspace:*",
+    "@detent/awa-policy": "workspace:*"
   }
 }

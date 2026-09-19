@@ -2,7 +2,7 @@
   "name": "@detent/agentic-website-assistant",
   "version": "1.0.0",
   "private": true,
-  "description": "Detent Agentic Website Assistant — multi-tenant, multi-CRM governed conversational sales assistant.",
+  "description": "Detent Agentic Website Assistant \u2014 multi-tenant, multi-CRM governed conversational sales assistant.",
   "license": "UNLICENSED",
   "type": "module",
   "engines": {
@@ -32,7 +32,11 @@
     "@detent/awa-analytics": "workspace:*",
     "@detent/awa-assurance": "workspace:*",
     "@detent/awa-audit": "workspace:*",
+    "@detent/awa-auth": "workspace:*",
+    "@detent/awa-billing": "workspace:*",
+    "@detent/awa-cms": "workspace:*",
     "@detent/awa-connectors": "workspace:*",
+    "@detent/awa-console": "workspace:*",
     "@detent/awa-context": "workspace:*",
     "@detent/awa-core": "workspace:*",
     "@detent/awa-db": "workspace:*",
@@ -40,18 +44,25 @@
     "@detent/awa-followup": "workspace:*",
     "@detent/awa-groups": "workspace:*",
     "@detent/awa-identity": "workspace:*",
+    "@detent/awa-ingestion": "workspace:*",
     "@detent/awa-knowledge": "workspace:*",
     "@detent/awa-machine": "workspace:*",
     "@detent/awa-modes": "workspace:*",
     "@detent/awa-onboarding": "workspace:*",
     "@detent/awa-outcomes": "workspace:*",
+    "@detent/awa-payments": "workspace:*",
+    "@detent/awa-persistence": "workspace:*",
     "@detent/awa-policy": "workspace:*",
+    "@detent/awa-reseller": "workspace:*",
     "@detent/awa-server": "workspace:*",
     "@detent/awa-signals": "workspace:*",
-    "@detent/awa-studio": "workspace:*"
+    "@detent/awa-studio": "workspace:*",
+    "@detent/awa-support": "workspace:*",
+    "@detent/awa-voice": "workspace:*",
+    "@detent/awa-widget": "workspace:*"
   },
   "optionalDependencies": {
-    "@anthropic-ai/sdk": "^0.127.0",
+    "@anthropic-ai/sdk": "0.125.0",
     "vitest": "^2.1.9"
   }
 }

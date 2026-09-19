@@ -17,3 +17,4 @@ export * from './metrics.js';
 export * from './features.js';
 export * from './config-authority.js';
 export * from './keyring.js';
+export * from './write-queue.js';

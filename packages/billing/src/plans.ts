@@ -14,9 +14,17 @@ import { money, type CurrencyCode, type Money } from './money.js';
  * regenerated years later against the prices that were in force when it was
  * raised, rather than against today's.
  */
-export type PlanCode = 'starter' | 'growth' | 'command' | 'enterprise';
+export type PlanCode = 'answers' | 'starter' | 'growth' | 'command' | 'enterprise';
 
 export type BillingInterval = 'monthly' | 'annual';
+
+/**
+ * Which event the outcome fee attaches to (Go-Live Brief F2).
+ *
+ * Stated as a type so that adding a third basis forces every rating path to
+ * be revisited rather than silently defaulting.
+ */
+export type OutcomeBasis = 'confirmed' | 'assistant_reply';
 
 /**
  * Per-unit prices in **millis of a minor unit** (thousandths of a penny).
@@ -43,6 +51,23 @@ export interface Plan {
   readonly includedCreditsPence: number;
   /** Charged per confirmed billable outcome, on top of credits. */
   readonly outcomeFee: Money;
+  /**
+   * What the outcome fee is actually charged on.
+   *
+   * `confirmed` bills only an outcome a human confirmed; `assistant_reply`
+   * bills each substantive reply up to a cap. The difference is material to
+   * both margin and the contract, so it is a property of the plan rather than
+   * a deployment setting: an invoice has to be reproducible from the plan
+   * version that was in force when it was raised.
+   */
+  readonly outcomeBasis: OutcomeBasis;
+  /**
+   * Cap on billable replies per conversation under `assistant_reply` basis.
+   * A runaway loop must not be able to bill a customer without limit.
+   * Undefined means uncapped, which `worstCaseConversationCost` reports
+   * honestly rather than implying a bound that does not exist.
+   */
+  readonly billableRepliesPerConversation?: number;
   readonly usageRates: UsageRates;
   /** How many Tier 1 / Tier 2 connectors the plan entitles. */
   readonly connectorEntitlement: { readonly tier1: number; readonly tier2: number; readonly tier3: number };
@@ -60,11 +85,39 @@ const GBP: CurrencyCode = 'GBP';
  * discount is a deliberate edit to a number a commercial person can read.
  */
 export const PLAN_CATALOGUE: Readonly<Record<PlanCode, Plan>> = {
+  /**
+   * The self-serve tier: one seller, card on file, no connector.
+   *
+   * It is the only plan billed per reply rather than per confirmed outcome,
+   * because there is no CRM to confirm an outcome in. The reply cap is what
+   * makes the worst case quotable: six replies at 50p, so a conversation
+   * cannot cost more than £3 however long somebody talks.
+   */
+  answers: {
+    code: 'answers', name: 'Answers', version: 1, currency: GBP,
+    platformFee: { monthly: money(999, GBP), annual: money(9_990, GBP) },
+    // Ten replies at the list price, so a quiet month costs the subscription
+    // and nothing else. A customer should not meet the per-reply rate for the
+    // first time on their first real invoice.
+    includedCreditsPence: 500,
+    outcomeFee: money(50, GBP),
+    outcomeBasis: 'assistant_reply',
+    billableRepliesPerConversation: 6,
+    usageRates: {
+      conversationMillis: 40, voiceMinuteMillis: 120, textMessageMillis: 4,
+      enrichmentRecordMillis: 12_000, companyResolutionMillis: 3_000,
+    },
+    connectorEntitlement: { tier1: 0, tier2: 0, tier3: 0 },
+    defaultSpendCapPence: 5_000,
+    maxConcurrentVoice: 0,
+    targetTenant: 'Individual seller, self-serve',
+  },
   starter: {
     code: 'starter', name: 'Starter', version: 1, currency: GBP,
     platformFee: { monthly: money(35_000, GBP), annual: money(350_000, GBP) },
     includedCreditsPence: 5_000,
     outcomeFee: money(600, GBP),
+    outcomeBasis: 'confirmed',
     usageRates: {
       conversationMillis: 40, voiceMinuteMillis: 120, textMessageMillis: 4,
       enrichmentRecordMillis: 12_000, companyResolutionMillis: 3_000,
@@ -79,6 +132,7 @@ export const PLAN_CATALOGUE: Readonly<Record<PlanCode, Plan>> = {
     platformFee: { monthly: money(75_000, GBP), annual: money(750_000, GBP) },
     includedCreditsPence: 15_000,
     outcomeFee: money(500, GBP),
+    outcomeBasis: 'confirmed',
     usageRates: {
       conversationMillis: 35, voiceMinuteMillis: 110, textMessageMillis: 4,
       enrichmentRecordMillis: 11_000, companyResolutionMillis: 2_500,
@@ -93,6 +147,7 @@ export const PLAN_CATALOGUE: Readonly<Record<PlanCode, Plan>> = {
     platformFee: { monthly: money(120_000, GBP), annual: money(1_200_000, GBP) },
     includedCreditsPence: 30_000,
     outcomeFee: money(400, GBP),
+    outcomeBasis: 'confirmed',
     usageRates: {
       conversationMillis: 30, voiceMinuteMillis: 100, textMessageMillis: 3,
       enrichmentRecordMillis: 10_000, companyResolutionMillis: 2_000,
@@ -110,6 +165,7 @@ export const PLAN_CATALOGUE: Readonly<Record<PlanCode, Plan>> = {
     platformFee: { monthly: money(0, GBP), annual: money(0, GBP) },
     includedCreditsPence: 0,
     outcomeFee: money(0, GBP),
+    outcomeBasis: 'confirmed',
     usageRates: {
       conversationMillis: 0, voiceMinuteMillis: 0, textMessageMillis: 0,
       enrichmentRecordMillis: 0, companyResolutionMillis: 0,

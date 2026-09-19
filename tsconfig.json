@@ -5,70 +5,97 @@
       "path": "tools"
     },
     {
-      "path": "packages/core"
-    },
-    {
-      "path": "packages/audit"
-    },
-    {
-      "path": "packages/policy"
-    },
-    {
-      "path": "packages/connectors"
-    },
-    {
-      "path": "packages/identity"
-    },
-    {
-      "path": "packages/knowledge"
-    },
-    {
       "path": "packages/agent"
-    },
-    {
-      "path": "packages/onboarding"
-    },
-    {
-      "path": "packages/studio"
-    },
-    {
-      "path": "packages/outcomes"
     },
     {
       "path": "packages/analytics"
     },
     {
-      "path": "packages/followup"
-    },
-    {
-      "path": "packages/signals"
-    },
-    {
-      "path": "packages/context"
-    },
-    {
-      "path": "packages/entitlement"
-    },
-    {
-      "path": "packages/modes"
-    },
-    {
-      "path": "packages/groups"
-    },
-    {
-      "path": "packages/machine"
-    },
-    {
       "path": "packages/assurance"
+    },
+    {
+      "path": "packages/audit"
+    },
+    {
+      "path": "packages/auth"
     },
     {
       "path": "packages/billing"
     },
     {
+      "path": "packages/cms"
+    },
+    {
+      "path": "packages/connectors"
+    },
+    {
+      "path": "packages/console"
+    },
+    {
+      "path": "packages/context"
+    },
+    {
+      "path": "packages/core"
+    },
+    {
       "path": "packages/db"
     },
     {
+      "path": "packages/entitlement"
+    },
+    {
+      "path": "packages/followup"
+    },
+    {
+      "path": "packages/groups"
+    },
+    {
+      "path": "packages/identity"
+    },
+    {
+      "path": "packages/ingestion"
+    },
+    {
+      "path": "packages/knowledge"
+    },
+    {
+      "path": "packages/machine"
+    },
+    {
+      "path": "packages/modes"
+    },
+    {
+      "path": "packages/onboarding"
+    },
+    {
+      "path": "packages/outcomes"
+    },
+    {
+      "path": "packages/payments"
+    },
+    {
+      "path": "packages/persistence"
+    },
+    {
+      "path": "packages/policy"
+    },
+    {
+      "path": "packages/reseller"
+    },
+    {
       "path": "packages/server"
+    },
+    {
+      "path": "packages/signals"
+    },
+    {
+      "path": "packages/studio"
+    },
+    {
+      "path": "packages/support"
+    },
+    {
+      "path": "packages/voice"
     },
     {
       "path": "packages/widget"

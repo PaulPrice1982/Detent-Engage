@@ -9,64 +9,91 @@
   ],
   "references": [
     {
-      "path": "../core"
-    },
-    {
-      "path": "../audit"
-    },
-    {
-      "path": "../policy"
-    },
-    {
-      "path": "../identity"
-    },
-    {
-      "path": "../knowledge"
-    },
-    {
-      "path": "../connectors"
-    },
-    {
       "path": "../agent"
-    },
-    {
-      "path": "../onboarding"
-    },
-    {
-      "path": "../studio"
-    },
-    {
-      "path": "../outcomes"
     },
     {
       "path": "../analytics"
     },
     {
-      "path": "../followup"
+      "path": "../assurance"
     },
     {
-      "path": "../signals"
+      "path": "../audit"
+    },
+    {
+      "path": "../auth"
+    },
+    {
+      "path": "../billing"
+    },
+    {
+      "path": "../cms"
+    },
+    {
+      "path": "../connectors"
+    },
+    {
+      "path": "../console"
     },
     {
       "path": "../context"
     },
     {
+      "path": "../core"
+    },
+    {
+      "path": "../db"
+    },
+    {
       "path": "../entitlement"
     },
     {
-      "path": "../modes"
+      "path": "../followup"
     },
     {
       "path": "../groups"
     },
     {
+      "path": "../identity"
+    },
+    {
+      "path": "../ingestion"
+    },
+    {
+      "path": "../knowledge"
+    },
+    {
       "path": "../machine"
     },
     {
-      "path": "../assurance"
+      "path": "../modes"
     },
     {
-      "path": "../billing"
+      "path": "../onboarding"
+    },
+    {
+      "path": "../outcomes"
+    },
+    {
+      "path": "../payments"
+    },
+    {
+      "path": "../persistence"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../reseller"
+    },
+    {
+      "path": "../signals"
+    },
+    {
+      "path": "../studio"
+    },
+    {
+      "path": "../support"
     }
   ]
 }

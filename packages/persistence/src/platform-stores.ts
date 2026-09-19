@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import type { ConsentEvent, ConsentPurpose, WriteReceipt, WriteReceiptState } from '@detent/awa-core';
-import type { ConsentStore, UsageRecord, UsageStore } from '@detent/awa-policy';
+import type { ConsentStore, UsageDelta, UsageRecord, UsageStore } from '@detent/awa-policy';
 import type { ConnectionStore, TenantConnection, WriteReceiptStore } from '@detent/awa-connectors';
 import type { OutcomeStore, RecordedOutcome } from '@detent/awa-outcomes';
 import type { PaymentRecord, PaymentStore } from '@detent/awa-payments';
@@ -28,10 +28,12 @@ import type { Database } from './database.js';
 /**
  * What the customer is billed from.
  *
- * The counters are written as a whole record rather than incremented in SQL,
- * because the service that owns them reads, changes and writes back, and a
- * store that also incremented would give two paths to the same number. The
- * durability is what was missing, not the arithmetic.
+ * The counters are incremented in SQL, not read-modify-written in the service.
+ * A whole-record `put` loses updates: two concurrent turns read the same
+ * snapshot and the second write discards the first one's spend. That is most
+ * likely under exactly the load that makes a spend cap matter, so the
+ * arithmetic happens in one statement the database serialises, and the guard
+ * is evaluated inside the same transaction as the update it authorises.
  */
 export class PostgresUsageStore implements UsageStore {
   constructor(private readonly database: Database) {}
@@ -44,20 +46,82 @@ export class PostgresUsageStore implements UsageStore {
     );
     const row = rows[0];
     if (!row) return undefined;
-    return {
-      tenantId: row.tenant_id,
-      period: row.period,
-      conversations: Number(row.conversations),
-      textMessages: Number(row.text_messages),
-      voiceMinutes: Number(row.voice_minutes),
-      crmCalls: Number(row.crm_calls),
-      llmTokens: Number(row.llm_tokens),
-      qualifiedOutcomes: Number(row.qualified_outcomes),
-      enrichmentRecords: Number(row.enrichment_records),
-      companyResolutions: Number(row.company_resolutions),
-      spendPence: Number(row.spend_pence),
-      concurrentVoice: Number(row.concurrent_voice),
-    };
+    return toUsageRecord(row);
+  }
+
+  /**
+   * Apply deltas atomically and report whether they were kept (audit PERF-3).
+   *
+   * One statement does the arithmetic: `ON CONFLICT ... DO UPDATE SET
+   * col = usage_period.col + EXCLUDED.col`. Postgres takes a row lock for the
+   * update, so concurrent callers queue rather than overwrite each other, and
+   * no read-modify-write window exists for an update to be lost in.
+   *
+   * The guard runs against the post-increment record inside the same
+   * transaction. Refusing rolls the increment back, so a refused call leaves
+   * the counters exactly as it found them. Checking before the update instead
+   * would be a check-then-act race, which is the thing this exists to remove.
+   */
+  async increment(
+    tenantId: string,
+    period: string,
+    delta: UsageDelta,
+    guard?: (next: UsageRecord) => boolean,
+  ): Promise<{ record: UsageRecord; applied: boolean }> {
+    const refused = Symbol('guard refused');
+    try {
+      return await this.database.transaction(async (client) => {
+        const result = await client.query<UsageRow>(
+          `INSERT INTO usage_period
+             (tenant_id, period, conversations, text_messages, voice_minutes, crm_calls,
+              llm_tokens, qualified_outcomes, enrichment_records, company_resolutions,
+              spend_pence, concurrent_voice, updated_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, now())
+           ON CONFLICT (tenant_id, period) DO UPDATE SET
+             conversations = usage_period.conversations + EXCLUDED.conversations,
+             text_messages = usage_period.text_messages + EXCLUDED.text_messages,
+             voice_minutes = usage_period.voice_minutes + EXCLUDED.voice_minutes,
+             crm_calls = usage_period.crm_calls + EXCLUDED.crm_calls,
+             llm_tokens = usage_period.llm_tokens + EXCLUDED.llm_tokens,
+             qualified_outcomes = usage_period.qualified_outcomes + EXCLUDED.qualified_outcomes,
+             enrichment_records = usage_period.enrichment_records + EXCLUDED.enrichment_records,
+             company_resolutions = usage_period.company_resolutions + EXCLUDED.company_resolutions,
+             -- Rounded to a thousandth of a penny on every step, so a long
+             -- month of sub-penny increments does not accumulate float drift.
+             spend_pence = round((usage_period.spend_pence + EXCLUDED.spend_pence)::numeric, 3),
+             -- Concurrency is a gauge, not a total: it goes down as well as up
+             -- and must never be negative, or a released slot is counted twice.
+             concurrent_voice = greatest(0, usage_period.concurrent_voice + EXCLUDED.concurrent_voice),
+             updated_at = now()
+           RETURNING *`,
+          [
+            tenantId, period,
+            delta.conversations ?? 0, delta.textMessages ?? 0, delta.voiceMinutes ?? 0,
+            delta.crmCalls ?? 0, delta.llmTokens ?? 0, delta.qualifiedOutcomes ?? 0,
+            delta.enrichmentRecords ?? 0, delta.companyResolutions ?? 0,
+            delta.spendPence ?? 0,
+            Math.max(0, delta.concurrentVoice ?? 0),
+          ],
+        );
+        const next = toUsageRecord(result.rows[0]!);
+        if (guard && !guard(next)) {
+          // Thrown rather than returned, because returning would commit the
+          // increment the guard just refused.
+          throw refused;
+        }
+        return { record: next, applied: true };
+      }, tenantId);
+    } catch (error) {
+      if (error === refused) {
+        // The transaction rolled back, so the stored record is what it was
+        // before this call. Derived rather than re-read: a second query would
+        // see any increment that landed in between and report it as ours.
+        const current = (await this.get(tenantId, period))
+          ?? emptyUsageRecord(tenantId, period);
+        return { record: current, applied: false };
+      }
+      throw error;
+    }
   }
 
   async put(record: UsageRecord): Promise<void> {
@@ -88,6 +152,38 @@ export class PostgresUsageStore implements UsageStore {
       ],
     );
   }
+}
+
+/**
+ * One row as a record. Counters are bigint and numeric, which the driver
+ * returns as strings because they can exceed what a JS number holds exactly;
+ * converting here rather than at each call site is what stops a comparison
+ * silently ordering '10' before '9'.
+ */
+function toUsageRecord(row: UsageRow): UsageRecord {
+  return {
+    tenantId: row.tenant_id,
+    period: row.period,
+    conversations: Number(row.conversations),
+    textMessages: Number(row.text_messages),
+    voiceMinutes: Number(row.voice_minutes),
+    crmCalls: Number(row.crm_calls),
+    llmTokens: Number(row.llm_tokens),
+    qualifiedOutcomes: Number(row.qualified_outcomes),
+    enrichmentRecords: Number(row.enrichment_records),
+    companyResolutions: Number(row.company_resolutions),
+    spendPence: Number(row.spend_pence),
+    concurrentVoice: Number(row.concurrent_voice),
+  };
+}
+
+function emptyUsageRecord(tenantId: string, period: string): UsageRecord {
+  return {
+    tenantId, period,
+    conversations: 0, textMessages: 0, voiceMinutes: 0, crmCalls: 0, llmTokens: 0,
+    qualifiedOutcomes: 0, enrichmentRecords: 0, companyResolutions: 0,
+    spendPence: 0, concurrentVoice: 0,
+  };
 }
 
 interface UsageRow {

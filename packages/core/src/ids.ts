@@ -29,6 +29,7 @@ export const ID_PREFIXES = {
   apiKey: 'ak',
   /** One inbound HTTP request, so a log line and a response share an id. */
   request: 'req',
+  reseller: 'rsl',
 } as const;
 
 export type IdPrefix = (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES];

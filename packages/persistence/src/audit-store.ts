@@ -46,6 +46,28 @@ export class PostgresAuditStore implements AuditStore {
     return rows[0] ? toEntry(rows[0]) : undefined;
   }
 
+  async firstEntry(tenantId: string): Promise<AuditEntry | undefined> {
+    // The oldest entry, used to clamp an all-time reporting window to data
+    // that actually exists. A window that starts before the first entry
+    // reports zero activity for a period nobody was running in, which reads
+    // as an outage rather than as an empty range.
+    const rows = await this.database.queryAs<AuditRow>(
+      tenantId,
+      'SELECT * FROM audit_entry WHERE tenant_id = $1 ORDER BY sequence LIMIT 1',
+      [tenantId],
+    );
+    return rows[0] ? toEntry(rows[0]) : undefined;
+  }
+
+  async count(tenantId: string): Promise<number> {
+    const rows = await this.database.queryAs<{ total: string }>(
+      tenantId,
+      'SELECT count(*)::text AS total FROM audit_entry WHERE tenant_id = $1',
+      [tenantId],
+    );
+    return Number(rows[0]?.total ?? 0);
+  }
+
   async list(
     tenantId: string,
     options: { limit?: number; sinceSequence?: number } = {},

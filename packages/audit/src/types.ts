@@ -44,7 +44,26 @@ export type AuditEventType =
   | 'erasure_executed'
   | 'session_opened'
   | 'session_closed'
-  | 'escalated_to_human';
+  | 'escalated_to_human'
+  // knowledge lifecycle
+  | 'knowledge_approved'
+  | 'knowledge_rejected'
+  // operator console: every privileged action is a four-eyes record
+  | 'operator_action_requested'
+  | 'operator_action_approved'
+  | 'operator_action_rejected'
+  | 'operator_action_executed'
+  // money. Separate from tool calls because these are the entries a buyer's
+  // auditor reads, and they must be findable without knowing the code path.
+  | 'credit_granted'
+  | 'payment_taken'
+  | 'payment_failed'
+  | 'payment_refunded'
+  | 'payment_webhook_received'
+  // voice
+  | 'voice_session_opened'
+  | 'voice_session_closed'
+  | 'voice_provider_error';
 
 export interface AuditEntryInput {
   readonly tenantId: string;

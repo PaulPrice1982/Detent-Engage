@@ -7,3 +7,6 @@ export * from './services.js';
 export * from './tool-executor.js';
 export * from './orchestrator.js';
 export * from './providers/anthropic.js';
+export * from './grounded-model.js';
+export * from './lead-routing.js';
+export * from './warming.js';
