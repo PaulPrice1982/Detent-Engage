@@ -27,6 +27,10 @@ import { ALL_FEATURES, JsonLogger, LocalKeyProvider, MetricsRegistry, featuresFr
 import { Api, ApiKeyService, Platform, RequestRateLimiter, createHttpServer } from './index.js';
 import { bootEnvironmentFrom, configurationProblems, databaseProblem } from './boot-config.js';
 import { createNotConfiguredServer } from './not-configured-server.js';
+import { buildDevSites } from './dev-sites.js';
+import { createSiteMount } from './site-mount.js';
+import { baseUrlFor, checkHosts, hostConfigFrom, recognisedHosts } from './host-routing.js';
+import { senderFromEnvironment } from '@detent/awa-auth';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -155,6 +159,70 @@ const widget = keys.issue(TENANT, 'widget', { label: 'development', origins: ORI
 const admin = keys.issue(TENANT, 'tenant_admin', { label: 'development' });
 const platformAdmin = keys.issue('*platform*', 'platform_admin', { label: 'development' });
 
+/**
+ * The websites: marketing, the customer area, the reseller portal, the console.
+ *
+ * Built here and passed to the transport. Until this existed every sign-in
+ * page, the console and the customer area answered 404 in a deployment,
+ * because the pieces were all written and none of them were joined.
+ */
+const hosts = hostConfigFrom(process.env, boot.deployed);
+const hostProblems = checkHosts(hosts, boot.deployed);
+if (hostProblems.length > 0 && boot.deployed) {
+  const refusal = createNotConfiguredServer({
+    problems: hostProblems.map((problem) => problem.message),
+    log: (line) => console.error(line),
+  });
+  refusal.listen(port, host);
+  await new Promise<never>(() => {});
+}
+
+// Where this deployment is reachable, for links in emails and social cards.
+// A reset link is followed from a mail client, so a relative one is useless.
+const fallbackOrigin = process.env['DETENT_BASE_URL']?.trim() || `http://localhost:${port}`;
+
+/**
+ * The database, when one is configured.
+ *
+ * Every store in the sites below is Postgres-backed when this is present and
+ * in memory when it is not, which is the difference between a console user who
+ * still exists after a restart and one who does not. The entry point passed
+ * nothing here, so the staff accounts, their sessions and their password-reset
+ * tokens were in memory even in a deployment that had a database.
+ */
+const siteDatabase = boot.databaseUrl
+  ? new (await import('@detent/awa-persistence')).Database({ connectionString: boot.databaseUrl })
+  : undefined;
+
+const sites = await buildDevSites({
+  audit: platform.audit,
+  clock: platform.clock,
+  ...(siteDatabase ? { database: siteDatabase } : {}),
+  sessionSecret: process.env['DETENT_SESSION_SECRET'],
+  operatorEmail: process.env['DETENT_CONSOLE_EMAIL'],
+  operatorPassword: process.env['DETENT_CONSOLE_PASSWORD'],
+  // A cookie without Secure is a cookie sent over plain HTTP, which on a
+  // development box is the only way it can be sent at all.
+  secureCookies: boot.deployed,
+  // Reset links are followed from a mail client, so a relative one is useless.
+  baseUrl: baseUrlFor('app', hosts, fallbackOrigin),
+  appBaseUrl: baseUrlFor('app', hosts, fallbackOrigin),
+  // Without this a reset email is written to stdout, which looks like it
+  // worked and delivers a credential to the log aggregator instead of to the
+  // person who asked for it.
+  emailSender: senderFromEnvironment(process.env),
+  deployed: boot.deployed,
+  stripeSecretKey: process.env['STRIPE_SECRET_KEY'],
+  stripeWebhookSecret: process.env['STRIPE_WEBHOOK_SECRET'],
+  widgetKeyFor: () => widget.key,
+});
+
+const siteMount = createSiteMount({
+  sites,
+  hosts,
+  canonicalOrigin: baseUrlFor('marketing', hosts, fallbackOrigin),
+});
+
 const here = dirname(fileURLToPath(import.meta.url));
 const staticMounts = [
   { prefix: '/widget', dir: resolve(here, '../../widget/public') },
@@ -166,6 +234,7 @@ platform.startMaintenance();
 
 const server = createHttpServer(api, {
   port,
+  sites: [siteMount],
   allowedOrigins: ORIGINS,
   panelFrameAncestors: ORIGINS,
   hsts: process.env['AWA_HSTS'] === '1',
@@ -188,6 +257,10 @@ server.listen(port, host, () => {
   console.log(`  console          http://localhost:${port}/console.html`);
   console.log(`  tenant           ${TENANT}`);
   console.log(`  model            ${model.id}`);
+  console.log(`  hosts            ${recognisedHosts(hosts).join(', ') || '(path prefixes)'}`);
+  console.log(`  operator         ${sites.operatorConfigured ? sites.operatorEmail : 'not configured; set DETENT_CONSOLE_PASSWORD'}`);
+  console.log(`  sessions         ${sites.sessionsPersist ? 'durable' : 'lost on restart'}`);
+  console.log(`  payments         ${sites.paymentProviderName}`);
   if (boot.printKeys) {
     // Keys are stored as digests, so this is the only moment they exist in
     // readable form. Printed only when asked for, and never in production:

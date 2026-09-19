@@ -40,6 +40,7 @@ export * from './reseller-pages.js';
 export * from './self-serve.js';
 export * from './seo.js';
 export * from './site-html.js';
+export * from './site-mount.js';
 export * from './site-router.js';
 export * from './static-files.js';
 export * from './support-pages.js';
