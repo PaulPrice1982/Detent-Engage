@@ -23,7 +23,7 @@ import {
 import {
   FetchStripeHttp, InMemoryPaymentStore, PaymentService, SandboxPaymentProvider, StripeProvider,
 } from '@detent/awa-payments';
-import { ApprovalService, ConsoleService, InMemoryApprovalStore, type ConsoleUser } from '@detent/awa-console';
+import { ApprovalService, ConsoleService, InMemoryApprovalStore, can, type ConsoleCapability, type ConsoleUser } from '@detent/awa-console';
 import {
   ConsoleEmailSender, InMemoryResetTokenStore, InMemorySessionStore, InMemoryUserStore,
   hashPassword,
@@ -72,7 +72,7 @@ import {
 } from './app-gated.js';
 import { boundaryOf, fieldOf, fileOf, parseMultipart } from './multipart.js';
 import { SiteRouter, type SiteResponse } from './site-router.js';
-import { escape as escapeHtml } from './site-html.js';
+import { escape as escapeHtml, forbiddenPage } from './site-html.js';
 
 /**
  * Wires the two sites for a development server.
@@ -194,7 +194,20 @@ export interface DevSites {
   readonly emailSender: EmailSender;
 }
 
-const CONSOLE_ROLES = ['admin'];
+/**
+ * The roles the first operator is seeded with.
+ *
+ * Both, because `owner` deliberately cannot move money and `admin`
+ * deliberately cannot manage users: the split exists so that on a staffed
+ * console no single person can both grant themselves a capability and use it.
+ * On a deployment with one operator that split has nobody to separate, and
+ * seeding only `admin` made `user.manage` unreachable for ever, so nobody
+ * could create the second console user the separation is for.
+ *
+ * The moment a second operator exists, give them one role and take the other
+ * away from this account.
+ */
+const CONSOLE_ROLES = ['admin', 'owner'];
 
 export async function buildDevSites(options: DevSitesOptions): Promise<DevSites> {
   const { audit, clock } = options;
@@ -502,10 +515,12 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
     name: user.name,
     roles: user.roles as ConsoleUser['roles'],
     active: user.active,
-    // A development operator is treated as enrolled so the money screens are
-    // reachable. In production this comes from the identity provider and is
-    // never asserted here.
-    mfaEnrolled: true,
+    // Read, never asserted. This was hard-coded true with a comment saying it
+    // came from the identity provider in production, and this is the
+    // production path: every MFA gate on every money capability was bypassed
+    // for every console user. It is now whatever the user actually proved,
+    // which is false until they complete enrolment.
+    mfaEnrolled: user.mfaEnrolled,
     createdAt: user.createdAt,
   });
 
@@ -526,8 +541,35 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
       const path = request.path.replace(/^\/console\/?/, '');
       const nowIso = clock.iso();
 
+      /**
+       * Server-side authorisation for a write.
+       *
+       * The screens already ask `can()` to decide which buttons to draw, and
+       * that is presentation, not a control: a hidden button is a button
+       * somebody can still POST to with curl. Every write below names the
+       * capability it needs and is refused without it, so the button and the
+       * endpoint cannot disagree.
+       *
+       * This also restores the point of the MFA gate. `can()` refuses the nine
+       * money capabilities to a user who has not enrolled, and until these
+       * calls existed nothing consulted it on the way to actually moving money.
+       */
+      const refuse = (capability: ConsoleCapability): SiteResponse | undefined => {
+        if (can(operator, capability)) return undefined;
+        return {
+          status: 403,
+          html: forbiddenPage({
+            capability,
+            roles: operator.roles,
+            mfaEnrolled: operator.mfaEnrolled,
+          }),
+        };
+      };
+
       if (path === 'new') {
         if (request.method === 'POST') {
+          const denied = refuse('account.create');
+          if (denied) return denied;
           try {
             const account = await accounts.create({
               name: request.form['name'] ?? '',
@@ -781,6 +823,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
 
         try {
           if (path === 'pricing/draft') {
+            const denied = refuse('plan.override');
+            if (denied) return denied;
             const monthly = pence('platformFeeMonthly');
             const annual = pence('platformFeeAnnual');
             const activation = pence('activationFee');
@@ -825,6 +869,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           }
 
           if (path === 'pricing/publish') {
+            const denied = refuse('plan.override');
+            if (denied) return denied;
             const published = await catalogue.publish(
               planCode, Number(request.form['version']), request.user.email,
             );
@@ -835,6 +881,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           }
 
           if (path === 'pricing/discard') {
+            const denied = refuse('plan.override');
+            if (denied) return denied;
             await catalogue.discard(planCode, Number(request.form['version']));
             return renderPricing({ notice: 'Draft discarded.' });
           }
@@ -859,6 +907,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
         });
 
         if (path === 'bundles/grant') {
+          const denied = refuse('credit.grant');
+          if (denied) return denied;
           if (request.method !== 'POST') return { status: 303, redirect: '/console/bundles' };
           if (request.form['csrf'] !== request.csrf) {
             return { status: 403, html: 'Stale form. Go back and try again.' };
@@ -933,6 +983,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
             if (request.form['csrf'] !== request.csrf) {
               return { status: 403, html: 'Stale form. Go back and try again.' };
             }
+            const denied = refuse('reseller.manage');
+            if (denied) return denied;
             try {
               await resellers.create({
                 name: request.form['name'] ?? '',
@@ -982,6 +1034,9 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           }
 
           if (action === 'portal') {
+            // Creating a sign-in for a partner is user management.
+            const deniedPortal = refuse('user.manage');
+            if (deniedPortal) return deniedPortal;
             // Creating the sign-in does not set a password: the reseller sets
             // their own through the reset flow. An operator who types a
             // password for somebody else knows that password.
@@ -1075,6 +1130,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           if (request.form['csrf'] !== request.csrf) {
             return { status: 403, html: 'Stale form. Go back and try again.' };
           }
+          const denied = refuse('reseller.manage');
+          if (denied) return denied;
           const chosen = request.form['resellerId'] ?? '';
           if (chosen === '') {
             await resellers.unlinkAccount(targetId);

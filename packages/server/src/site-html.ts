@@ -11,6 +11,8 @@
  * a tenant's own configuration all arrive from outside and all get escaped.
  */
 
+import { MONEY_CAPABILITIES } from '@detent/awa-console';
+
 export function escape(value: unknown): string {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -172,4 +174,44 @@ export function statCard(label: string, value: string, note?: string): string {
 export function pill(text: string, tone: 'ok' | 'warn' | 'bad' | 'neutral' = 'neutral'): string {
   const cls = tone === 'neutral' ? 'pill' : `pill ${tone}`;
   return `<span class="${cls}">${escape(text)}</span>`;
+}
+
+/**
+ * Refusing a write the signed-in user may not make.
+ *
+ * Says which capability was needed and which roles they hold, because "not
+ * permitted" with no detail sends somebody to an administrator who also cannot
+ * tell what to grant. Names the MFA requirement separately when that is the
+ * reason, since the remedy is theirs rather than an administrator's.
+ */
+export function forbiddenPage(input: {
+  capability: string;
+  roles: readonly string[];
+  mfaEnrolled: boolean;
+}): string {
+  const mfaIsTheReason = !input.mfaEnrolled && MONEY_CAPABILITIES.includes(
+    input.capability as (typeof MONEY_CAPABILITIES)[number],
+  );
+  const reason = mfaIsTheReason
+    ? 'This moves money, so it needs multi-factor authentication. Set it up on '
+      + 'your own account and try again.'
+    : `Your roles (${input.roles.join(', ') || 'none'}) do not include it. `
+      + 'An owner can grant it.';
+  return [
+    '<!doctype html><html lang="en-GB"><head><meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width,initial-scale=1">',
+    '<meta name="robots" content="noindex,nofollow">',
+    '<title>Not permitted</title>',
+    '<style>body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,',
+    'sans-serif;background:#F6F8FB;color:#16202B;display:flex;min-height:100vh;',
+    'align-items:center;justify-content:center;padding:24px}',
+    'main{max-width:34rem;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:30px}',
+    'h1{font-size:20px;margin:0 0 8px}p{color:#42536B;margin:0 0 12px}',
+    'code{background:#EEF2F6;padding:2px 6px;border-radius:5px;font-size:14px}</style>',
+    '</head><body><main>',
+    '<h1>Not permitted</h1>',
+    `<p>This action needs <code>${escape(input.capability)}</code>. ${escape(reason)}</p>`,
+    '<p><a href="/console">Back to the console</a></p>',
+    '</main></body></html>',
+  ].join('');
 }

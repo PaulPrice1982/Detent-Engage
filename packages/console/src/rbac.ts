@@ -32,6 +32,18 @@ export type ConsoleRole =
 export type ConsoleCapability =
   | 'account.read'
   | 'account.list'
+  /**
+   * Creating a customer account and its first subscription.
+   *
+   * Deliberately not a money capability. It commits to a plan, so it is not
+   * something a viewer or a support agent should do, but requiring a second
+   * factor to onboard a customer would put MFA in the way of the one action
+   * the business most needs to be frictionless. The money capabilities gate
+   * what is taken from an account, not whether it exists.
+   */
+  | 'account.create'
+  /** Creating a partner, attaching a customer to one, issuing a portal login. */
+  | 'reseller.manage'
   | 'audit.read'
   | 'usage.read'
   | 'invoice.read'
@@ -63,6 +75,7 @@ const SUPPORT: readonly ConsoleCapability[] = [
 ];
 
 const BILLING: readonly ConsoleCapability[] = [
+  'account.create', 'reseller.manage',
   ...SUPPORT, 'invoice.issue', 'invoice.void', 'credit.grant', 'credit.reverse',
   'payment.take', 'payment.refund', 'subscription.change',
 ];

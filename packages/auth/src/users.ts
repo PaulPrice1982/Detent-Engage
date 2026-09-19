@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { AwaError, type Clock, systemClock } from '@detent/awa-core';
 import { checkPasswordStrength, hashPassword, needsRehash, verifyPassword } from './passwords.js';
+import { generateRecoveryCodes, generateTotpSecret, otpauthUri, useRecoveryCode, verifyTotp } from './mfa.js';
 
 /**
  * Identity for both sites.
@@ -41,7 +42,34 @@ export interface AuthUser {
    */
   readonly resellerId?: string;
   readonly active: boolean;
+  /**
+   * True only once a code from the authenticator has been verified.
+   *
+   * RBAC refuses every money capability without it. It used to be written
+   * false at creation with nothing anywhere able to set it, which made those
+   * capabilities unreachable rather than protected: granting a credit, taking
+   * a payment, refunding and voiding an invoice were impossible for everybody
+   * including the owner, and the only way to move money was to edit the
+   * database by hand.
+   */
   readonly mfaEnrolled: boolean;
+  /**
+   * The shared secret, base32, while enrolment is in progress and after it.
+   *
+   * Present and unenrolled means somebody scanned the QR code and has not yet
+   * proved they can produce a code from it. A secret alone grants nothing.
+   */
+  readonly totpSecret?: string;
+  /**
+   * The last counter step accepted for this user.
+   *
+   * A code is valid for ninety seconds across the window, so somebody who
+   * reads it over a shoulder or off a screen share has that long to reuse it.
+   * Recording the step is what makes a code single use.
+   */
+  readonly totpLastStep?: number;
+  /** Hashed exactly as passwords are. A recovery code bypasses the second factor. */
+  readonly recoveryCodeHashes?: readonly string[];
   readonly createdAt: string;
   readonly lastLoginAt?: string;
   /** Consecutive failures since the last success. Drives lockout. */
@@ -213,6 +241,151 @@ export class UserService {
       passwordHash: await hashPassword(next),
       mustChangePassword: false,
     });
+  }
+
+  /**
+   * Begin enrolment: generate a secret and the URI an authenticator reads.
+   *
+   * The secret is stored immediately but `mfaEnrolled` stays false, so nothing
+   * is gated on a factor the person has not yet proved they hold. Starting
+   * again simply replaces the secret, which is what somebody does when they
+   * abandon a half-finished setup on a lost phone.
+   */
+  async beginMfaEnrolment(userId: string, issuer = 'Detent'): Promise<{
+    secret: string; uri: string;
+  }> {
+    const user = await this.require(userId);
+    if (user.mfaEnrolled) {
+      throw new AwaError({
+        kind: 'SCHEMA_INVALID',
+        message: 'Multi-factor authentication is already set up. Turn it off before setting it up again.',
+      });
+    }
+    const secret = generateTotpSecret();
+    await this.store.put({ ...user, totpSecret: secret, totpLastStep: undefined });
+    return { secret, uri: otpauthUri({ secret, account: user.email, issuer }) };
+  }
+
+  /**
+   * Finish enrolment by proving a code, and hand back the recovery codes.
+   *
+   * The codes are returned here and never again: they are stored hashed,
+   * because a recovery code is a password that skips the second factor and a
+   * readable list of them is a list of ways to skip MFA for every member of
+   * staff.
+   */
+  async confirmMfaEnrolment(userId: string, code: string): Promise<{
+    recoveryCodes: readonly string[];
+  }> {
+    const user = await this.require(userId);
+    if (!user.totpSecret) {
+      throw new AwaError({
+        kind: 'SCHEMA_INVALID',
+        message: 'Start setting up multi-factor authentication before confirming it.',
+      });
+    }
+    const verified = verifyTotp({
+      secret: user.totpSecret,
+      code,
+      atMs: this.clock.nowMs(),
+      lastUsedStep: user.totpLastStep,
+    });
+    if (!verified.ok) {
+      throw new AwaError({
+        kind: 'SCHEMA_INVALID',
+        message: 'That code was not right. Check the clock on your phone and try the next one.',
+      });
+    }
+    const recovery = await generateRecoveryCodes();
+    await this.store.put({
+      ...user,
+      mfaEnrolled: true,
+      totpLastStep: verified.step,
+      recoveryCodeHashes: recovery.hashes,
+    });
+    return { recoveryCodes: recovery.plain };
+  }
+
+  /**
+   * Verify a code at sign-in or as step-up before a money action.
+   *
+   * Accepts a recovery code in place of a generated one, spending it. Ten of
+   * them, single use, because an operator who loses their phone with nothing
+   * else has to be restored by another operator, and on a two-person company
+   * that is everybody locked out of their own console at once.
+   */
+  async verifyMfa(userId: string, code: string): Promise<boolean> {
+    const user = await this.require(userId);
+    if (!user.mfaEnrolled || !user.totpSecret) return false;
+
+    const verified = verifyTotp({
+      secret: user.totpSecret,
+      code,
+      atMs: this.clock.nowMs(),
+      lastUsedStep: user.totpLastStep,
+    });
+    if (verified.ok) {
+      await this.store.put({ ...user, totpLastStep: verified.step });
+      return true;
+    }
+
+    const recovery = await useRecoveryCode(code, user.recoveryCodeHashes ?? []);
+    if (!recovery.ok) return false;
+    await this.store.put({ ...user, recoveryCodeHashes: recovery.remaining });
+    return true;
+  }
+
+  /** How many recovery codes are left, for a warning before the last one goes. */
+  async recoveryCodesRemaining(userId: string): Promise<number> {
+    return (await this.require(userId)).recoveryCodeHashes?.length ?? 0;
+  }
+
+  /**
+   * Turn it off, which requires proving it first.
+   *
+   * Without that check, anybody who reaches an unlocked laptop removes the
+   * second factor and the first factor is all that ever protected the money.
+   */
+  async disableMfa(userId: string, code: string): Promise<void> {
+    if (!(await this.verifyMfa(userId, code))) {
+      throw new AwaError({
+        kind: 'POLICY_DENIED',
+        message: 'Confirm a code from your authenticator before turning it off.',
+      });
+    }
+    const user = await this.require(userId);
+    await this.store.put({
+      ...user,
+      mfaEnrolled: false,
+      totpSecret: undefined,
+      totpLastStep: undefined,
+      recoveryCodeHashes: undefined,
+    });
+  }
+
+  private async require(userId: string): Promise<AuthUser> {
+    const user = await this.store.findById(userId);
+    if (!user) {
+      throw new AwaError({ kind: 'NOT_FOUND', message: 'No such user.' });
+    }
+    return user;
+  }
+
+  /**
+   * Replace a user's roles.
+   *
+   * Set rather than added to, so removing one is possible: a grant path with
+   * no revoke path means somebody who changes team keeps everything they have
+   * ever been given, which is how a support account ends up able to refund.
+   *
+   * The caller checks that whoever asked holds `user.manage`. This is the
+   * service, not the screen.
+   */
+  async setRoles(userId: string, roles: readonly string[]): Promise<AuthUser> {
+    const user = await this.require(userId);
+    const next: AuthUser = { ...user, roles: [...roles] };
+    await this.store.put(next);
+    return next;
   }
 
   async setActive(userId: string, active: boolean): Promise<void> {
