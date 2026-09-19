@@ -1,0 +1,28 @@
+# Detent Agentic Website Assistant — Replit configuration.
+#
+# `pnpm serve` uses tsx where it is installed and falls back to Node's own
+# TypeScript transform where it is not, so this runs whether or not the package
+# firewall allowed every dependency.
+run = "pnpm serve"
+entrypoint = "packages/server/src/main.ts"
+
+modules = ["nodejs-22"]
+
+[nix]
+channel = "stable-24_05"
+
+[[ports]]
+localPort = 8787
+externalPort = 80
+
+[env]
+# The server reads PORT and defaults to 8787. Replit maps 8787 to 80 above.
+PORT = "8787"
+# The server binds every interface by default. A loopback-only bind leaves the
+# process healthy but unreachable from the preview proxy, which shows as
+# "running, but the preview isn't ready". Set explicitly so it cannot regress.
+HOST = "0.0.0.0"
+
+[deployment]
+run = ["sh", "-c", "pnpm serve"]
+deploymentTarget = "cloudrun"

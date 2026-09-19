@@ -1,0 +1,87 @@
+:root {
+    color-scheme: light dark;
+    --bg:#fff; --fg:#0F1B2A; --muted:#5B6B7F; --line:#E3E8EF; --panel:#F7F9FC;
+    --accent:#0F1B2A; --amber:#EFA13C; --ok:#15803d; --warn:#b45309; --bad:#b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0B1420; --fg:#F3F6FA; --muted:#9AA9BC; --line:#22344A; --panel:#111E2E; --accent:#2D4763; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--fg);
+  }
+  header.top {
+    display:flex; align-items:center; gap:14px; padding:14px 20px;
+    border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5;
+  }
+  .lockup { display:inline-flex; align-items:center; gap:8px; font-weight:700; letter-spacing:-0.01em; }
+  .spacer { flex:1; }
+  .pill { font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
+  .pill.ok { color:var(--ok); border-color:currentColor; }
+  .pill.warn { color:var(--warn); border-color:currentColor; }
+  .pill.bad { color:var(--bad); border-color:currentColor; }
+  nav.steps { display:flex; gap:4px; padding:10px 20px 0; border-bottom:1px solid var(--line); overflow-x:auto; }
+  nav.steps button {
+    border:0; background:none; font:inherit; color:var(--muted); cursor:pointer;
+    padding:10px 14px; border-bottom:3px solid transparent; white-space:nowrap;
+  }
+  nav.steps button[aria-current="step"] { color:var(--fg); font-weight:650; border-bottom-color:var(--amber); }
+  nav.steps button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+    outline:3px solid #2563eb; outline-offset:2px;
+  }
+  main { padding:24px 20px 64px; max-width:1040px; margin:0 auto; }
+  section[hidden] { display:none; }
+  h2 { font-size:20px; margin:0 0 6px; }
+  h3 { font-size:15px; margin:22px 0 8px; }
+  p.lede { color:var(--muted); margin:0 0 18px; max-width:64ch; }
+  .card { border:1px solid var(--line); border-radius:12px; padding:16px; background:var(--panel); margin-bottom:16px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+  .stat { border:1px solid var(--line); border-radius:10px; padding:12px; background:var(--bg); }
+  .stat .value { font-size:24px; font-weight:700; letter-spacing:-0.02em; }
+  .stat .label { font-size:12px; color:var(--muted); }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+  input[type=text], input[type=url], input[type=password], select, textarea {
+    width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px;
+    background:var(--bg); color:var(--fg); font:inherit;
+  }
+  textarea { min-height:90px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; }
+  button.primary {
+    padding:9px 14px; border:0; border-radius:8px; background:var(--accent); color:#fff;
+    font:inherit; font-weight:600; cursor:pointer;
+  }
+  button.secondary {
+    padding:9px 14px; border:1px solid var(--line); border-radius:8px; background:transparent;
+    color:var(--fg); font:inherit; cursor:pointer;
+  }
+  button[disabled] { opacity:.5; cursor:default; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  code, pre { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; }
+  pre { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px; overflow:auto; }
+  .toast {
+    position:fixed; inset-inline-end:20px; inset-block-end:20px; max-width:380px;
+    padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); box-shadow:0 12px 32px rgb(0 0 0 /.18); font-size:14px;
+  }
+  .toast.bad { border-color:var(--bad); color:var(--bad); }
+  .muted { color:var(--muted); }
+  .checklist { list-style:none; padding:0; margin:0; }
+  .checklist li { padding:8px 0; border-bottom:1px solid var(--line); display:flex; gap:10px; align-items:flex-start; }
+  .checklist .tick { font-weight:700; width:1.4em; flex:none; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+/* Utility classes. Inline `style` attributes are blocked by the page's own
+   Content-Security-Policy (`style-src 'self'`), and weakening the policy to
+   allow them would be the wrong trade on the surface that holds the audit
+   export (audit SEC-7). */
+.small { font-size:13px; }
+.mt10 { margin-top:10px; }
+.mb10 { margin-bottom:10px; }
+.grow { flex:1; min-width:200px; }
+.tick.done { color:var(--ok); }
+.tick.todo { color:var(--muted); }
+
+a.secondary { display:inline-block; padding:9px 14px; border:1px solid var(--line); border-radius:8px; color:var(--fg); text-decoration:none; }

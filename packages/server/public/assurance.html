@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detent — behavioural assurance pack</title>
+<!--
+  The assurance pack, as a document a DPO can file (audit BIZ-2).
+
+  The finding: the compliance scorecard and the Behavioural Assurance Pack are
+  the two artefacts nobody else ships, and they were JSON behind curl. As a
+  branded document — with the chain verification result, consent coverage,
+  disclosure rate, the measured injection-detection rate and a signed replay of
+  any disputed conversation — it becomes a procurement accelerator and a renewal
+  mechanism.
+
+  It is a print stylesheet rather than a PDF library on purpose: the browser's
+  own print-to-PDF produces a filing-ready document, the page stays a page a
+  buyer can read in a tab, and the platform takes no dependency it would then
+  have to keep patched.
+-->
+<link rel="stylesheet" href="assurance.css">
+</head>
+<body>
+<div class="controls no-print">
+  <label for="api">API base</label>
+  <input id="api" type="url">
+  <label for="tenant">Tenant</label>
+  <input id="tenant" type="text" placeholder="t_acme">
+  <label for="key">Admin key</label>
+  <input id="key" type="password" autocomplete="off">
+  <label for="from">From</label>
+  <input id="from" type="text" placeholder="2026-09-01T00:00:00.000Z">
+  <label for="to">To</label>
+  <input id="to" type="text" placeholder="2026-09-30T23:59:59.999Z">
+  <button id="load">Build the pack</button>
+  <button id="print" class="secondary">Print or save as PDF</button>
+  <span id="status"></span>
+</div>
+
+<article id="pack" hidden>
+  <header class="masthead">
+    <span class="lockup">
+      <svg viewBox="0 0 32 20" width="30" height="19" role="img" aria-label="Detent" focusable="false">
+        <circle cx="6" cy="10" r="5" fill="#EFA13C"/>
+        <path d="M27 3 L18 10 L27 17" fill="none" stroke="currentColor" stroke-width="2.6"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Detent</span>
+    </span>
+    <span class="doc-type">Behavioural assurance pack</span>
+  </header>
+
+  <h1 id="pack-title">—</h1>
+  <p class="meta" id="pack-meta">—</p>
+
+  <section>
+    <h2>1 · Chain integrity</h2>
+    <p class="note">
+      Every figure in this pack is derived from a per-tenant, hash-chained,
+      append-only audit log. A pack whose chain does not verify is not evidence,
+      and this section says so before any other number is read.
+    </p>
+    <div id="integrity"></div>
+  </section>
+
+  <section>
+    <h2>2 · AI disclosure — EU AI Act Article 50</h2>
+    <p class="note">
+      The disclosure is shown in the surface, on the first screen of every
+      conversation, and cannot be switched off by configuration. Target: 100%.
+    </p>
+    <div id="disclosure"></div>
+  </section>
+
+  <section>
+    <h2>3 · Consent</h2>
+    <p class="note">
+      Identity resolution is gated on consent recorded before it happens, with
+      the exact wording shown stored verbatim. Refusals are honoured for the
+      session and the conversation continues without a CRM lookup.
+    </p>
+    <table id="consent"></table>
+  </section>
+
+  <section>
+    <h2>4 · Deterministic boundaries</h2>
+    <p class="note">
+      Controls enforced in code with the model outside the trust boundary. Each
+      row is testable, and each row is tested in the suite named beside it.
+    </p>
+    <table id="boundaries"></table>
+  </section>
+
+  <section>
+    <h2>5 · Security posture</h2>
+    <div id="security"></div>
+    <p class="note" id="injection-note"></p>
+  </section>
+
+  <section>
+    <h2>6 · Accessibility</h2>
+    <div id="accessibility"></div>
+  </section>
+
+  <section class="page-break">
+    <h2>7 · Sample conversation replay</h2>
+    <p class="note">
+      Any conversation can be reconstructed with the exact prompt, policy, model
+      and configuration versions that produced it. This is what "demonstrate
+      what the system did and why, on a given date" means in practice.
+    </p>
+    <div id="replay"><p class="note">No correlation id was supplied, so no replay is included.</p></div>
+  </section>
+
+  <section>
+    <h2>8 · Caveats</h2>
+    <ul id="caveats"></ul>
+  </section>
+
+  <footer class="colophon">
+    <p id="colophon">—</p>
+  </footer>
+</article>
+
+<script type="module" src="assurance.js"></script>
+</body>
+</html>

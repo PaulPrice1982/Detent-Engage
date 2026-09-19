@@ -1,0 +1,51 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../auth"
+    },
+    {
+      "path": "../billing"
+    },
+    {
+      "path": "../cms"
+    },
+    {
+      "path": "../reseller"
+    },
+    {
+      "path": "../support"
+    },
+    {
+      "path": "../audit"
+    },
+    {
+      "path": "../knowledge"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../connectors"
+    },
+    {
+      "path": "../outcomes"
+    },
+    {
+      "path": "../payments"
+    },
+    {
+      "path": "../followup"
+    }
+  ]
+}

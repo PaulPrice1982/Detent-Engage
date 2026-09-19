@@ -1,0 +1,72 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../audit"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../identity"
+    },
+    {
+      "path": "../knowledge"
+    },
+    {
+      "path": "../connectors"
+    },
+    {
+      "path": "../agent"
+    },
+    {
+      "path": "../onboarding"
+    },
+    {
+      "path": "../studio"
+    },
+    {
+      "path": "../outcomes"
+    },
+    {
+      "path": "../analytics"
+    },
+    {
+      "path": "../followup"
+    },
+    {
+      "path": "../signals"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../entitlement"
+    },
+    {
+      "path": "../modes"
+    },
+    {
+      "path": "../groups"
+    },
+    {
+      "path": "../machine"
+    },
+    {
+      "path": "../assurance"
+    },
+    {
+      "path": "../billing"
+    }
+  ]
+}

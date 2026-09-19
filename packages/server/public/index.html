@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detent — Agentic Website Assistant</title>
+<link rel="stylesheet" href="index.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark"></span><span class="chev">&#9666;</span>
+    <span class="word">Detent</span>
+  </header>
+
+  <h1>Agentic Website Assistant</h1>
+  <p class="lede">A governed conversational sales assistant. The model reasons; it never
+  holds a CRM credential and never writes to a CRM. Every turn passes the same
+  ten-step pipeline &mdash; there is no fast path.</p>
+
+  <div class="status">
+    <span class="dot" id="dot"></span>
+    <span id="status-text">Checking service&hellip;</span>
+    <span id="status-detail"></span>
+  </div>
+
+  <h2>Interfaces</h2>
+  <div class="grid">
+    <a class="card" href="/console.html"><b>Approval console</b><span>Connect, generate and approve, dry run, go live, evidence.</span></a>
+    <a class="card" href="/trust.html"><b>Trust and security</b><span>Posture, sub-processors, residency, and what is not done yet.</span></a>
+    <a class="card" href="/assurance.html"><b>Assurance pack</b><span>The compliance evidence, as a document a DPO can file.</span></a>
+    <a class="card" href="/widget/panel.html"><b>Widget panel</b><span>The assistant surface as an end visitor sees it.</span></a>
+    <a class="card" href="/widget/install.html"><b>Installation</b><span>One script tag; the snippet and its attributes.</span></a>
+    <a class="card" href="/health"><b>Health endpoint</b><span>Raw JSON liveness response.</span></a>
+  </div>
+
+  <h2>API surface</h2>
+  <table>
+    <thead><tr><th>Route</th><th>Purpose</th><th>Key</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method">POST</span> <code>/v1/sessions</code></td><td>Open a conversation</td><td>widget</td></tr>
+      <tr><td><span class="method">POST</span> <code>/v1/sessions/{id}/messages</code></td><td>Send a turn</td><td>widget</td></tr>
+      <tr><td><span class="method">POST</span> <code>/v1/sessions/{id}/consent</code></td><td>Record consent</td><td>widget</td></tr>
+      <tr><td><span class="method">GET</span> <code>/v1/admin/tenants</code></td><td>Tenant administration</td><td>tenant admin</td></tr>
+      <tr><td><span class="method">GET</span> <code>/v1/admin/audit</code></td><td>Hash-chained audit log</td><td>tenant admin</td></tr>
+      <tr><td><span class="method">POST</span> <code>/v1/webhooks/{connector}</code></td><td>CRM callbacks</td><td>signature</td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">
+    Every route requires a bearer key. Development keys are printed once to the
+    server console at boot and stored only as SHA-256 digests.
+  </p>
+
+  <footer>
+    This is a development server. AI-generated responses are disclosed to end
+    users in accordance with EU AI Act Article 50; that disclosure cannot be
+    switched off.
+  </footer>
+</div>
+
+<script type="module" src="index.js"></script>
+</body>
+</html>

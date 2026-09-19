@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detent — assistant console</title>
+<!--
+  The approval console (audit UX-3).
+
+  The audit's verdict was blunt and correct: "the 'nothing serves until
+  approved' workflow is the single strongest thing in this codebase and a
+  customer cannot see or operate it." Onboarding generation, section-by-section
+  approval, the field-mapping dry run, playbook rollback, LIA completion, the
+  compliance scorecard, usage and the audit export were all JSON endpoints
+  behind a bearer token, and the only HTML shipped was a developer status page.
+
+  This is the five-screen console the audit asked for — Connect, Generate &
+  Approve, Dry run, Go live, Evidence — built as one static page against the
+  same API the tests exercise. No build step, no framework, no dependency: the
+  console is the surface, the API is the product, and a console that needs a
+  toolchain to change is a console that does not get changed.
+
+  The admin key never leaves this page: it is held in sessionStorage for the
+  tab, sent as a bearer token, and cleared on sign-out.
+-->
+<link rel="stylesheet" href="console.css">
+</head>
+<body>
+<header class="top">
+  <span class="lockup">
+    <svg viewBox="0 0 32 20" width="26" height="16" role="img" aria-label="Detent" focusable="false">
+      <circle cx="6" cy="10" r="5" fill="var(--amber)"/>
+      <path d="M27 3 L18 10 L27 17" fill="none" stroke="currentColor" stroke-width="2.6"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Detent</span>
+  </span>
+  <span class="muted" id="tenant-name">—</span>
+  <span class="pill" id="state-pill">not signed in</span>
+  <span class="pill" id="durability-pill" hidden></span>
+  <span class="spacer"></span>
+  <button class="secondary" id="sign-out" hidden>Sign out</button>
+</header>
+
+<nav class="steps" aria-label="Setup steps">
+  <button type="button" data-screen="connect" aria-current="step">1 · Connect</button>
+  <button type="button" data-screen="generate">2 · Generate &amp; approve</button>
+  <button type="button" data-screen="dryrun">3 · Dry run</button>
+  <button type="button" data-screen="golive">4 · Go live</button>
+  <button type="button" data-screen="evidence">5 · Evidence</button>
+</nav>
+
+<main>
+  <!-- ---------------------------------------------------------------- 1 -->
+  <section id="screen-connect">
+    <h2>Connect</h2>
+    <p class="lede">
+      Sign in with a tenant admin key, register the web origins your assistant
+      runs on, and issue the public key for your site. Nothing serves traffic
+      until the later steps are complete — that is by design, and it is what
+      the evidence screen proves.
+    </p>
+
+    <div class="card" id="signin-card">
+      <h3>Sign in</h3>
+      <label for="api-base">API base URL</label>
+      <input type="url" id="api-base" placeholder="https://api.detentgtm.io" value="">
+      <label for="tenant-id">Tenant id</label>
+      <input type="text" id="tenant-id" placeholder="t_acme">
+      <label for="admin-key">Tenant admin key</label>
+      <input type="password" id="admin-key" placeholder="awa_sk_…" autocomplete="off">
+      <p class="muted small">
+        The key is held for this browser tab only and is never written to disk by this page.
+      </p>
+      <div class="row"><button class="primary" id="sign-in">Sign in</button></div>
+    </div>
+
+    <div class="card" id="config-card" hidden>
+      <h3>Configuration</h3>
+      <div class="grid" id="config-stats"></div>
+    </div>
+
+    <div class="card" id="origins-card" hidden>
+      <h3>Registered origins</h3>
+      <p class="muted small">
+        A widget key is refused from any origin not listed here. A tenant with no
+        registered origins cannot serve visitor traffic at all — failing closed
+        is the point.
+      </p>
+      <label for="origins">Origins, one per line</label>
+      <textarea id="origins" placeholder="https://www.example.com&#10;https://*.example.com"></textarea>
+      <label for="verify-url">Verification URL (optional)</label>
+      <input type="url" id="verify-url" placeholder="https://www.example.com/">
+      <div class="row mt10">
+        <button class="primary" id="save-origins">Save and verify</button>
+        <span id="verify-result" class="muted"></span>
+      </div>
+    </div>
+
+    <div class="card" id="keys-card" hidden>
+      <h3>Keys</h3>
+      <div class="row mb10">
+        <button class="secondary" id="issue-widget-key">Issue a widget key</button>
+        <button class="secondary" id="refresh-keys">Refresh</button>
+      </div>
+      <div id="new-key" hidden>
+        <p class="muted small">Copy this now. It is shown once and never again.</p>
+        <pre id="new-key-value"></pre>
+      </div>
+      <table>
+        <thead><tr><th>Prefix</th><th>Audience</th><th>Created</th><th>Last used</th><th>Expires</th><th></th></tr></thead>
+        <tbody id="keys-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="snippet-card" hidden>
+      <h3>Install snippet</h3>
+      <pre id="snippet"></pre>
+      <h3>Content Security Policy</h3>
+      <pre id="csp"></pre>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- 2 -->
+  <section id="screen-generate" hidden>
+    <h2>Generate &amp; approve</h2>
+    <p class="lede">
+      The governed crawl reads your public site and proposes a playbook: the
+      service catalogue, prices, approved claims, qualification and routing.
+      None of it is served to a visitor until a named person approves it, and
+      the approval is recorded in the audit chain with their name against it.
+    </p>
+
+    <div class="card">
+      <div class="row">
+        <input type="url" id="root-url" placeholder="https://www.example.com" class="grow">
+        <button class="primary" id="run-generation">Run governed crawl</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Coverage</h3>
+      <div class="grid" id="coverage-stats"><p class="muted">Not generated yet.</p></div>
+    </div>
+
+    <div class="card" id="approve-card">
+      <h3>Approve a section</h3>
+      <label for="approve-section">Section</label>
+      <select id="approve-section">
+        <option value="serviceCatalogue">Service catalogue</option>
+        <option value="priceList">Prices</option>
+        <option value="approvedClaims">Approved claims</option>
+        <option value="qualification">Qualification</option>
+        <option value="objections">Objections</option>
+        <option value="routing">Routing</option>
+      </select>
+      <label for="approved-by">Approved by (a person, not a role)</label>
+      <input type="text" id="approved-by" placeholder="jo.smith@example.com">
+      <div class="row mt10">
+        <button class="primary" id="sign-off">Approve and sign off</button>
+      </div>
+      <p class="muted small mt10">
+        Signing off a section you have not read is visible on the evidence
+        screen as approval coverage. That is deliberate.
+      </p>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- 3 -->
+  <section id="screen-dryrun" hidden>
+    <h2>Dry run</h2>
+    <p class="lede">
+      Every conversation writes to a staging ledger first. This is the answer to
+      the question every CRM owner asks: <em>what exactly will it write into my
+      system?</em> Review the diff, then accept it. Real CRM writes are disabled
+      until you do.
+    </p>
+    <div class="card">
+      <div class="row">
+        <button class="secondary" id="load-diff">Load the diff</button>
+        <button class="primary" id="accept-diff">Accept and enable writes</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Staged writes</h3>
+      <div id="diff-body"><p class="muted">Nothing loaded.</p></div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- 4 -->
+  <section id="screen-golive" hidden>
+    <h2>Go live</h2>
+    <p class="lede">
+      The lifecycle gates are gates, not suggestions: no CRM connection before a
+      DPA record exists, and no live traffic before the field-mapping dry run is
+      accepted. The checklist below reads the real state; it is not a form.
+    </p>
+    <div class="card">
+      <ul class="checklist" id="golive-checklist"></ul>
+    </div>
+    <div class="card">
+      <h3>Lifecycle</h3>
+      <div class="row">
+        <select id="lifecycle-target">
+          <option value="TEST_MODE">TEST_MODE</option>
+          <option value="LIVE">LIVE</option>
+          <option value="SUSPENDED">SUSPENDED</option>
+        </select>
+        <button class="primary" id="transition">Move to state</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Kill switch</h3>
+      <p class="muted small">
+        Effective immediately, without a redeploy. TEXT_ONLY drops voice;
+        BOOKING_LINK_ONLY stops the model and serves a booking link.
+      </p>
+      <div class="row">
+        <select id="kill-switch">
+          <option value="OFF">OFF</option>
+          <option value="TEXT_ONLY">TEXT_ONLY</option>
+          <option value="BOOKING_LINK_ONLY">BOOKING_LINK_ONLY</option>
+        </select>
+        <button class="secondary" id="set-kill-switch">Apply</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Playbook versions</h3>
+      <table>
+        <thead><tr><th>Version</th><th>Author</th><th>Published</th><th>Note</th><th></th></tr></thead>
+        <tbody id="playbooks-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- 5 -->
+  <section id="screen-evidence" hidden>
+    <h2>Evidence</h2>
+    <p class="lede">
+      Every figure here is derived from a hash-chained, per-tenant audit log, and
+      the chain verification travels with the figures. A scorecard whose
+      underlying log does not verify is not evidence, and this page says so.
+    </p>
+
+    <div class="card">
+      <div class="row">
+        <label for="from" class="sr-only">From</label>
+        <input type="text" id="from" placeholder="2026-09-01T00:00:00.000Z" class="grow">
+        <label for="to" class="sr-only">To</label>
+        <input type="text" id="to" placeholder="2026-09-30T23:59:59.999Z" class="grow">
+        <button class="primary" id="load-evidence">Load</button>
+        <button class="secondary" id="download-compliance">Download compliance JSON</button>
+        <a class="secondary" id="open-assurance" href="assurance.html">Assurance pack</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Value delivered</h3>
+      <div class="grid" id="value-stats"><p class="muted">Nothing loaded.</p></div>
+    </div>
+
+    <div class="card">
+      <h3>Compliance</h3>
+      <div class="grid" id="compliance-stats"><p class="muted">Nothing loaded.</p></div>
+    </div>
+
+    <div class="card">
+      <h3>Outcome ledger</h3>
+      <p class="muted small">
+        Every billable outcome, with the correlation id it was recorded under.
+        An invoice line you can verify is an invoice line you do not dispute.
+      </p>
+      <table>
+        <thead><tr><th>Outcome</th><th>State</th><th>Billable</th><th>Recorded</th><th>Evidence</th></tr></thead>
+        <tbody id="ledger-body"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Audit chain</h3>
+      <div id="audit-summary"><p class="muted">Nothing loaded.</p></div>
+      <div class="row mt10">
+        <button class="secondary" id="load-more-audit" hidden>Load the next page</button>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>At</th><th>Type</th><th>Actor</th><th>Correlation</th></tr></thead>
+        <tbody id="audit-body"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script type="module" src="console.js"></script>
+</body>
+</html>

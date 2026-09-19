@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install the Detent assistant</title>
+<!--
+  The install page (audit UX-10).
+
+  What it was: an unstyled wall of text with a hardcoded example key, no key
+  issuance, no way to check whether the snippet was actually live, no CSP
+  generator and no test-mode toggle. The person doing the install is usually not
+  the person who bought the product, and this is the page they are sent.
+-->
+<link rel="stylesheet" href="install.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="lockup">
+    <svg viewBox="0 0 32 20" width="28" height="18" role="img" aria-label="Detent" focusable="false">
+      <circle cx="6" cy="10" r="5" fill="var(--amber)"/>
+      <path d="M27 3 L18 10 L27 17" fill="none" stroke="currentColor" stroke-width="2.6"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>Detent</span>
+  </span>
+</header>
+
+<h1>Install the assistant</h1>
+<p class="lede">
+  One script tag. It injects a Web Component with Shadow DOM and lazy-loads the
+  conversation panel only when someone opens it. Fill in the three fields below
+  and copy what it gives you.
+</p>
+
+<div class="card">
+  <label for="api">API base URL</label>
+  <input id="api" type="url" placeholder="https://api.detentgtm.io">
+
+  <label for="key">Public widget key</label>
+  <input id="key" type="text" placeholder="awa_pub_…">
+  <p class="lede note">
+    Issue one on the <strong>Connect</strong> screen of the console. Public keys
+    are bound to your registered origins, so a key lifted from your page source
+    does not work anywhere else.
+  </p>
+
+  <label for="label">Launcher label</label>
+  <input id="label" type="text" value="Ask a question">
+
+  <label for="position">Position</label>
+  <select id="position">
+    <option value="bottom-right">Bottom right</option>
+    <option value="bottom-left">Bottom left</option>
+  </select>
+
+  <label for="locale">Locale</label>
+  <select id="locale">
+    <option value="">Follow the page's own lang attribute</option>
+    <option value="en-GB">en-GB</option>
+    <option value="fr">fr</option>
+    <option value="de">de</option>
+    <option value="es">es</option>
+    <option value="nl">nl</option>
+    <option value="it">it</option>
+  </select>
+
+  <label for="mode">Mode</label>
+  <select id="mode">
+    <option value="live">Live</option>
+    <option value="test">Test — only shows on pages with ?detent=test</option>
+  </select>
+</div>
+
+<h2>Your snippet</h2>
+<pre id="snippet"></pre>
+<div class="row">
+  <button id="copy">Copy</button>
+  <span id="copied" class="ok" hidden>Copied.</span>
+</div>
+
+<h2>Check it is live</h2>
+<p class="lede">
+  Paste the page you installed it on. This asks the platform to fetch that URL
+  and confirm the snippet is actually present — the common failure is a snippet
+  pasted into a staging template and never promoted.
+</p>
+<div class="card">
+  <label for="verify-url">Page URL</label>
+  <input id="verify-url" type="url" placeholder="https://www.example.com/">
+  <label for="tenant">Tenant id</label>
+  <input id="tenant" type="text" placeholder="t_acme">
+  <label for="admin">Tenant admin key</label>
+  <input id="admin" type="password" placeholder="awa_sk_…" autocomplete="off">
+  <div class="row">
+    <button id="verify">Verify the install</button>
+    <span id="verify-result"></span>
+  </div>
+</div>
+
+<h2>Content Security Policy</h2>
+<p class="lede">Add these three directives. Nothing else is needed.</p>
+<pre id="csp"></pre>
+
+<h2>Consent</h2>
+<p>
+  The widget reads your consent management platform's signal; it does not set
+  its own. IAB TCF, OneTrust, Cookiebot and a <code>dataLayer</code> flag are
+  detected automatically. To state the position explicitly, add
+  <code>data-consent-personalisation="granted"</code> or <code>"denied"</code>.
+</p>
+<p>
+  Where no signal can be read, the assistant runs in non-resolving mode: it will
+  not match the visitor against your CRM. It still answers, qualifies and books.
+  Refusing consent costs the visitor nothing, which is the point.
+</p>
+
+<h2>Accessibility</h2>
+<ul>
+  <li>The panel is keyboard operable throughout, has a visible close control, and returns focus to the launcher when it closes.</li>
+  <li>Escape closes it from inside the panel as well as from the host page.</li>
+  <li>On a phone the panel is a full-screen sheet and the composer stays above the on-screen keyboard.</li>
+  <li>The AI disclosure is on the launcher before anyone clicks, and on the first screen of every conversation. It is not disableable.</li>
+</ul>
+
+<h2>Google Tag Manager</h2>
+<p>
+  Add the same tag as a Custom HTML tag firing on All Pages. The
+  <code>data-*</code> attributes work identically.
+</p>
+
+<script type="module" src="install.js"></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "@detent/awa-persistence",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@detent/awa-audit": "workspace:*",
+    "@detent/awa-auth": "workspace:*",
+    "@detent/awa-billing": "workspace:*",
+    "@detent/awa-cms": "workspace:*",
+    "@detent/awa-connectors": "workspace:*",
+    "@detent/awa-core": "workspace:*",
+    "@detent/awa-followup": "workspace:*",
+    "@detent/awa-knowledge": "workspace:*",
+    "@detent/awa-outcomes": "workspace:*",
+    "@detent/awa-payments": "workspace:*",
+    "@detent/awa-policy": "workspace:*",
+    "@detent/awa-reseller": "workspace:*",
+    "@detent/awa-support": "workspace:*",
+    "pg": "^8.23.0"
+  }
+}

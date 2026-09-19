@@ -1,0 +1,15 @@
+{
+  "name": "@detent/awa-policy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@detent/awa-core": "workspace:*",
+    "@detent/awa-audit": "workspace:*"
+  }
+}
