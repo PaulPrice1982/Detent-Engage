@@ -1,0 +1,30 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "bAc7zb-m8At3KdufPS6xj"
+uri = "file://detent-agentic-website-assistant-handover-2026-09-06.zip"
+type = "unspecified"
+title = "Detent Technical Handover"
+description = "Complete revision 6 project source, tests, database migrations, documentation, assets, lockfile, and Replit configuration. Dependencies, build output, workspace internals, uploads, logs, and secret files are excluded."
+logical_id = "0089280f-5f9d-4e37-ad35-e67f5086b4d3"
+content_hash = "sha256:32b3b466062072554ca5fcf1fc39060c510c294d1dbb0b696c67f00cb7026a79"
+size = 2364934
+mtime_ms = 1788687276219
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:b5035297-35ae-4f38-87dc-c5814fb508fd/0089280f-5f9d-4e37-ad35-e67f5086b4d3/d9e426d4-b1bb-4c9f-b575-006a99ed92ac"
+storage_version_token = "1788687283712270"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "4vczQyfCEgwcqmKwoVXyP"
+uri = "file://detent-agentic-website-assistant-source-audit-remediation.zip"
+type = "unspecified"
+title = "Detent Source Code — Audit Remediation Build"
+description = "Clean source archive of the currently applied audit-remediation project. Includes source, tests, migrations, documentation, assets, lockfile, and Replit configuration; excludes dependencies, generated output, workspace internals, uploads, logs, and secrets."
+logical_id = "d86d1c63-6b20-46c6-8c9d-a61c490347fd"
+content_hash = "sha256:546bb1670a8992cc33f5f5354fd381dc6d0862ab901fd4cd7f5c5cf29e19ad08"
+size = 2499227
+mtime_ms = 1789830014524
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:b5035297-35ae-4f38-87dc-c5814fb508fd/d86d1c63-6b20-46c6-8c9d-a61c490347fd/f289e094-8490-4e18-8966-51c56f56b195"
+storage_version_token = "1789830019040886"
+content_type = "application/octet-stream"

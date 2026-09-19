@@ -1,0 +1,96 @@
+# Detent Agentic Website Assistant, Replit configuration.
+#
+# `pnpm serve` uses tsx where it is installed and falls back to Node's own
+# TypeScript transform where it is not, so this runs whether or not the package
+# firewall allowed every dependency.
+run = "pnpm serve"
+entrypoint = "packages/server/src/main.ts"
+
+modules = ["nodejs-22"]
+
+[nix]
+channel = "stable-24_05"
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 8787
+externalPort = 80
+
+[env]
+# The server reads PORT and defaults to 8787. Replit maps 8787 to 80 above.
+PORT = "8787"
+# The server binds every interface by default. A loopback-only bind leaves the
+# process healthy but unreachable from the preview proxy, which shows as
+# "running, but the preview isn't ready". Set explicitly so it cannot regress.
+HOST = "0.0.0.0"
+# Print the three API keys at boot so the preview can be driven by hand.
+# Ignored in a deployment, where printing a key would put it in the platform's
+# log aggregator for as long as logs are retained.
+AWA_DEV_PRINT_KEYS = "1"
+
+# --------------------------------------------------------------------------
+# Secrets, set in the Replit Secrets pane and never here
+# --------------------------------------------------------------------------
+#
+# Nothing below is needed to run the preview. Every one of them is required
+# before Deploy, and a deployment that is missing any of them serves a page
+# saying which rather than crash-looping.
+#
+#   DETENT_CONSOLE_EMAIL     the one staff account's address. Use a real mailbox:
+#                            password resets go to it.
+#   DETENT_CONSOLE_PASSWORD  its password. Read at every boot, so changing it
+#                            here and restarting is the documented way back in.
+#   DETENT_SESSION_SECRET    signs session cookies, 32 characters or more.
+#                            Generate with: node tools/make-secret.mjs session
+#   DATABASE_URL             Postgres. Without it every store is in memory and
+#                            a restart loses the audit trail and consent record.
+#   AWA_ROOT_KEY             encrypts CRM credentials at rest.
+#   AWA_CHECKPOINT_KEY       signs the audit checkpoints.
+#   ANTHROPIC_API_KEY        the model. Without it the assistant cannot answer.
+#   AWA_MODEL                the model id, validated at boot against an
+#                            allow-list. There is no default, deliberately.
+#   AWA_ORIGINS              comma-separated origins allowed to embed the widget.
+#
+# Hostnames, once DNS exists. The console must not share a hostname with the
+# marketing, app or reseller site, and a deployment refuses to start if it does.
+#
+#   DETENT_MARKETING_HOST, DETENT_APP_HOST, DETENT_CONSOLE_HOST,
+#   DETENT_RESELLER_HOST, DETENT_BASE_URL
+#
+# Email, or password reset links are written to the log instead of sent.
+#
+#   DETENT_EMAIL_PROVIDER (resend|postmark), DETENT_EMAIL_API_KEY,
+#   DETENT_EMAIL_FROM
+
+[deployment]
+# Migrations run as their own step, before anything serves. A container that
+# migrates on start races itself the moment the platform runs a second one.
+run = ["sh", "-c", "node tools/migrate.mjs && pnpm serve"]
+deploymentTarget = "cloudrun"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=5000 pnpm serve"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"

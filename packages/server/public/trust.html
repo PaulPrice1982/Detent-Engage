@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detent, trust and security</title>
+<meta name="description" content="Security posture, sub-processors, data residency, retention, availability and certification roadmap for the Detent Agentic Website Assistant.">
+<!--
+  The public trust page (audit BIZ-4).
+
+  Mid-market UK buyers gate on exactly this list, and answering it late costs
+  weeks per deal. It is public, it is written for a buyer's security reviewer,
+  and where something is not done it says so, an overstatement here surfaces in
+  a DPA review in front of the person who can veto the purchase.
+
+  The long form lives in docs/TRUST.md and docs/SECURITY-QUESTIONNAIRE.md; this
+  is the page a procurement team is sent.
+-->
+<link rel="stylesheet" href="trust.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="lockup">
+      <svg viewBox="0 0 32 20" width="30" height="19" role="img" aria-label="Detent" focusable="false">
+        <circle cx="6" cy="10" r="5" fill="#EFA13C"/>
+        <path d="M27 3 L18 10 L27 17" fill="none" stroke="currentColor" stroke-width="2.6"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Detent</span>
+    </span>
+    <span class="reviewed">Last reviewed 18 September 2026</span>
+  </header>
+
+  <h1>Trust and security</h1>
+  <p class="lede">
+    What this product does with data, what protects it, and, just as important,
+    what is not done yet. Everything on this page can be checked against the
+    tenant's own hash-chained audit log rather than taken on trust.
+  </p>
+
+  <section>
+    <h2>The short version</h2>
+    <ul class="ticks">
+      <li><b>Your CRM records never reach the model.</b> Identity resolution returns a classification and a permitted behaviour, never a record, a name, a company or a deal.</li>
+      <li><b>Consent comes before matching, in code.</b> Absence of an affirmative event is refusal, not a default, and the exact wording shown is stored verbatim in the visitor's own language.</li>
+      <li><b>The AI disclosure cannot be switched off.</b> It is in the surface, on the first screen, every conversation, and the coverage figure is on a scorecard you can export.</li>
+      <li><b>Ownership, lifecycle stage and pipeline are read-only.</b> Enforced in three independent places, because overwriting a CRM owner is the one thing a RevOps buyer will not forgive.</li>
+      <li><b>A commitment made to a person is never retracted</b> to keep a system consistent. A confirmed booking stays confirmed; the CRM is repaired behind it.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Security controls</h2>
+    <dl>
+      <dt>Tenant isolation</dt>
+      <dd>The tenant id is derived from the API key, never accepted from the caller. Under the Postgres adapters every query runs inside a transaction that binds <code>SET LOCAL app.tenant_id</code>, under a <code>NOBYPASSRLS</code> role with a forced row-level security policy: a query that forgets the binding returns zero rows.</dd>
+
+      <dt>Credentials at rest</dt>
+      <dd>CRM credentials are sealed with a per-tenant data key under a KMS root key, with the tenant id authenticated as additional data, a ciphertext moved between rows does not decrypt. Rotation rewraps without the plaintext leaving the process.</dd>
+
+      <dt>Keys</dt>
+      <dd>Stored as SHA-256 digests, compared in constant time, shown once. They expire, record last use, and rotate with an overlap window. A public widget key is bound to your registered web origins and refused from anywhere else.</dd>
+
+      <dt>Abuse and spend</dt>
+      <dd>Per-key, per-IP and per-session rate limits, a hard message ceiling per conversation, an input length cap before tokenisation, and your spend cap checked before the model is called rather than reconciled afterwards.</dd>
+
+      <dt>Prompt injection and output</dt>
+      <dd>Retrieved content never enters the system prompt; it arrives inside a per-turn unguessable delimiter as data. Detection runs over normalised text with multilingual patterns and an optional classifier stage, and every answer, including each sentence of a streamed one, is validated before emission for invented prices, human claims and exfiltration links.</dd>
+
+      <dt>Browser and transport</dt>
+      <dd>A strict Content-Security-Policy with no <code>'unsafe-inline'</code>, <code>frame-ancestors</code> on the conversation panel restricted to your registered origins, HSTS, a restrictive <code>Permissions-Policy</code>, and HTTP timeouts.</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Data residency and retention</h2>
+    <p>
+      Residency is <code>UK</code> or <code>EU</code> per tenant. A deployment declares the
+      regions it operates; a tenant whose residency has no declared region is
+      <strong>refused rather than quietly served from the wrong region</strong>, and a
+      deployment that declares none makes no residency claim at all.
+    </p>
+    <table>
+      <thead><tr><th>Data</th><th>Default retention</th><th>Configurable</th></tr></thead>
+      <tbody>
+        <tr><td>Conversation transcripts</td><td>90 days</td><td>Yes</td></tr>
+        <tr><td>Voice recordings</td><td>30 days, off by default</td><td>Yes</td></tr>
+        <tr><td>Lead personal data</td><td>730 days</td><td>Yes</td></tr>
+        <tr><td>Audit entries</td><td>7 years</td><td>No</td></tr>
+      </tbody>
+    </table>
+    <p class="note">
+      Sessions expire after 30 minutes idle or 24 hours absolute, and the
+      transcript goes with the session. Audit entries are exempt from erasure on
+      legal-obligation grounds and hold no personal data, because payloads are
+      redacted before they are written.
+    </p>
+  </section>
+
+  <section>
+    <h2>Availability and support</h2>
+    <table>
+      <thead><tr><th>Commitment</th><th>Starter</th><th>Growth</th><th>Command</th><th>Enterprise</th></tr></thead>
+      <tbody>
+        <tr><td>Target monthly availability</td><td>99.5%</td><td>99.5%</td><td>99.9%</td><td>99.9%</td></tr>
+        <tr><td>P1 support response</td><td>1 business day</td><td>4 business hours</td><td>2 business hours</td><td>1 business hour</td></tr>
+        <tr><td>Security incident notification</td><td colspan="4">Without undue delay, within 24 hours of confirmation</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="open">
+    <h2>What is not done yet</h2>
+    <p class="note">
+      Stated here rather than left to be discovered. A trust page that overstates
+      is worse than none.
+    </p>
+    <ul>
+      <li><b>Administrative SSO and MFA.</b> Administrative access is a bearer key today. This is the largest open item and belongs before a production pilot.</li>
+      <li><b>An independent penetration test.</b> Not yet commissioned.</li>
+      <li><b>SOC 2 and ISO/IEC 27001.</b> Not started. SOC 2 Type I is targeted within twelve months of first revenue.</li>
+      <li><b>An independent accessibility audit.</b> The product is built to WCAG 2.2 AA and the conformance statement refuses to claim conformance without a named auditor and a date, so it reads "partial, self-assessed".</li>
+      <li><b>A public status page.</b> Not yet published.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Verify it yourself</h2>
+    <p>
+      Every figure below is derived from your own audit chain, and the chain
+      verification travels with it. A scorecard whose chain does not verify says
+      so on its first page.
+    </p>
+    <pre><code>curl -H "authorization: Bearer $ADMIN_KEY" \
+  "$API/v1/admin/tenants/$TENANT/compliance?from=…&amp;to=…"</code></pre>
+    <p class="note">
+      Or open <a href="assurance.html">the assurance pack</a>, build it for a
+      period, and print it to PDF.
+    </p>
+  </section>
+
+  <footer>
+    <p>
+      Report a vulnerability to <b>security@detentgtm.io</b>. We acknowledge within
+      one business day and will not pursue good-faith research that respects
+      tenant data and gives us reasonable time to remediate.
+    </p>
+  </footer>
+</div>
+</body>
+</html>

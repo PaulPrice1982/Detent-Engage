@@ -1,0 +1,1 @@
+- [Package firewall behavior](package-firewall.md) — pinned dependencies may be blocked by the environment even when pnpm and the lockfile are available.

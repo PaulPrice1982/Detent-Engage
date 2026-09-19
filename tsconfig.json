@@ -1,0 +1,104 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "tools"
+    },
+    {
+      "path": "packages/agent"
+    },
+    {
+      "path": "packages/analytics"
+    },
+    {
+      "path": "packages/assurance"
+    },
+    {
+      "path": "packages/audit"
+    },
+    {
+      "path": "packages/auth"
+    },
+    {
+      "path": "packages/billing"
+    },
+    {
+      "path": "packages/cms"
+    },
+    {
+      "path": "packages/connectors"
+    },
+    {
+      "path": "packages/console"
+    },
+    {
+      "path": "packages/context"
+    },
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/db"
+    },
+    {
+      "path": "packages/entitlement"
+    },
+    {
+      "path": "packages/followup"
+    },
+    {
+      "path": "packages/groups"
+    },
+    {
+      "path": "packages/identity"
+    },
+    {
+      "path": "packages/ingestion"
+    },
+    {
+      "path": "packages/knowledge"
+    },
+    {
+      "path": "packages/machine"
+    },
+    {
+      "path": "packages/modes"
+    },
+    {
+      "path": "packages/onboarding"
+    },
+    {
+      "path": "packages/outcomes"
+    },
+    {
+      "path": "packages/payments"
+    },
+    {
+      "path": "packages/persistence"
+    },
+    {
+      "path": "packages/policy"
+    },
+    {
+      "path": "packages/reseller"
+    },
+    {
+      "path": "packages/server"
+    },
+    {
+      "path": "packages/signals"
+    },
+    {
+      "path": "packages/studio"
+    },
+    {
+      "path": "packages/support"
+    },
+    {
+      "path": "packages/voice"
+    },
+    {
+      "path": "packages/widget"
+    }
+  ]
+}

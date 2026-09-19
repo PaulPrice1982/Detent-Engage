@@ -1,0 +1,70 @@
+{
+  "name": "@detent/agentic-website-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Detent Agentic Website Assistant \u2014 multi-tenant, multi-CRM governed conversational sales assistant.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --build --force",
+    "test": "node tools/test.mjs",
+    "test:watch": "vitest",
+    "demo": "node tools/run.mjs examples/demo.ts",
+    "serve": "node tools/serve.mjs",
+    "clean": "tsc --build --clean",
+    "demo:customer": "node tools/run.mjs examples/existing-customer-demo.ts",
+    "test:vitest": "vitest run",
+    "test:fallback": "node --experimental-transform-types --disable-warning=ExperimentalWarning --import ./tools/register-fallback.mjs tools/run-tests.ts",
+    "serve:tsx": "tsx packages/server/src/main.ts",
+    "serve:node": "node --experimental-transform-types --disable-warning=ExperimentalWarning --import ./tools/register-ts.mjs packages/server/src/main.ts",
+    "smoke": "node tools/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "ioredis": "5.11.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@detent/awa-agent": "workspace:*",
+    "@detent/awa-analytics": "workspace:*",
+    "@detent/awa-assurance": "workspace:*",
+    "@detent/awa-audit": "workspace:*",
+    "@detent/awa-auth": "workspace:*",
+    "@detent/awa-billing": "workspace:*",
+    "@detent/awa-cms": "workspace:*",
+    "@detent/awa-connectors": "workspace:*",
+    "@detent/awa-console": "workspace:*",
+    "@detent/awa-context": "workspace:*",
+    "@detent/awa-core": "workspace:*",
+    "@detent/awa-db": "workspace:*",
+    "@detent/awa-entitlement": "workspace:*",
+    "@detent/awa-followup": "workspace:*",
+    "@detent/awa-groups": "workspace:*",
+    "@detent/awa-identity": "workspace:*",
+    "@detent/awa-ingestion": "workspace:*",
+    "@detent/awa-knowledge": "workspace:*",
+    "@detent/awa-machine": "workspace:*",
+    "@detent/awa-modes": "workspace:*",
+    "@detent/awa-onboarding": "workspace:*",
+    "@detent/awa-outcomes": "workspace:*",
+    "@detent/awa-payments": "workspace:*",
+    "@detent/awa-persistence": "workspace:*",
+    "@detent/awa-policy": "workspace:*",
+    "@detent/awa-reseller": "workspace:*",
+    "@detent/awa-server": "workspace:*",
+    "@detent/awa-signals": "workspace:*",
+    "@detent/awa-studio": "workspace:*",
+    "@detent/awa-support": "workspace:*",
+    "@detent/awa-voice": "workspace:*",
+    "@detent/awa-widget": "workspace:*"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "0.125.0",
+    "vitest": "^2.1.9"
+  }
+}

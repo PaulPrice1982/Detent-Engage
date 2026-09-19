@@ -1,0 +1,29 @@
+{
+  // The widget, compiled for a browser rather than for Node.
+  //
+  // It emits into `public/`, which is the directory the server serves at
+  // /widget/. The output is native ES modules and nothing else: the loader
+  // imports './launcher.js', the browser fetches it, and no bundler is
+  // involved. That matters because a bundler is a build dependency, and this
+  // repository has already had one deployment blocked by a vulnerability in a
+  // tool that never ran in production.
+  //
+  // The emitted files are committed, because the release is a zip built from
+  // what git tracks and there is no build step on the other side of it.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "public",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/index.ts"]
+}

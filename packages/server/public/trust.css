@@ -1,0 +1,35 @@
+/* A document for a buyer's security reviewer. No inline styles: the page is
+   served under `style-src 'self'` (audit SEC-7). */
+:root {
+  color-scheme: light dark;
+  --bg:#fff; --fg:#101B2A; --muted:#5B6B7F; --line:#DFE6EE; --panel:#F7F9FC; --amber:#EFA13C; --ok:#15803d;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#0B1420; --fg:#F2F6FA; --muted:#9AA9BC; --line:#22344A; --panel:#111E2E; }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+.wrap { max-width:760px; margin:0 auto; padding:0 20px 80px; }
+header { display:flex; align-items:baseline; gap:14px; padding:28px 0 6px; }
+.lockup { display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:19px; letter-spacing:-0.01em; }
+.reviewed { color:var(--muted); font-size:13px; }
+h1 { font-size:32px; letter-spacing:-0.02em; margin:18px 0 8px; }
+h2 { font-size:19px; margin:38px 0 10px; letter-spacing:-0.01em; }
+.lede { color:var(--muted); font-size:17px; margin:0 0 8px; }
+.note { color:var(--muted); font-size:14px; }
+section { border-top:1px solid var(--line); padding-top:6px; }
+ul.ticks { list-style:none; padding:0; }
+ul.ticks li { padding:8px 0 8px 26px; position:relative; }
+ul.ticks li::before { content:"✓"; position:absolute; left:0; color:var(--ok); font-weight:700; }
+dl { margin:0; }
+dt { font-weight:650; margin-top:16px; }
+dd { margin:4px 0 0; color:var(--muted); }
+table { width:100%; border-collapse:collapse; font-size:14px; margin:10px 0; }
+th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+pre { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; overflow:auto; }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; }
+a { color:inherit; }
+a:focus-visible { outline:3px solid #2563eb; outline-offset:2px; }
+.open { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:4px 18px 18px; margin-top:38px; }
+footer { margin-top:44px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }

@@ -1,0 +1,99 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../agent"
+    },
+    {
+      "path": "../analytics"
+    },
+    {
+      "path": "../assurance"
+    },
+    {
+      "path": "../audit"
+    },
+    {
+      "path": "../auth"
+    },
+    {
+      "path": "../billing"
+    },
+    {
+      "path": "../cms"
+    },
+    {
+      "path": "../connectors"
+    },
+    {
+      "path": "../console"
+    },
+    {
+      "path": "../context"
+    },
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../db"
+    },
+    {
+      "path": "../entitlement"
+    },
+    {
+      "path": "../followup"
+    },
+    {
+      "path": "../groups"
+    },
+    {
+      "path": "../identity"
+    },
+    {
+      "path": "../ingestion"
+    },
+    {
+      "path": "../knowledge"
+    },
+    {
+      "path": "../machine"
+    },
+    {
+      "path": "../modes"
+    },
+    {
+      "path": "../onboarding"
+    },
+    {
+      "path": "../outcomes"
+    },
+    {
+      "path": "../payments"
+    },
+    {
+      "path": "../persistence"
+    },
+    {
+      "path": "../policy"
+    },
+    {
+      "path": "../reseller"
+    },
+    {
+      "path": "../signals"
+    },
+    {
+      "path": "../studio"
+    },
+    {
+      "path": "../support"
+    }
+  ]
+}

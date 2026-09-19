@@ -1,0 +1,18 @@
+{
+  "name": "@detent/awa-analytics",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@detent/awa-audit": "workspace:*",
+    "@detent/awa-connectors": "workspace:*",
+    "@detent/awa-core": "workspace:*",
+    "@detent/awa-outcomes": "workspace:*",
+    "@detent/awa-policy": "workspace:*"
+  }
+}
