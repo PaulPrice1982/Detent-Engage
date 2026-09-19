@@ -99,7 +99,7 @@ export interface UsageStore {
    * across an await: two concurrent turns read the same snapshot and the second
    * `put` discarded the first one's spend. Lost updates are most likely under
    * exactly the load that makes the cap matter, so the interface itself now
-   * carries the atomicity requirement — a Postgres adapter implements this as
+   * carries the atomicity requirement; a Postgres adapter implements this as
    * `UPDATE ... SET spend_pence = spend_pence + $1 ... RETURNING`, and Redis as
    * `INCRBY`, neither of which can lose an update.
    *

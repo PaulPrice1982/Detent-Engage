@@ -48,7 +48,7 @@ export interface Entitlement {
  *
  * Note the split: `permittedBehaviours` is the only field the model receives;
  * `sourceSystems` exists for audit, not for the model; and the commercial
- * signals — arrears, excess use, renewal exposure — are here so the platform
+ * signals (arrears, excess use, renewal exposure) are here so the platform
  * can raise a task, and are structurally absent from the model-facing
  * projection below.
  */
@@ -80,7 +80,7 @@ export interface CustomerContext {
  *
  * This is the FR-084 boundary: zero source-system data in model context,
  * verified by probe. There is no relationship field, no standing field, no
- * ticket count and no renewal date — because a model that is told a customer is
+ * ticket count and no renewal date, because a model that is told a customer is
  * in arrears will, sooner or later, say so.
  */
 export interface ModelSafeContext {

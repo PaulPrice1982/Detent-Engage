@@ -4,7 +4,7 @@
  * The rule this implements is narrow and absolute: operational logs are
  * classified "Internal, PII redacted" in section 21.4, so a transcript fragment
  * that reaches a log line must have had personal data removed first. Redaction
- * is lossy on purpose — it preserves the shape of a value for debugging without
+ * is lossy on purpose, it preserves the shape of a value for debugging without
  * preserving the value.
  */
 

@@ -7,7 +7,7 @@ import type { ToolDefinition } from '../tools.js';
  * A real model provider (audit SEC-3, BIZ-1).
  *
  * The audit's blunt finding was that the platform shipped with only
- * `ScriptedModelProvider` — an excellent test harness and not a product. This
+ * `ScriptedModelProvider`, an excellent test harness and not a product. This
  * is the production implementation behind the same `ModelProvider` port, so
  * nothing else in the platform changes.
  *
@@ -49,7 +49,7 @@ const SIGNAL_TOOL = {
   description:
     'Report your own assessment of this turn. Call this exactly once on every turn, '
     + 'after any other tool calls. Confidence is your honest confidence that your answer '
-    + 'is correct and grounded in the reference material — a low number is useful, not a failure.',
+    + 'is correct and grounded in the reference material; a low number is useful, not a failure.',
   input_schema: {
     type: 'object' as const,
     properties: {

@@ -5,8 +5,8 @@ import type { ToolName } from '@detent/awa-policy';
  * Typed tool schemas (section 22.1).
  *
  * Every schema sets `additionalProperties: false`. That is the control that
- * stops a model smuggling an unvalidated field — an owner id, a lifecycle stage
- * — past the tool layer and into a CRM write.
+ * stops a model smuggling an unvalidated field, an owner id, a lifecycle stage
+ *, past the tool layer and into a CRM write.
  *
  * `service_interest` carries a per-tenant enum, injected at session start from
  * the tenant's service catalogue, so a value outside the catalogue fails

@@ -18,7 +18,7 @@ import type { Platform } from './platform.js';
  * The public API surface, expressed as a transport-agnostic router.
  *
  * Keeping the handlers free of Node's http types means the same routes are
- * exercised by the test suite directly, by the demo, and by the HTTP server —
+ * exercised by the test suite directly, by the demo, and by the HTTP server,
  * so the cross-tenant probe suite tests the real authorisation path rather than
  * a mock of it.
  */
@@ -157,7 +157,7 @@ export class Api {
     /**
      * Self-serve trial (audit BIZ-7).
      *
-     * Unauthenticated by necessity — this is the sign-up — and therefore rate
+     * Unauthenticated by necessity, this is the sign-up, and therefore rate
      * limited by IP like any other public route. The tenant it creates starts
      * in REGISTERED with no DPA and no CRM, so nothing it can do reaches
      * anything.
@@ -298,7 +298,7 @@ export class Api {
      *
      * The panel lives in an iframe that is destroyed on every page navigation,
      * so the thread used to reset silently each time a visitor moved from
-     * pricing to case studies — and each reset opened a new session, which
+     * pricing to case studies, and each reset opened a new session, which
      * inflated the conversation meter and therefore the tenant's bill.
      */
     if (request.method === 'GET' && rest.length === 1) {
@@ -393,8 +393,8 @@ export class Api {
      * "Forget me" (audit UX-8).
      *
      * A refusal recorded against the purpose, the session's transcript dropped,
-     * and the erasure itself audited. The audit entry is deliberately kept —
-     * the evidence that an erasure happened cannot itself be erased — and it
+     * and the erasure itself audited. The audit entry is deliberately kept,
+     * the evidence that an erasure happened cannot itself be erased, and it
      * holds no personal data, because payloads are redacted before they land.
      */
     if (request.method === 'POST' && rest[1] === 'forget') {
@@ -580,7 +580,7 @@ export class Api {
       case 'handoffs':
         return json(200, { handoffs: this.platform.handoff.forTenant(tenantId) });
       case 'reconcile': {
-        // POST replays the backlog now rather than waiting for the timer —
+        // POST replays the backlog now rather than waiting for the timer,
         // what an operator wants at the moment a CRM comes back (audit PERF-8).
         if (request.method === 'POST') {
           const result = await this.platform.reconciliation.runForTenant(tenantId);
@@ -795,7 +795,7 @@ export class Api {
   /**
    * Reporting window, from the query string first and the body second.
    *
-   * Reading a window only from the request body — including on GETs — meant a
+   * Reading a window only from the request body, including on GETs, meant a
    * dashboard could not link to a report and a link could not be shared
    * (audit UX-10).
    */
@@ -855,8 +855,8 @@ export class Api {
    *
    * Audit SEC-1: this route had no audience check, and the comment claimed it
    * was "authenticated by signature" when it was in fact authenticated by
-   * bearer token. Any holder of a widget key — which is, by design, in the HTML
-   * of every page on the tenant's website — could mark outcomes succeeded or
+   * bearer token. Any holder of a widget key, which is, by design, in the HTML
+   * of every page on the tenant's website, could mark outcomes succeeded or
    * failed, and those records drive the per-outcome fee, the funnel and the
    * data-quality scorecard. Two things fixed it: the audience assertion, and
    * an HMAC signature the route actually verifies when the tenant has

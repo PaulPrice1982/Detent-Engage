@@ -135,7 +135,7 @@ export function scoreAll(input: ScoringInput, candidates: readonly MatchCandidat
  * Classification (section 16.4, table 25).
  *
  * What this returns changes what the assistant *does*. It never changes what
- * the assistant *says about the CRM* — that separation is enforced at the
+ * the assistant *says about the CRM*; that separation is enforced at the
  * response boundary in `resolution.ts`, which strips record contents entirely.
  */
 export type Classification =

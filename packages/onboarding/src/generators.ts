@@ -151,7 +151,7 @@ export interface GeneratedMapping {
 /**
  * Canonical fields we attempt to map, with the API names each Tier 1 CRM is
  * likely to use. Matching is by exact API name first, then by normalised label,
- * then by type-compatible heuristic — in that order, because an exact API-name
+ * then by type-compatible heuristic, in that order, because an exact API-name
  * match is evidence and a label match is a guess.
  */
 const CANONICAL_TARGETS: Readonly<Record<string, { standard: boolean; candidates: readonly string[]; labels: readonly string[]; type: CrmField['type'] }>> = {

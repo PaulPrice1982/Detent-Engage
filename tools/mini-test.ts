@@ -2,7 +2,7 @@
  * A zero-dependency test runner implementing the Vitest subset this suite uses.
  *
  * Why this exists: the suite previously could not run at all if a single
- * package — vitest — was unavailable. Locked-down registries and package
+ * package, vitest, was unavailable. Locked-down registries and package
  * firewalls block individual versions routinely, and a test suite that cannot
  * run in a restricted environment is a test suite that stops being evidence
  * exactly where evidence matters most.

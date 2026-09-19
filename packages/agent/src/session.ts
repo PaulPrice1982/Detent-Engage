@@ -76,7 +76,7 @@ export interface Session {
  * Sessions had no TTL, no eviction and no sweep: every session and its full
  * transcript stayed in process memory until restart. That is an unbounded leak
  * in the component that holds the most visitor-supplied personal data, and a
- * retention breach against the project's own stated policy — a transcript kept
+ * retention breach against the project's own stated policy, a transcript kept
  * "until the process restarts" is not kept for the documented period, it is
  * kept for an arbitrary one.
  */
@@ -194,7 +194,7 @@ export class SessionManager {
   }
 
   /**
-   * Record a state that follows a commitment already made to a person — a
+   * Record a state that follows a commitment already made to a person, a
    * confirmed booking, a raised handoff. Never throws.
    *
    * The invariant in section 28 is that a commitment is not retracted to

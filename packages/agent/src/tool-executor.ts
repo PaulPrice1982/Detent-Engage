@@ -37,8 +37,8 @@ export interface ToolExecutionResult {
  *
  * The agent package deliberately does not depend on the outcome service: the
  * assistant's job is to recognise which outcome a conversation reached, and
- * everything downstream of that — whether the outcome is enabled, whether it is
- * billable, whether it needs downstream confirmation — is the platform's
+ * everything downstream of that, whether the outcome is enabled, whether it is
+ * billable, whether it needs downstream confirmation, is the platform's
  * decision and lives outside this package.
  */
 export interface OutcomeRecorder {
@@ -512,7 +512,7 @@ export class ToolExecutor {
   ): Promise<ToolExecutionResult> {
     // Dry-run: the envelope is staged rather than executed. Checked here, after
     // schema validation and the policy gate, so a staged write is one that
-    // would genuinely have been permitted — staging an envelope the policy
+    // would genuinely have been permitted, staging an envelope the policy
     // engine would have refused would make the diff a lie.
     if (config?.dryRun && this.deps.staging) {
       const staged = this.deps.staging.stage(envelope);

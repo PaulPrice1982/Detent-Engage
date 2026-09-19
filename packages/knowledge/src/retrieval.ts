@@ -10,7 +10,7 @@ import type { KnowledgeChunk, KnowledgeCorpus } from './corpus.js';
  *
  * Audit PERF-4: every visitor turn used to tokenise the entire published
  * corpus, rebuild the document-frequency map and recompute the average document
- * length before scoring — O(corpus) of pure CPU on the request path, per
+ * length before scoring, O(corpus) of pure CPU on the request path, per
  * message, single-threaded. The index and its length statistics are now built
  * once per corpus version and cached per tenant, and scoring walks only the
  * postings for the query's own terms. Same public interface, same scores, two
@@ -52,7 +52,7 @@ interface Posting {
  * The inverted index for one tenant at one corpus version.
  *
  * Immutable once built. A publish or retire bumps the corpus version, which
- * makes the cached index unreachable rather than stale — an index that can be
+ * makes the cached index unreachable rather than stale; an index that can be
  * mutated in place is an index that can serve a retired chunk.
  */
 interface CorpusIndex {
@@ -170,7 +170,7 @@ export class RetrievalService {
     }
 
     // Ties break on corpus order, as they did when every chunk was scored in
-    // order — a retrieval that reorders equal-scoring chunks between calls is a
+    // order, a retrieval that reorders equal-scoring chunks between calls is a
     // conversation that answers differently for no reason anyone can explain.
     return results
       .sort((a, b) => b.score - a.score || a.doc - b.doc)

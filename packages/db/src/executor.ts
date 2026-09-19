@@ -19,7 +19,7 @@ import { AwaError } from '@detent/awa-core';
  *    supplies the driver it already trusts (`pg`, `postgres`, a pooler, a proxy)
  *    in twenty lines;
  *  - the isolation probe can run in CI without a database, against a fake that
- *    models the one thing worth proving in code — that no adapter ever issues a
+ *    models the one thing worth proving in code, that no adapter ever issues a
  *    query outside a transaction that has bound `app.tenant_id`;
  *  - the failure mode is visible. `TenantBoundExecutor` refuses an unbound
  *    query rather than issuing it and trusting the database to return nothing.
@@ -47,7 +47,7 @@ export interface TenantBoundExecutor extends SqlExecutor {
 
 export interface Pool {
   /**
-   * Check out a connection, run `fn` against it, and release it — whatever
+   * Check out a connection, run `fn` against it, and release it, whatever
    * happens. A leaked connection with `app.tenant_id` still set is the single
    * most dangerous object this design can produce.
    */

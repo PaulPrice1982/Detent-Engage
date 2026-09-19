@@ -1,9 +1,9 @@
 /**
  * Visitor-surface copy, by locale (audit UX-6).
  *
- * The disclosure was already per-tenant configurable, but every other string —
+ * The disclosure was already per-tenant configurable, but every other string,
  * the consent prompt, the error messages, the placeholder, the accessibility
- * hints — was inline English in the panel markup. A product positioned for the
+ * hints, was inline English in the panel markup. A product positioned for the
  * EU and for multi-entity groups with jurisdiction rules could not serve a
  * French or German visitor.
  *
@@ -14,7 +14,7 @@
  *    so a translated prompt must produce a translated record, not an English
  *    one with a language tag attached;
  *  - the disclosure line here is a fallback only. A tenant's own disclosure,
- *    in their own voice, overrides it — and cannot be removed in any locale.
+ *    in their own voice, overrides it, and cannot be removed in any locale.
  */
 export interface LocaleBundle {
   readonly locale: string;
@@ -75,7 +75,7 @@ const EN: Readonly<Record<LocaleKey, string>> = {
   privacyLink: 'Privacy notice',
   yes: 'Yes',
   no: 'No',
-  consentAccepted: 'Thanks — noted.',
+  consentAccepted: 'Thanks, noted.',
   consentRefused: 'No problem. I will treat you as a new enquiry.',
   forgetMe: 'Forget me',
   forgotten: 'Done. This conversation has been cleared and nothing has been kept.',
@@ -89,7 +89,7 @@ const EN: Readonly<Record<LocaleKey, string>> = {
   leaveDetails: 'Nobody is available right now. Leave an email address and the team will come back to you.',
   leaveDetailsCta: 'Send',
   emailPlaceholder: 'you@company.com',
-  detailsReceived: 'Thank you — the team has your details.',
+  detailsReceived: 'Thank you; the team has your details.',
   you: 'You',
   assistant: 'Assistant',
 };
@@ -112,7 +112,7 @@ const FR: Readonly<Record<LocaleKey, string>> = {
   privacyLink: 'Politique de confidentialité',
   yes: 'Oui',
   no: 'Non',
-  consentAccepted: 'Merci — c’est noté.',
+  consentAccepted: 'Merci, c’est noté.',
   consentRefused: 'Pas de problème. Je vous traite comme une nouvelle demande.',
   forgetMe: 'Effacer mes données',
   forgotten: "C'est fait. Cette conversation a été effacée et rien n'a été conservé.",
@@ -126,7 +126,7 @@ const FR: Readonly<Record<LocaleKey, string>> = {
   leaveDetails: "Personne n'est disponible actuellement. Laissez une adresse e-mail et l'équipe vous recontactera.",
   leaveDetailsCta: 'Envoyer',
   emailPlaceholder: 'vous@entreprise.com',
-  detailsReceived: "Merci — l'équipe a vos coordonnées.",
+  detailsReceived: "Merci, l'équipe a vos coordonnées.",
   you: 'Vous',
   assistant: 'Assistant',
 };
@@ -149,7 +149,7 @@ const DE: Readonly<Record<LocaleKey, string>> = {
   privacyLink: 'Datenschutzhinweis',
   yes: 'Ja',
   no: 'Nein',
-  consentAccepted: 'Danke — vermerkt.',
+  consentAccepted: 'Danke, vermerkt.',
   consentRefused: 'Kein Problem. Ich behandle Sie als neue Anfrage.',
   forgetMe: 'Meine Daten löschen',
   forgotten: 'Erledigt. Diese Unterhaltung wurde gelöscht und nichts wurde gespeichert.',
@@ -163,7 +163,7 @@ const DE: Readonly<Record<LocaleKey, string>> = {
   leaveDetails: 'Derzeit ist niemand verfügbar. Hinterlassen Sie eine E-Mail-Adresse, das Team meldet sich.',
   leaveDetailsCta: 'Senden',
   emailPlaceholder: 'sie@firma.de',
-  detailsReceived: 'Danke — das Team hat Ihre Kontaktdaten.',
+  detailsReceived: 'Danke, das Team hat Ihre Kontaktdaten.',
   you: 'Sie',
   assistant: 'Assistent',
 };
@@ -186,7 +186,7 @@ const ES: Readonly<Record<LocaleKey, string>> = {
   privacyLink: 'Aviso de privacidad',
   yes: 'Sí',
   no: 'No',
-  consentAccepted: 'Gracias — anotado.',
+  consentAccepted: 'Gracias, anotado.',
   consentRefused: 'Sin problema. Le trataré como una consulta nueva.',
   forgetMe: 'Olvidar mis datos',
   forgotten: 'Hecho. Esta conversación se ha borrado y no se ha guardado nada.',
@@ -200,7 +200,7 @@ const ES: Readonly<Record<LocaleKey, string>> = {
   leaveDetails: 'Ahora mismo no hay nadie disponible. Deje un correo electrónico y el equipo le responderá.',
   leaveDetailsCta: 'Enviar',
   emailPlaceholder: 'usted@empresa.com',
-  detailsReceived: 'Gracias — el equipo tiene sus datos.',
+  detailsReceived: 'Gracias, el equipo tiene sus datos.',
   you: 'Usted',
   assistant: 'Asistente',
 };
@@ -223,7 +223,7 @@ const NL: Readonly<Record<LocaleKey, string>> = {
   privacyLink: 'Privacyverklaring',
   yes: 'Ja',
   no: 'Nee',
-  consentAccepted: 'Dank u — genoteerd.',
+  consentAccepted: 'Dank u, genoteerd.',
   consentRefused: 'Geen probleem. Ik behandel u als een nieuwe aanvraag.',
   forgetMe: 'Vergeet mij',
   forgotten: 'Gedaan. Dit gesprek is gewist en er is niets bewaard.',
@@ -237,7 +237,7 @@ const NL: Readonly<Record<LocaleKey, string>> = {
   leaveDetails: 'Er is nu niemand beschikbaar. Laat een e-mailadres achter en het team neemt contact op.',
   leaveDetailsCta: 'Versturen',
   emailPlaceholder: 'u@bedrijf.nl',
-  detailsReceived: 'Dank u — het team heeft uw gegevens.',
+  detailsReceived: 'Dank u, het team heeft uw gegevens.',
   you: 'U',
   assistant: 'Assistent',
 };
@@ -260,7 +260,7 @@ const IT: Readonly<Record<LocaleKey, string>> = {
   privacyLink: 'Informativa sulla privacy',
   yes: 'Sì',
   no: 'No',
-  consentAccepted: 'Grazie — annotato.',
+  consentAccepted: 'Grazie, annotato.',
   consentRefused: 'Nessun problema. Ti tratterò come una nuova richiesta.',
   forgetMe: 'Dimenticami',
   forgotten: 'Fatto. Questa conversazione è stata cancellata e non è stato conservato nulla.',
@@ -274,7 +274,7 @@ const IT: Readonly<Record<LocaleKey, string>> = {
   leaveDetails: "Al momento non c'è nessuno disponibile. Lascia un indirizzo e-mail e il team ti ricontatterà.",
   leaveDetailsCta: 'Invia',
   emailPlaceholder: 'tu@azienda.it',
-  detailsReceived: 'Grazie — il team ha i tuoi contatti.',
+  detailsReceived: 'Grazie, il team ha i tuoi contatti.',
   you: 'Tu',
   assistant: 'Assistente',
 };
@@ -292,7 +292,7 @@ export const SUPPORTED_LOCALES = ['en-GB', 'fr', 'de', 'es', 'nl', 'it'] as cons
  * quality-value negotiation: the panel is told which locale to use by the host
  * page's `lang` attribute or by tenant configuration, and inventing a preference
  * the tenant has not approved copy for would serve a visitor untranslated
- * consent wording — which is a consent record that does not match what was seen.
+ * consent wording, which is a consent record that does not match what was seen.
  */
 export function negotiateLocale(requested: string, supported: readonly string[] = SUPPORTED_LOCALES): string {
   const wanted = requested.trim().toLowerCase();

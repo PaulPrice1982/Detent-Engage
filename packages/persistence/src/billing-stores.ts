@@ -17,6 +17,11 @@ import type { Database } from './database.js';
  */
 
 export class PostgresAccountStore implements AccountStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(accountId: string): Promise<Account | undefined> {
@@ -71,6 +76,11 @@ export class PostgresAccountStore implements AccountStore {
 }
 
 export class PostgresSubscriptionStore implements SubscriptionStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async put(subscription: Subscription): Promise<void> {
@@ -116,6 +126,11 @@ export class PostgresSubscriptionStore implements SubscriptionStore {
 }
 
 export class PostgresInvoiceStore implements InvoiceStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(invoiceId: string): Promise<Invoice | undefined> {
@@ -178,6 +193,11 @@ export class PostgresInvoiceStore implements InvoiceStore {
 }
 
 export class PostgresLedgerStore implements LedgerStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async appendEntry(entry: LedgerEntry): Promise<void> {

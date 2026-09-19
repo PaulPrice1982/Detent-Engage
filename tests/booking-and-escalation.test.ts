@@ -5,7 +5,7 @@ import { buildHarness } from './fixtures/tenant.js';
 
 /**
  * CI gates: calendar race (zero double bookings), human handoff (correct
- * trigger in 100% of scenario cases), and the invariant from section 28 — a
+ * trigger in 100% of scenario cases), and the invariant from section 28, a
  * commitment already made to a person is never retracted to preserve system
  * consistency.
  */

@@ -5,7 +5,7 @@
  * with nothing written anywhere, which leaves an operator blind during exactly
  * the incident the audit trail was built for. Every log line here is a single
  * JSON object on one line, carries a correlation id, and is redacted with the
- * same `redactObject` the audit log uses — so a credential cannot reach a log
+ * same `redactObject` the audit log uses, so a credential cannot reach a log
  * by a route the audit writer already closes.
  */
 import { redactObject } from './redact.js';

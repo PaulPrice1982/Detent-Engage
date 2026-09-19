@@ -5,7 +5,7 @@ import type { ReportWindow } from './window.js';
  * Per-tenant, per-day materialised rollups (audit PERF-2).
  *
  * The finding: all three analytics services called `audit.export(tenantId)`,
- * which was `list()` plus a full chain `verify()` — a SHA-256 recomputation over
+ * which was `list()` plus a full chain `verify()`, a SHA-256 recomputation over
  * the canonical JSON of every entry ever written for that tenant, on every
  * dashboard load, three times per page. On a busy tenant that is the worst
  * scaling characteristic in the codebase.

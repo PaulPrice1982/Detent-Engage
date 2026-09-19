@@ -133,7 +133,7 @@ describe('Flow 19: tenant CRM token revoked mid-operation', () => {
       script: [{
         match: /.*/,
         output: {
-          text: 'Thanks — I have your details and the team will pick this up.',
+          text: 'Thanks, I have your details and the team will pick this up.',
           toolCalls: [{ tool: 'upsert_person', args: { work_email: 'alex@acme.co.uk', qualification_state: 'QUALIFIED' } }],
         },
       }],

@@ -158,7 +158,7 @@ describe('suppression crosses where data does not (FR-077, FR-078)', () => {
     expect(verdict.permitted).toBe(false);
   });
 
-  it('requires a documented arrangement, an informed visitor and a grant — all three', async () => {
+  it('requires a documented arrangement, an informed visitor and a grant, all three', async () => {
     const { identity, hierarchy } = groupFixture();
     await hierarchy.grantContentAccess({ groupId: 'g1', entityId: 'e_a', grantedBy: 'dpo', basis: 'documented', correlationId: 'c1' });
 

@@ -6,7 +6,7 @@ import { AwaError, type Clock, systemClock } from '@detent/awa-core';
  * There was none. No per-IP, per-key or per-session limit on `/v1/sessions` or
  * `/v1/sessions/{id}/messages`, no origin binding on a key that appears in page
  * source, and no input length cap before the tokeniser. A trivial script
- * against a public key ran a tenant past their spend cap — "denial of wallet",
+ * against a public key ran a tenant past their spend cap, "denial of wallet",
  * which is the exact risk the metering module names in its own header comment.
  *
  * Three buckets, because they fail in different ways:

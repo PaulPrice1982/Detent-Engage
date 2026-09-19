@@ -141,7 +141,7 @@ export class MachineSurface {
 
   /**
    * Serve the governed document. Approved content only, on the same allowlist
-   * as the human surface — and less of it. No owner identity, no calendar
+   * as the human surface, and less of it. No owner identity, no calendar
    * detail, no CRM information of any kind.
    */
   async serve(input: {

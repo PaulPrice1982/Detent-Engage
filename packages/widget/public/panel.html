@@ -21,7 +21,7 @@
     UX-1  there was no close button and no way out from the keyboard. Escape was
           bound on the *host* document, and this panel is a cross-origin iframe,
           so a keyboard or screen-reader user who opened the assistant was
-          trapped until they reloaded the page — WCAG 2.2 failures 2.1.2 and
+          trapped until they reloaded the page, WCAG 2.2 failures 2.1.2 and
           2.4.3 behind a README that claimed AA. There is now a close control in
           the header, Escape is handled in here, focus is moved to the heading
           on open and handed back to the launcher on close.
@@ -29,7 +29,7 @@
           There is now a typing indicator on submit and sentence-level streaming
           over SSE, each sentence validated before it is sent.
     UX-4  the session id was a variable in an iframe destroyed on every page
-          navigation, so the thread reset silently — and every reset opened a
+          navigation, so the thread reset silently, and every reset opened a
           new session, which inflated the tenant's conversation meter. It is now
           held in partitioned sessionStorage and the transcript is replayed from
           the server.

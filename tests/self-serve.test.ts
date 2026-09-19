@@ -6,8 +6,8 @@ import { buildHarness, bearer } from './fixtures/tenant.js';
 /**
  * CI gate: the self-serve surfaces (audit BIZ-7).
  *
- * Pass threshold: a trial is a real tenant on the real lifecycle — it skips no
- * gate — and the OAuth handshake cannot be replayed or redirected to another
+ * Pass threshold: a trial is a real tenant on the real lifecycle, it skips no
+ * gate, and the OAuth handshake cannot be replayed or redirected to another
  * tenant.
  */
 const hubspot = (exchanged: { accessToken: string; refreshToken?: string }): OAuthConnector => ({

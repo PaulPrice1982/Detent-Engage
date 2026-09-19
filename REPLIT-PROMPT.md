@@ -1,4 +1,4 @@
-# Replit prompt — audit remediation build
+# Replit prompt: audit remediation build
 
 **Copy everything in the fenced block below into the Replit Agent, once.**
 
@@ -18,7 +18,7 @@ This repository is COMPLETE. It typechecks clean and all 484 tests pass. Do NOT
 write, refactor, reformat or "improve" any source, test, dependency or migration.
 Your only job is to update it, run it, and report what the commands printed.
 
-STEP 1 — update the checkout.
+STEP 1, update the checkout.
 
 Run, in the Shell:
 
@@ -33,12 +33,12 @@ dist-zip/detent-agentic-website-assistant.zip over the project root instead
 NOTE: never run `pnpm install --no-optional`. It breaks esbuild's platform
 binary, which tsx needs, and the failure looks like a broken repository.
 
-STEP 2 — verify.
+STEP 2, verify.
 
     pnpm typecheck
 
 Expected output: two lines, the pnpm banner and `tsc --build --force`, then
-nothing. Any TypeScript error means the checkout is incomplete — re-run STEP 1.
+nothing. Any TypeScript error means the checkout is incomplete, re-run STEP 1.
 Do not "fix" a type error.
 
     pnpm test
@@ -51,7 +51,7 @@ Expected final lines:
 If a test fails, STOP and report the failing test name and its output verbatim.
 Do not delete, skip, loosen or rewrite a test to make the suite pass.
 
-STEP 3 — run it.
+STEP 3, run it.
 
     pnpm serve
 
@@ -73,9 +73,9 @@ chain and consent events do not survive a restart, and the boot message says so
 deliberately. It is not an error.
 
 The server binds 0.0.0.0. A loopback bind is unreachable from the Replit preview
-proxy and presents as "running, but the preview isn't ready" — do not change it.
+proxy and presents as "running, but the preview isn't ready", do not change it.
 
-STEP 4 — check four surfaces and report, then STOP.
+STEP 4, check four surfaces and report, then STOP.
 
 Open the preview and confirm each of these returns a page:
 
@@ -93,7 +93,7 @@ Then, in the Shell, with the widget key printed at boot:
       -d '{"jurisdiction":"UK"}'
 
 Expected: a JSON object containing session_id, disclosure, locale and
-streaming_available. The `origin` header is required — widget keys are bound to
+streaming_available. The `origin` header is required, widget keys are bound to
 the tenant's registered origins, and a request without one is refused with 403.
 That refusal is the control working, not a bug.
 
@@ -111,8 +111,8 @@ at, not as work for the Agent.
 
 | Area | Change |
 |---|---|
-| Persistence | `@detent/awa-db` — Postgres adapters behind every store interface, `SET LOCAL app.tenant_id` inside each transaction, plus an isolation probe suite |
-| Console | `/console.html` — Connect, Generate and approve, Dry run, Go live, Evidence |
+| Persistence | `@detent/awa-db`: Postgres adapters behind every store interface, `SET LOCAL app.tenant_id` inside each transaction, plus an isolation probe suite |
+| Console | `/console.html`: Connect, Generate and approve, Dry run, Go live, Evidence |
 | Credentials | Envelope encryption under a KMS-style provider, with rotation |
 | Abuse | Per-key, per-IP and per-session rate limits, input cap, spend cap checked before the model call |
 | Widget | Close control, Escape inside the panel, streaming, session resume, mobile sheet, six locales |
@@ -130,7 +130,7 @@ None of it is required to run; all of it is read from the environment.
 | `ANTHROPIC_API_KEY` | Uses the real model provider instead of the scripted one |
 | `AWA_MODEL` | Model id, default `claude-opus-5` |
 | `AWA_ORIGINS` | Comma-separated registered origins, default `http://localhost:8787` |
-| `AWA_ROOT_KEY` | Root key for credential encryption. Generated per run if unset — which means a restart cannot read the previous run's credentials |
+| `AWA_ROOT_KEY` | Root key for credential encryption. Generated per run if unset: which means a restart cannot read the previous run's credentials |
 | `AWA_FEATURE_*` | Per-flag overrides, e.g. `AWA_FEATURE_SELF_SERVE_TRIAL=1` |
 | `AWA_HSTS`, `AWA_TRUST_PROXY`, `AWA_ALLOW_PAGE_PROBE` | Off by default; each is a deliberate opt-in |
 

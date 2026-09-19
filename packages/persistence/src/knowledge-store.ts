@@ -22,6 +22,11 @@ export interface TenantArchive {
 }
 
 export class PostgresTenantArchive implements TenantArchive {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async save(config: TenantConfig): Promise<void> {
@@ -64,6 +69,11 @@ export class PostgresTenantArchive implements TenantArchive {
 }
 
 export class PostgresKnowledgeArchive implements KnowledgeArchive {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async save(chunk: KnowledgeChunk): Promise<void> {

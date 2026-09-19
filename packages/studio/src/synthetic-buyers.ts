@@ -3,7 +3,7 @@
  *
  * Ten standard buyers, each testing one thing the tenant needs to be sure of
  * before they publish. The panel exists because the boundaries are
- * deterministic and therefore testable — a competitor whose boundaries are
+ * deterministic and therefore testable, a competitor whose boundaries are
  * prompt instructions cannot offer this, because there is nothing stable to
  * assert against.
  */

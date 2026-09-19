@@ -34,7 +34,7 @@ export interface TurnInput {
 /**
  * What the visitor can do next (audit UX-7).
  *
- * An escalation used to return a sentence and nothing else — no confirmation
+ * An escalation used to return a sentence and nothing else, no confirmation
  * that a human had actually been notified, no expected response time, no
  * in-panel booking fallback, no way to leave an email if nobody was available.
  * The turn now returns a structured action the panel renders as a card, so the
@@ -87,7 +87,7 @@ export class TurnOrchestrator {
    * Streamed turn (audit UX-2).
    *
    * Sentences are emitted as the model produces them, each one validated before
-   * it leaves — the same validator, run per sentence. The final `TurnResult` is
+   * it leaves, the same validator, run per sentence. The final `TurnResult` is
    * the generator's return value, so a caller that ignores the chunks gets
    * exactly the behaviour of `run()`.
    */
@@ -141,7 +141,7 @@ export class TurnOrchestrator {
     // --- Spend cap, evaluated before the model is called (audit SEC-2a).
     //
     // The cap used to be checked only inside `PolicyEngine.decide`, which runs
-    // per tool call — but the model call happened first and unconditionally,
+    // per tool call, but the model call happened first and unconditionally,
     // and the tokens were then recorded. The one path that reached the model
     // was the one path that did not check the cap, which is precisely the
     // "denial of wallet" the metering module names in its own header comment.

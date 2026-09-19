@@ -17,6 +17,11 @@ import type { Database } from './database.js';
  */
 
 export class PostgresUserStore implements UserStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async findByEmail(realm: Realm, email: string): Promise<AuthUser | undefined> {
@@ -70,6 +75,11 @@ export class PostgresUserStore implements UserStore {
 }
 
 export class PostgresSessionStore implements SessionStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(sessionId: string): Promise<Session | undefined> {
@@ -118,6 +128,11 @@ export class PostgresSessionStore implements SessionStore {
 }
 
 export class PostgresResetTokenStore implements ResetTokenStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async put(token: ResetToken): Promise<void> {

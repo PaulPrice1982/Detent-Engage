@@ -201,7 +201,7 @@ export class GenerationService {
 
   /**
    * Mark a whole section reviewed. Requires that every item in it has been
-   * individually approved or explicitly excluded — a section cannot be signed
+   * individually approved or explicitly excluded; a section cannot be signed
    * off with unread items sitting in it.
    */
   async approveSection(tenantId: string, section: GeneratedSection, approvedBy: string, correlationId: string): Promise<GenerationResult> {

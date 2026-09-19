@@ -19,7 +19,7 @@ import type { AuditEntry, AuditEntryInput, ChainVerification } from './types.js'
  *    O(entries since the checkpoint) and a full walk is something an operator
  *    asks for explicitly.
  *  - PERF-5 and SEC-10: the per-tenant write queue never released its entries,
- *    and three callers used `void this.audit.write(...)` — a failed append on a
+ *    and three callers used `void this.audit.write(...)`, a failed append on a
  *    config or lifecycle change was discarded silently, which contradicts the
  *    append-before-act guarantee stated everywhere else. Queue entries are now
  *    evicted when they drain, and the fire-and-forget writes have been replaced
@@ -230,7 +230,7 @@ export class AuditLog {
    * part of verification is recomputing a SHA-256 over the canonical JSON of
    * every entry ever written, and an entry already covered by a signed
    * checkpoint does not need recomputing on every dashboard load. Pass
-   * `{ full: true }` to walk the whole chain regardless — which is what a
+   * `{ full: true }` to walk the whole chain regardless, which is what a
    * nightly integrity job and a disputed-conversation review should do.
    */
   async verify(tenantId: string, options: { full?: boolean } = {}): Promise<ChainVerification> {
@@ -342,7 +342,7 @@ export class AuditLog {
    * Paginated export (audit SEC-10).
    *
    * The unpaginated version materialised a tenant's entire chain in one
-   * response and then serialised it again in the HTTP layer — two copies of
+   * response and then serialised it again in the HTTP layer, two copies of
    * every entry ever written, on a route a DPO is encouraged to use.
    */
   async export(

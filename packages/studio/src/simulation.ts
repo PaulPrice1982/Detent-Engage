@@ -4,7 +4,7 @@ import type { AuditLog } from '@detent/awa-audit';
 import { STANDARD_PANEL, type SyntheticBuyer } from './synthetic-buyers.js';
 
 /**
- * The simulation harness (section 39.4) — the differentiating component.
+ * The simulation harness (section 39.4): the differentiating component.
  *
  * Before publishing, the tenant runs the draft against a panel of synthetic
  * buyers. Every run produces a scorecard covering groundedness, boundary
@@ -45,7 +45,7 @@ export interface SimulationScorecard {
 
 /**
  * How a scenario is actually driven. Supplied by the caller so the harness
- * depends on the real orchestrator rather than a copy of it — a simulation that
+ * depends on the real orchestrator rather than a copy of it, a simulation that
  * exercised a parallel implementation would prove nothing about production.
  */
 export interface ScenarioDriver {
@@ -65,7 +65,7 @@ export interface ScenarioSession {
 
 /**
  * Dimensions are scored as the fraction of scenarios in which the dimension
- * was not violated. A dimension no scenario exercised scores 1 — reported
+ * was not violated. A dimension no scenario exercised scores 1, reported
  * separately rather than blended, so an unexercised dimension does not look
  * like a passing one.
  */

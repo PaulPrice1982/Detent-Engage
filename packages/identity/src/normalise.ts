@@ -26,7 +26,7 @@ export interface NormalisedEmail {
   /** Lower-cased, whitespace-trimmed. Used for storage and display. */
   readonly normalised: string;
   /**
-   * Plus-suffix and (for Gmail) dots removed. Used for matching only — never
+   * Plus-suffix and (for Gmail) dots removed. Used for matching only, never
    * written to a CRM, because it is not the address the person gave us.
    */
   readonly matchKey: string;

@@ -14,8 +14,8 @@ import type {
  *
  * This exists for three jobs: the contract test suite every real connector must
  * also pass, the deduplication precision harness, and the runnable demo. It
- * models the awkward parts deliberately — a separate lead object, owner and
- * lifecycle stage that are read-only, and a configurable failure mode — because
+ * models the awkward parts deliberately, a separate lead object, owner and
+ * lifecycle stage that are read-only, and a configurable failure mode, because
  * a fake that only models the easy path proves nothing.
  */
 export interface SandboxRecord {
@@ -163,7 +163,7 @@ export class SandboxConnector implements CrmConnector {
     const email = person.emails[0];
     if (!email) throw new AwaError({ kind: 'SCHEMA_INVALID', message: 'sandbox upsertPerson requires an email' });
 
-    // Idempotent on the write key first, then on email — the same order a real
+    // Idempotent on the write key first, then on email, the same order a real
     // native-upsert CRM resolves in.
     const existing =
       [...this.records.values()].find((r) => r.writeKey === idempotencyKey) ??

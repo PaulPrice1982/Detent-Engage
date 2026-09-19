@@ -3,7 +3,7 @@
  *
  * `TenantStore.update()` used to validate exactly two things and spread the
  * rest. That let a tenant admin raise the spend cap the plan defines as
- * operator-controlled, and add any host to `outboundAllowlist` — which is
+ * operator-controlled, and add any host to `outboundAllowlist`, which is
  * precisely the list the output validator uses to block link and image-beacon
  * exfiltration. The `actor` argument was written to the audit line and used for
  * nothing.

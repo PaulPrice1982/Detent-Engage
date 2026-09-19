@@ -8,8 +8,8 @@
  * whole pence (or cents), currency travels with every amount, and arithmetic
  * across currencies throws rather than guessing a rate.
  *
- * The one place rounding is unavoidable — splitting an amount across periods or
- * lines — uses `allocate`, which distributes remainder pence deterministically
+ * The one place rounding is unavoidable, splitting an amount across periods or
+ * lines, uses `allocate`, which distributes remainder pence deterministically
  * so the parts always sum exactly to the whole.
  */
 export type CurrencyCode = 'GBP' | 'EUR' | 'USD';
@@ -87,7 +87,7 @@ export function multiply(a: Money, quantity: number): Money {
 /**
  * Rate in thousandths of a minor unit ("millis"), rounded half-up at the end.
  *
- * Unit economics genuinely need sub-penny rates — a text message costs 0.24p —
+ * Unit economics genuinely need sub-penny rates, a text message costs 0.24p,
  * so rates are held as integers in millis and the rounding happens exactly once,
  * at the point an amount becomes chargeable. Rounding per unit and then summing
  * is how a thousand messages ends up 3p out.
@@ -134,7 +134,7 @@ export function allocate(a: Money, weights: readonly number[]): Money[] {
   let remainder = magnitude - shares.reduce((acc, share) => acc + share, 0);
 
   // Remainder pence go to the largest weights first, deterministically, so the
-  // same inputs always produce the same split — which matters when an invoice
+  // same inputs always produce the same split, which matters when an invoice
   // is regenerated.
   const order = weights
     .map((weight, index) => ({ weight, index }))

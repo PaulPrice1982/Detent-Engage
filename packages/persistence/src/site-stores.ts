@@ -10,6 +10,11 @@ import type { Database } from './database.js';
  * worked.
  */
 export class PostgresPageStore implements PageStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(pageId: string): Promise<Page | undefined> {

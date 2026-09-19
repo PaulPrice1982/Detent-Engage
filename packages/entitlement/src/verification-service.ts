@@ -7,7 +7,7 @@ import type { AuditLog } from '@detent/awa-audit';
  *
  * Level 2 is the practical working level: a one-time code sent to the address
  * **on the contract**, not to whatever address the visitor typed. That
- * distinction is the entire control — a visitor who types a customer's email
+ * distinction is the entire control, a visitor who types a customer's email
  * proves nothing, and a code sent to the typed address would prove nothing
  * either.
  */
@@ -58,7 +58,7 @@ export class VerificationService {
 
   /**
    * Issue a one-time code. `contractEmail` is the address on the executed
-   * agreement, supplied by the entitlement layer — never the address the
+   * agreement, supplied by the entitlement layer, never the address the
    * visitor typed. If the two differ, the code goes to the contract address and
    * an impostor learns nothing.
    */
@@ -173,7 +173,7 @@ export class VerificationService {
   }
 }
 
-/** a***@acme.co.uk — enough to recognise, not enough to learn. */
+/** a***@acme.co.uk, enough to recognise, not enough to learn. */
 export function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
   if (!local || !domain) return '***';

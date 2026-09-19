@@ -9,7 +9,7 @@ import {
  *
  * Pass threshold: zero unbound queries, and an unbound read returns nothing.
  *
- * This runs against a fake that models the two properties the probe is about —
+ * This runs against a fake that models the two properties the probe is about,
  * a policy keyed on a transaction-local binding, and `SET LOCAL` semantics that
  * do not survive a commit. It proves the adapters always bind, which is the
  * part that lives in this repository. It does not prove a production cluster is
@@ -37,7 +37,7 @@ describe('every adapter binds its tenant inside the transaction', () => {
 
     // Both transactions run on the same checked-out connection, which is what a
     // pool does. A plain `SET` would leave `app.tenant_id` set and the second
-    // read would return the first tenant's rows — the single most dangerous
+    // read would return the first tenant's rows, the single most dangerous
     // mistake available in this design.
     const afterCommit = await pool.connect(async (sql) => {
       await sql.query('BEGIN');

@@ -100,8 +100,20 @@ export interface PlatformOptions {
   /** Fetches a tenant page to confirm the widget snippet is installed. */
   readonly pageProbe?: (url: string) => Promise<string>;
   readonly accessibilityStatement?: AccessibilityStatement;
-  /** Stated so the composition root does not have to assume it. */
-  readonly durable?: boolean;
+  /**
+   * Deliberately absent: durability is measured, not declared.
+   *
+   * It used to be an option, defaulting to whether four stores had been
+   * passed. Both halves were wrong. A caller could state `durable: true` about
+   * a platform holding everything in memory, and passing an in-memory store
+   * explicitly counted as durable because something had been passed. The
+   * console then showed a durability banner that was simply a repetition of
+   * what the deployment had claimed about itself.
+   *
+   * `durable` is now read from the stores: an adapter that survives a restart
+   * says so with `durable = true`, and anything that does not is not durable
+   * whatever the deployment believes.
+   */
   /**
    * Regions this deployment can serve, by residency (audit BIZ-8).
    *
@@ -230,8 +242,13 @@ export class Platform {
     this.logger = options.logger ?? silentLogger;
     this.metrics = options.metrics;
     this.pageProbe = options.pageProbe;
-    this.durable = options.durable
-      ?? Boolean(options.auditStore && options.connectionStore && options.usageStore && options.consentStore);
+    // Every one of them, not any: a platform whose audit trail survives a
+    // restart but whose consent evidence does not is not durable, and the one
+    // that does not survive is the one a regulator asks about.
+    this.durable = [
+      options.auditStore, options.checkpointStore, options.connectionStore,
+      options.usageStore, options.consentStore,
+    ].every((store) => (store as { durable?: boolean } | undefined)?.durable === true);
     this.accessibilityStatement = options.accessibilityStatement ?? DEFAULT_ACCESSIBILITY;
     this.residencyRegions = options.residencyRegions ?? {};
 
@@ -386,7 +403,7 @@ export class Platform {
    * gauges (audit PERF-7, PERF-8).
    *
    * Called by the HTTP server at boot and stopped on shutdown. `unref` so a
-   * timer never keeps a process alive — a server that will not exit because of
+   * timer never keeps a process alive; a server that will not exit because of
    * its own housekeeping is a deploy that hangs.
    */
   startMaintenance(intervalMs = 60_000): void {
@@ -425,8 +442,8 @@ export class Platform {
    *
    * Deliberately a weak check that is honest about being one: it looks for the
    * custom element and the tenant's own key prefix in the served HTML. It
-   * catches the common install failure — a snippet pasted into a staging
-   * template and never promoted — and it does not pretend to prove ownership.
+   * catches the common install failure, a snippet pasted into a staging
+   * template and never promoted, and it does not pretend to prove ownership.
    */
   async verifyInstall(tenantId: string, url: string): Promise<{ verified: boolean; reason: string }> {
     if (!this.pageProbe) return { verified: false, reason: 'no page probe configured on this deployment' };
@@ -448,7 +465,7 @@ export class Platform {
    * description, and nothing routed on it. It now selects the storage and
    * processing region for a tenant, and a deployment that has not been given a
    * region for a tenant's residency refuses rather than quietly serving from
-   * the wrong one — which is the failure a DPA review is looking for.
+   * the wrong one, which is the failure a DPA review is looking for.
    */
   regionFor(tenantId: string): string {
     const config = this.tenants.get(tenantId);

@@ -1,28 +1,81 @@
 /**
- * Development entry point.
+ * The entry point, in both modes.
  *
  * Boots a platform with the in-memory stores, one demo tenant on the sandbox
  * connector, and the HTTP gateway. Production wiring differs in exactly two
- * places — the store implementations and the model provider passed to
- * `new Platform(...)` — because both are behind interfaces.
+ * places, the store implementations and the model provider passed to
+ * `new Platform(...)`, because both are behind interfaces.
  *
  *   pnpm serve
  *
  * The audit's SEC-3 finding applies to this file as much as to the composition
  * root: a deployment that boots on the in-memory stores loses its audit chain,
  * its consent events and its spend counters on restart. That is fine for a demo
- * and not fine for a pilot, so this says so on stdout at boot rather than
- * leaving someone to find out.
+ * and not fine for a pilot.
+ *
+ * So this file mode-switches rather than warning. On a development machine it
+ * boots the demo tenant on in-memory stores as before. In a deployment
+ * (DETENT_DEPLOYED, REPLIT_DEPLOYMENT or NODE_ENV=production) it first checks
+ * that everything a durable boot needs is present and that the database
+ * actually answers, and if anything is missing it serves the reasons instead of
+ * starting. It does not exit: a process that exits is restarted, called a crash
+ * loop, and its explanation ends up in a log somebody has to go and find.
  */
 import { SandboxConnector } from '@detent/awa-connectors';
 import { AnthropicModelProvider, ScriptedModelProvider, type ModelProvider } from '@detent/awa-agent';
 import { ALL_FEATURES, JsonLogger, LocalKeyProvider, MetricsRegistry, featuresFromEnv } from '@detent/awa-core';
 import { Api, ApiKeyService, Platform, RequestRateLimiter, createHttpServer } from './index.js';
+import { bootEnvironmentFrom, configurationProblems, databaseProblem } from './boot-config.js';
+import { createNotConfiguredServer } from './not-configured-server.js';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const logger = new JsonLogger({ service: 'awa', level: (process.env['AWA_LOG_LEVEL'] as 'info') ?? 'info' });
 const metrics = new MetricsRegistry();
+
+const port = Number(process.env['PORT'] ?? 8787);
+// Bind to every interface by default. A loopback-only bind is unreachable from
+// a container's preview proxy (Replit, Codespaces, Docker port mapping), which
+// presents as "the preview is not loading" with a perfectly healthy process.
+const host = process.env['HOST'] ?? '0.0.0.0';
+
+/**
+ * The deployment gate, before anything that could throw.
+ *
+ * Deliberately the first thing that runs. The fault this guards against is an
+ * ordering fault: the code that explains a bad configuration existed and was
+ * correct both times the deployment crash-looped, and both times something
+ * above it constructed a store, threw, and took the process down before the
+ * explanation could be served.
+ */
+const boot = bootEnvironmentFrom(process.env);
+if (boot.deployed) {
+  const problems = configurationProblems(boot);
+  const unreachable = await databaseProblem(boot.databaseUrl, async (url) => {
+    const { Database } = await import('@detent/awa-persistence');
+    const probe = new Database({ connectionString: url, maxConnections: 1 });
+    try {
+      return await probe.healthy();
+    } finally {
+      await probe.close().catch(() => undefined);
+    }
+  });
+  if (unreachable) problems.push(unreachable);
+
+  if (problems.length > 0) {
+    const refusal = createNotConfiguredServer({
+      problems,
+      log: (line) => console.error(line),
+    });
+    refusal.listen(port, host);
+    // Nothing below this point runs. Returning rather than exiting is the
+    // whole point: the container stays up and answers with the reason.
+    await new Promise<never>(() => {});
+  }
+}
+
+/** Only ever reached on a development machine; a deployment must set AWA_MODEL. */
+const DEVELOPMENT_MODEL = 'claude-sonnet-5';
 
 /**
  * A real provider when a key is present, the scripted one otherwise.
@@ -31,10 +84,15 @@ const metrics = new MetricsRegistry();
  * governance suite deterministic, and a developer without an API key should
  * still be able to run the whole platform end to end.
  */
-const model: ModelProvider = process.env['ANTHROPIC_API_KEY']
-  ? new AnthropicModelProvider({ model: process.env['AWA_MODEL'] ?? 'claude-opus-5' })
+// The model id comes from configuration and is validated against
+// SUPPORTED_MODELS at the gate above before a deployment reaches this line. A
+// hard-coded default is a guess that goes wrong silently: the provider answers
+// 404 for a retired name and the assistant is simply unavailable, with nothing
+// pointing at a string in a source file as the reason.
+const model: ModelProvider = boot.modelKey
+  ? new AnthropicModelProvider({ model: boot.model ?? DEVELOPMENT_MODEL })
   : new ScriptedModelProvider([
-      { match: /.*/, output: { text: 'Thanks — what are you trying to solve?', confidence: 0.9 } },
+      { match: /.*/, output: { text: 'Thanks, what are you trying to solve?', confidence: 0.9 } },
     ]);
 
 const crm = new SandboxConnector({ hasSeparateLeadObject: true });
@@ -97,12 +155,6 @@ const widget = keys.issue(TENANT, 'widget', { label: 'development', origins: ORI
 const admin = keys.issue(TENANT, 'tenant_admin', { label: 'development' });
 const platformAdmin = keys.issue('*platform*', 'platform_admin', { label: 'development' });
 
-const port = Number(process.env['PORT'] ?? 8787);
-// Bind to every interface by default. A loopback-only bind is unreachable from
-// a container's preview proxy (Replit, Codespaces, Docker port mapping), which
-// presents as "the preview is not loading" with a perfectly healthy process.
-const host = process.env['HOST'] ?? '0.0.0.0';
-
 const here = dirname(fileURLToPath(import.meta.url));
 const staticMounts = [
   { prefix: '/widget', dir: resolve(here, '../../widget/public') },
@@ -136,9 +188,17 @@ server.listen(port, host, () => {
   console.log(`  console          http://localhost:${port}/console.html`);
   console.log(`  tenant           ${TENANT}`);
   console.log(`  model            ${model.id}`);
-  console.log(`  widget key       ${widget.key}`);
-  console.log(`  tenant admin key ${admin.key}`);
-  console.log(`  platform key     ${platformAdmin.key}`);
+  if (boot.printKeys) {
+    // Keys are stored as digests, so this is the only moment they exist in
+    // readable form. Printed only when asked for, and never in production:
+    // a key on stdout is a key in whatever aggregates the logs, held by
+    // whoever can read them and for as long as they are retained.
+    console.log(`  widget key       ${widget.key}`);
+    console.log(`  tenant admin key ${admin.key}`);
+    console.log(`  platform key     ${platformAdmin.key}`);
+  } else {
+    console.log('  api keys         hidden; set AWA_DEV_PRINT_KEYS=1 to print them');
+  }
   console.log('');
   if (!platform.durable) {
     console.log('  NOTE: this process is running on the in-memory stores. The audit chain,');
@@ -146,5 +206,7 @@ server.listen(port, host, () => {
     console.log('        restart. Pass the Postgres adapters from @detent/awa-db before a pilot.');
     console.log('');
   }
-  console.log(`  curl -s -XPOST localhost:${port}/v1/sessions -H "authorization: Bearer ${widget.key}" -H 'origin: ${ORIGINS[0]}' -H 'content-type: application/json' -d '{"jurisdiction":"UK"}'`);
+  if (boot.printKeys) {
+    console.log(`  curl -s -XPOST localhost:${port}/v1/sessions -H "authorization: Bearer ${widget.key}" -H 'origin: ${ORIGINS[0]}' -H 'content-type: application/json' -d '{"jurisdiction":"UK"}'`);
+  }
 });

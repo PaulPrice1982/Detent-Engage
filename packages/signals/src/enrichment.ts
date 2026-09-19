@@ -6,8 +6,8 @@ import type { MeteringService } from '@detent/awa-policy';
  *
  * Enrichment is the first component in this programme with a per-record
  * marginal cost paid to a third party, and it changes the unit economics
- * materially: Wave B moves blended cost of goods from £0.35–0.60 to
- * £0.55–0.95 per conversation. It is therefore metered as credits, capped per
+ * materially: Wave B moves blended cost of goods from £0.35 to 0.60 to
+ * £0.55 to 0.95 per conversation. It is therefore metered as credits, capped per
  * tenant, and the cost of any bulk routine is shown before it runs (FR-063).
  *
  * Enrichment is explicitly not model-mediated (section 48.2). There is no path

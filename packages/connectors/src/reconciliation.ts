@@ -8,13 +8,13 @@ import type { WriteReceiptService } from './receipts.js';
  *
  * The finding: "reconciliation of parked writes is an in-memory list with no
  * worker". The receipt survived a failure, and an operator could list what was
- * waiting — but nothing ever retried it, so a CRM outage turned into a queue
+ * waiting, but nothing ever retried it, so a CRM outage turned into a queue
  * somebody had to work by hand.
  *
  * Replay is safe because of the design that was already there: every write
  * carries an idempotency key, the receipt is claimed before the external call,
  * and a confirmed receipt short-circuits the call and returns the original
- * external id. A replayed write therefore produces one CRM record or none —
+ * external id. A replayed write therefore produces one CRM record or none,
  * never a duplicate. That property is why the worker can be blunt.
  *
  * What the worker will not do is the important half. It never replays a write

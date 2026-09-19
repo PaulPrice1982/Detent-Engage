@@ -21,6 +21,11 @@ import type { Database } from './database.js';
  */
 
 export class PostgresResellerStore implements ResellerStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(resellerId: string): Promise<Reseller | undefined> {
@@ -119,6 +124,11 @@ export class PostgresResellerStore implements ResellerStore {
 }
 
 export class PostgresTerritoryStore implements TerritoryStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(area: string): Promise<Territory | undefined> {
@@ -162,6 +172,11 @@ export class PostgresTerritoryStore implements TerritoryStore {
 }
 
 export class PostgresSupportRequestStore implements SupportRequestStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async put(request: SupportRequest): Promise<void> {

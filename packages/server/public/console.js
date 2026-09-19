@@ -151,7 +151,7 @@
           <td>${escape(key.audience)}</td>
           <td>${escape(key.createdAt.slice(0, 10))}</td>
           <td>${escape(key.lastUsedAt?.slice(0, 16).replace('T', ' ') ?? 'never')}</td>
-          <td>${escape(key.expiresAt?.slice(0, 10) ?? '—')}</td>
+          <td>${escape(key.expiresAt?.slice(0, 10) ?? '-')}</td>
           <td>
             ${key.active
               ? `<button class="secondary" data-rotate="${escape(key.id)}">Rotate</button>
@@ -248,8 +248,8 @@
       $('diff-body').innerHTML = `
         <div class="grid">
           ${stat('Total writes', diff.totalWrites ?? writes.length)}
-          ${stat('Creates', diff.creates ?? '—')}
-          ${stat('Updates', diff.updates ?? '—')}
+          ${stat('Creates', diff.creates ?? '-')}
+          ${stat('Updates', diff.updates ?? '-')}
         </div>
         <pre>${escape(JSON.stringify(diff, null, 2))}</pre>`;
     } catch (error) { toast(error.message, true); }
@@ -287,7 +287,7 @@
       $('playbooks-body').innerHTML = (result.versions ?? []).map((version) => `
         <tr>
           <td>${version.version}${version.version === result.active ? ' <span class="pill ok">active</span>' : ''}</td>
-          <td>${escape(version.author ?? '—')}</td>
+          <td>${escape(version.author ?? '-')}</td>
           <td>${escape((version.publishedAt ?? '').slice(0, 16).replace('T', ' '))}</td>
           <td>${escape(version.note ?? '')}</td>
           <td>${version.version === result.active ? '' : `<button class="secondary" data-rollback="${version.version}">Roll back</button>`}</td>
@@ -347,7 +347,7 @@
         stat('Deflection rate', `${headline.deflection_rate_pct ?? 0}%`),
         stat('Hours saved', headline.implied_hours_saved ?? 0),
         stat('Out-of-hours sessions', headline.outside_business_hours_sessions ?? 0),
-        stat('Cost per conversation', `${analytics.cost?.costPerConversationPence?.toFixed?.(2) ?? '—'}p`),
+        stat('Cost per conversation', `${analytics.cost?.costPerConversationPence?.toFixed?.(2) ?? '-'}p`),
       ].join('');
     } catch (error) { toast(error.message, true); }
 

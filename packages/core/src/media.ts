@@ -1,7 +1,7 @@
 /**
  * Synthetic media marking (FR-068, EU AI Act Article 50(2)).
  *
- * Article 50(1) — telling a person they are interacting with an AI — is already
+ * Article 50(1), telling a person they are interacting with an AI, is already
  * handled by the conversation disclosure. Article 50(2) is a separate duty: AI-
  * generated content must be marked in machine-readable form. This module exists
  * so that the marking cannot be forgotten when media is added, and so the

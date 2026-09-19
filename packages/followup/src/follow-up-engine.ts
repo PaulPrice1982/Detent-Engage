@@ -9,7 +9,7 @@ import {
 /**
  * The consent-safe follow-up engine (section 42).
  *
- * Lane two — a single relevant follow-up under legitimate interest — is the
+ * Lane two, a single relevant follow-up under legitimate interest, is the
  * capability competitors have and v1.0 lacks. It is defensible only with the
  * machinery here, which is why it is a rules engine rather than a feature:
  * every send passes the jurisdiction engine, the LIA gate, the global
@@ -73,7 +73,7 @@ export class FollowUpEngine {
     const { config, recipient } = request;
 
     // 1. Global suppression, first and unconditionally. An address that has
-    //    opted out anywhere receives nothing from any tenant — including a
+    //    opted out anywhere receives nothing from any tenant, including a
     //    transactional message, because a person who asked to be left alone
     //    did not mean "except for confirmations".
     if (await this.suppression.isSuppressed(recipient.email)) {
@@ -209,7 +209,7 @@ export class FollowUpEngine {
     return [
       body,
       '',
-      '—',
+      '--',
       `${config.followUp.senderName}, ${config.followUp.physicalAddress}`,
       'You can stop these messages at any time using the link in this email. We will action it immediately and permanently.',
     ].join('\n');
@@ -226,27 +226,27 @@ export class FollowUpEngine {
  */
 export function generateLiaTemplate(config: TenantConfig): string {
   return [
-    `# Legitimate Interests Assessment — ${config.name}`,
+    `# Legitimate Interests Assessment, ${config.name}`,
     '',
     `Prepared for: ${config.name} (the controller)`,
     `Processing: a single follow-up email to a business contact who engaged with the website assistant and did not book.`,
     `Jurisdiction: ${config.homeJurisdiction}. Applied per recipient using the stricter of the recipient's and the controller's position.`,
     '',
-    '## 1. Purpose test — is there a legitimate interest?',
+    '## 1. Purpose test, is there a legitimate interest?',
     '',
     'Pre-populated: following up a business enquiry the individual initiated, referencing that conversation and nothing else.',
     'The controller must confirm this reflects the actual intended use.',
     '',
     '**Controller to complete:** _______________________________________________',
     '',
-    '## 2. Necessity test — is the processing necessary?',
+    '## 2. Necessity test, is the processing necessary?',
     '',
     'Pre-populated: the individual engaged and did not complete a booking. A single message is the least intrusive',
     'means of completing the enquiry they began. No campaign content is permitted in this lane.',
     '',
     '**Controller to complete:** _______________________________________________',
     '',
-    '## 3. Balancing test — do the interests override the individual\'s rights?',
+    '## 3. Balancing test, do the interests override the individual\'s rights?',
     '',
     'Factors the platform can evidence:',
     `- Frequency is hard-capped at ${effectiveCap(config.followUp.maxFollowUpsPerConversation)} message per conversation and cannot be raised by configuration.`,

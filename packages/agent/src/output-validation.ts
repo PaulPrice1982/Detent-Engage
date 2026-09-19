@@ -124,7 +124,7 @@ export function validateOutput(input: OutputValidationInput): OutputVerdict {
 
 /** Safe replacement when output is blocked. Honest, and always offers a human. */
 export const BLOCKED_OUTPUT_REPLACEMENT =
-  'Let me get that confirmed properly rather than risk telling you something wrong. I can put you through to someone on the team — shall I do that?';
+  'Let me get that confirmed properly rather than risk telling you something wrong. I can put you through to someone on the team, shall I do that?';
 
 function hostOf(reference: string): string | undefined {
   try {

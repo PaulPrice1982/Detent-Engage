@@ -11,7 +11,7 @@ import { buildHarness, bearer } from './fixtures/tenant.js';
  *
  * Pass threshold: the panel is escapable, translatable and resumable, and the
  * headers that make it safe to embed are present. Several of these assert on
- * the shipped markup rather than in a browser — there is no DOM in this suite —
+ * the shipped markup rather than in a browser, there is no DOM in this suite,
  * which is a weaker check than a real accessibility audit and is stated as
  * such in the assurance pack rather than dressed up as one.
  */
@@ -227,8 +227,8 @@ describe('UX-8 · consent is a screen a DPO can read', () => {
     expect(response.status).toBe(200);
     expect(harness.platform.sessions.get(sessionId)).toBeUndefined();
 
-    // The erasure is itself audited — the evidence that an erasure happened
-    // cannot itself be erased — and the audit holds no personal data.
+    // The erasure is itself audited, the evidence that an erasure happened
+    // cannot itself be erased, and the audit holds no personal data.
     const audit = await harness.platform.audit.export(harness.config.tenantId);
     expect(audit.entries.some((entry) => entry.type === 'erasure_executed')).toBe(true);
   });

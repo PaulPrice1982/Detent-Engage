@@ -45,7 +45,7 @@ export function resolveJurisdiction(recipient: Recipient): Jurisdiction | undefi
   if (recipient.countryCode) {
     const mapped = COUNTRY_TO_JURISDICTION[recipient.countryCode.toUpperCase()];
     if (mapped) return mapped;
-    // A country we know but have no rule for is not "OTHER by default" — it is
+    // A country we know but have no rule for is not "OTHER by default", it is
     // unresolved, which fails closed.
     return undefined;
   }
@@ -101,7 +101,7 @@ export function isCorporateSubscriber(recipient: Recipient): boolean {
  */
 export function permittedLane(recipient: Recipient, config: TenantConfig): LaneDecision {
   // Consent, where it genuinely exists, is the strongest basis and is checked
-  // first — it is the only path to nurture regardless of jurisdiction.
+  // first, it is the only path to nurture regardless of jurisdiction.
   if (recipient.hasMarketingConsentEvent) {
     return {
       lane: 'CONSENTED_NURTURE',

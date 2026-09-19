@@ -184,7 +184,7 @@ export class CrmAdapter {
         this.dispatch(connector, connection.credential, envelope),
       );
       await this.receipts.confirm(receipt, result.externalId);
-      // Whatever route got here — first attempt or a replay — the write is
+      // Whatever route got here, first attempt or a replay, the write is
       // done, so it leaves the queue.
       await this.parked?.remove(envelope.tenantId, envelope.idempotencyKey);
       await this.audit.write({
@@ -334,7 +334,7 @@ export class CrmAdapter {
  *
  * The distinction that keeps this safe is upstream: `ownerRef` on an activity
  * comes from a CRM read (`readOwners`, or the matched record's owner), never
- * from a model-supplied argument — no tool schema exposes an owner field.
+ * from a model-supplied argument, no tool schema exposes an owner field.
  */
 const ACTIVITY_OPERATIONS: ReadonlySet<CanonicalWriteEnvelope['operation']> = new Set([
   'create_note', 'create_task', 'create_meeting',
@@ -379,8 +379,8 @@ function reconcileStage(opportunity: CanonicalOpportunity, pipelines: readonly C
  *
  * This wraps any `ConnectionStore` and seals the credential before it is
  * written, opening it just in time on read. The plaintext exists only inside
- * the adapter's call stack; what the store holds — in memory, in Postgres, in a
- * backup — is ciphertext under a per-tenant data key.
+ * the adapter's call stack; what the store holds, in memory, in Postgres, in a
+ * backup, is ciphertext under a per-tenant data key.
  *
  * Rotation is `rewrap`: re-seal every stored credential under the current root
  * key. Ciphertext is rewritten and the plaintext never leaves this process.

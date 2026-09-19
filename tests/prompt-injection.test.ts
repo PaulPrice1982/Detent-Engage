@@ -89,7 +89,7 @@ describe('prompt injection and exfiltration', () => {
     const serialised = JSON.stringify(modelSafe);
 
     expect(internal.classification).toBe('EXISTING_CUSTOMER');
-    // Not "redacted in the response" — never present in it.
+    // Not "redacted in the response", never present in it.
     for (const secret of ['Alex Warner', 'Northwind', 'owner_1', internal.matchedExternalId ?? '__none__']) {
       expect(serialised).not.toContain(secret);
     }

@@ -98,8 +98,8 @@ export class FunnelService {
 
   async build(tenantId: string, window: ReportWindow, generatedAt: string, options: FunnelOptions = {}): Promise<FunnelReport> {
     // Ranged query rather than a full export (audit PERF-2). `export()` was
-    // `list()` plus a full chain verification — a SHA-256 pass over every entry
-    // ever written — and the funnel needs neither the entries outside the
+    // `list()` plus a full chain verification, a SHA-256 pass over every entry
+    // ever written, and the funnel needs neither the entries outside the
     // window nor the chain recomputed.
     //
     // The funnel is not folded per day the way the compliance scorecard is,

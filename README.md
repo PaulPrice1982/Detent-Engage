@@ -13,7 +13,7 @@ a commodity that Salesforce, HubSpot and Intercom already ship; the governed
 commercial layer is the part they have not built and the part a UK or EU
 mid-market buyer's DPO will actually interrogate.
 
-> **Your website chat has to tell people it is AI — and you have to be able to
+> **Your website chat has to tell people it is AI, and you have to be able to
 > evidence that it did.** EU AI Act Article 50 transparency obligations apply to
 > systems interacting with natural persons, and "we configured it that way" is
 > not evidence. This product shows the disclosure in the surface on the first
@@ -26,9 +26,9 @@ Implements three specifications:
 
 | Version | Scope | Docs |
 |---|---|---|
-| **v1.0** sections 1–36 | The governed multi-CRM assistant | [`ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`COMPLIANCE.md`](docs/COMPLIANCE.md) |
-| **v1.1** sections 37–50 | Competitive parity extension | [`PARITY-EXTENSION.md`](docs/PARITY-EXTENSION.md) |
-| **v1.2** sections 51–62 | Unoccupied ground | [`UNOCCUPIED-GROUND.md`](docs/UNOCCUPIED-GROUND.md) |
+| **v1.0** sections 1 to 36 | The governed multi-CRM assistant | [`ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`COMPLIANCE.md`](docs/COMPLIANCE.md) |
+| **v1.1** sections 37 to 50 | Competitive parity extension | [`PARITY-EXTENSION.md`](docs/PARITY-EXTENSION.md) |
+| **v1.2** sections 51 to 62 | Unoccupied ground | [`UNOCCUPIED-GROUND.md`](docs/UNOCCUPIED-GROUND.md) |
 
 See [`docs/SPEC-TRACEABILITY.md`](docs/SPEC-TRACEABILITY.md) for the
 requirement-by-requirement map across all three, including what is deliberately
@@ -40,7 +40,7 @@ not built.
 
 ```
 packages/
-  # v1.0 — the governed core
+  # v1.0: the governed core
   core         canonical model, tool-schema validator, PII redaction, tenant config,
                outcome taxonomy, approval state, verification ladder, media marking
   audit        hash-chained, tamper-evident, replayable audit log
@@ -52,7 +52,7 @@ packages/
   server       composition root, HTTP gateway, admin API, webhooks, API keys
   widget       Shadow DOM launcher, sandboxed panel, host consent-signal reader
 
-  # v1.1 — competitive parity
+  # v1.1: competitive parity
   onboarding   governed crawl, typed extraction, four generators, staging ledger
   studio       business-language authoring compiler, versioning, simulation panel
   outcomes     nine-outcome taxonomy, trial provisioning, confirmation callbacks
@@ -60,7 +60,7 @@ packages/
   followup     three sending lanes and the jurisdiction rules engine
   signals      company-level proactive engagement, enrichment, account matching
 
-  # v1.2 — unoccupied ground
+  # v1.2: unoccupied ground
   context      the nine non-CRM system categories, unified CustomerContext
   entitlement  verification ladder, entitlement answers, excess-use tasks
   modes        seven conversational modes and the mode gate
@@ -128,7 +128,7 @@ jailbreak or misconfiguration produces an unlawful enrolment.
 
 **5. A commitment made to a person is never retracted to preserve consistency.**
 If the calendar confirms a booking and the CRM write fails, the visitor is told
-the meeting is confirmed — because it is. The CRM is repaired asynchronously and
+the meeting is confirmed, because it is. The CRM is repaired asynchronously and
 alerted on.
 
 **6. Selling is switched off when the customer is unhappy.** (v1.2) The CRM says
@@ -145,8 +145,8 @@ A **governed control plane** holds all consequential authority and all
 credentials. A **bought conversational plane** handles language, speech and
 turn-taking. The two are separated by a typed tool interface, and the language
 model never holds a CRM credential or writes to a CRM directly. Every turn runs
-the same ten steps — ingest, retrieve, reason, validate, policy, authorise,
-execute, audit, validate output, emit — with no fast path that skips validation.
+the same ten steps, ingest, retrieve, reason, validate, policy, authorise,
+execute, audit, validate output, emit, with no fast path that skips validation.
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Evidence, not assertions
@@ -191,7 +191,7 @@ The four things it changed most:
   against Postgres, binding `SET LOCAL app.tenant_id` inside each transaction, and
   the isolation probe suite asserts that no adapter can issue an unbound query.
   The composition root now reports whether a deployment is durable, and says so
-  at boot when it is not — because evidence that evaporates on restart is not
+  at boot when it is not, because evidence that evaporates on restart is not
   evidence.
 - **There is an approval console.** Connect → Generate and approve → Dry run →
   Go live → Evidence, at `/console.html`. The best thing in this product used to
@@ -214,18 +214,18 @@ the first stakeholder review.
 - **Voice provider wiring.** As above: the port exists, the audio path does not.
 - **Tier 2 and Tier 3 CRM connectors.** Five Tier 1 connectors are built
   against the real vendor API shapes. The framework is what makes the sixth cheap.
-- **Marketplace listings and the design partner programme** (v1.1 §46–47) —
+- **Marketplace listings and the design partner programme** (v1.1 §46 to 47),
   process, not engineering. The self-serve trial and the OAuth connect handshake
   a marketplace listing needs are built.
 - **Data residency routing beyond a single region.** `residencyRegions` is
   honoured where a deployment declares it, and a tenant whose residency has no
   declared region is refused rather than quietly served from the wrong place. A
-  deployment that declares none makes no residency claim — and the Enterprise
+  deployment that declares none makes no residency claim, and the Enterprise
   tier description should not make one either until it does.
-- **Video and channels beyond website and email** (v1.1 §44–45). The
+- **Video and channels beyond website and email** (v1.1 §44 to 45). The
   channel-agnostic conversation model that makes them cheap is built; the
   adapters are not.
-- **Priority-2 and 3 non-CRM connectors** (v1.2 §54) — warehouse, CPQ, ERP,
+- **Priority-2 and 3 non-CRM connectors** (v1.2 §54): warehouse, CPQ, ERP,
   marketing automation, professional services. The contract is defined and the
   three priority-1 categories have two exemplar connectors each.
 - **The independent accessibility audit** (v1.2 §58). The widget is built to

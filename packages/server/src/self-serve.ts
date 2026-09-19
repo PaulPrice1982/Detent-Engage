@@ -7,7 +7,7 @@ import type { ApiKeyService } from './auth.js';
  *
  * The finding: at £350/month the Starter tier can only work self-serve, and
  * there was no free tier, no trial, no "Connect HubSpot" button, no marketplace
- * listing path and no partner surface — while trial provisioning, the governed
+ * listing path and no partner surface, while trial provisioning, the governed
  * crawl and the partner registry were all built and reachable from nowhere.
  * The strongest demo this product can give is a governed crawl that produces a
  * *generated, unapproved* playbook within ten minutes, and it was mostly
@@ -230,7 +230,7 @@ export class SelfServeService {
    *
    * The state is consumed whatever happens, so a replayed callback cannot bind
    * a second credential, and the tenant comes from the stored state rather than
-   * from the request — a callback that takes a tenant id from the caller is an
+   * from the request, a callback that takes a tenant id from the caller is an
    * account takeover with extra steps.
    */
   async complete(state: string, code: string): Promise<{ tenantId: string; connector: string }> {

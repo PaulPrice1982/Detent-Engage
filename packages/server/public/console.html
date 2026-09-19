@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Detent — assistant console</title>
+<title>Detent, assistant console</title>
 <!--
   The approval console (audit UX-3).
 
@@ -14,8 +14,8 @@
   compliance scorecard, usage and the audit export were all JSON endpoints
   behind a bearer token, and the only HTML shipped was a developer status page.
 
-  This is the five-screen console the audit asked for — Connect, Generate &
-  Approve, Dry run, Go live, Evidence — built as one static page against the
+  This is the five-screen console the audit asked for, Connect, Generate &
+  Approve, Dry run, Go live, Evidence, built as one static page against the
   same API the tests exercise. No build step, no framework, no dependency: the
   console is the surface, the API is the product, and a console that needs a
   toolchain to change is a console that does not get changed.
@@ -35,7 +35,7 @@
     </svg>
     <span>Detent</span>
   </span>
-  <span class="muted" id="tenant-name">—</span>
+  <span class="muted" id="tenant-name">-</span>
   <span class="pill" id="state-pill">not signed in</span>
   <span class="pill" id="durability-pill" hidden></span>
   <span class="spacer"></span>
@@ -57,7 +57,7 @@
     <p class="lede">
       Sign in with a tenant admin key, register the web origins your assistant
       runs on, and issue the public key for your site. Nothing serves traffic
-      until the later steps are complete — that is by design, and it is what
+      until the later steps are complete, that is by design, and it is what
       the evidence screen proves.
     </p>
 
@@ -84,7 +84,7 @@
       <h3>Registered origins</h3>
       <p class="muted small">
         A widget key is refused from any origin not listed here. A tenant with no
-        registered origins cannot serve visitor traffic at all — failing closed
+        registered origins cannot serve visitor traffic at all, failing closed
         is the point.
       </p>
       <label for="origins">Origins, one per line</label>

@@ -33,7 +33,7 @@ describe('SEC-1 · the public widget key cannot confirm a billable outcome', () 
       body: { succeeded: true },
     });
     // The correlation id does not exist, so this is a 404 from the outcome
-    // service rather than an authorisation refusal — which is the point.
+    // service rather than an authorisation refusal, which is the point.
     expect(response.status).not.toBe(403);
   });
 });

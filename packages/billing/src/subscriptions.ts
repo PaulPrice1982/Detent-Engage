@@ -278,7 +278,7 @@ export class SubscriptionService {
   /**
    * Cancel. Defaults to the end of the paid period, because cancelling
    * immediately takes away service the customer has already paid for and then
-   * obliges us to refund it — two operations where one would do.
+   * obliges us to refund it, two operations where one would do.
    */
   async cancel(input: {
     subscriptionId: string; immediate?: boolean; reason: string; actor: string; correlationId: string;

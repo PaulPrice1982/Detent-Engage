@@ -12,7 +12,7 @@ import { ruleFor, TOOLS_AVAILABLE_IN_BOOKING_LINK_MODE, type ToolName, type Tool
  *
  * The single design rule, from section 8.3: every decision this class makes is
  * one the language model is structurally prevented from making. Nothing here
- * reads model output as an input to its own verdict — the model's claim that
+ * reads model output as an input to its own verdict, the model's claim that
  * consent was given, that a price is approved, or that a field was confirmed is
  * never evidence. Evidence comes from the consent store, the tenant config and
  * the tool arguments themselves.

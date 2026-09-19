@@ -100,7 +100,7 @@ export interface BehaviouralAssurancePack {
 
 /**
  * Sector boundary presets (FR-108). A preset applies refusal boundaries and
- * **is not weakenable below the platform floor** — a regulated tenant can be
+ * **is not weakenable below the platform floor**: a regulated tenant can be
  * stricter than the platform, never looser.
  */
 export interface SectorPreset {
@@ -210,7 +210,7 @@ export class AssurancePackGenerator {
 
   /**
    * Version-pinned conversation replay (FR-107). Any conversation is
-   * reconstructable with the exact configuration that produced it — which is
+   * reconstructable with the exact configuration that produced it, which is
    * what "demonstrating what the system did and why on a given date" requires
    * for a sector under audit.
    */

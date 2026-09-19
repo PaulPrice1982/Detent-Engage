@@ -7,7 +7,7 @@ import type { ClmConnector, ClmFacts, ContractedItem, SystemCapabilityDeclaratio
  *
  * This is the one integration in the whole programme that produces recovered
  * revenue rather than better context, and it is the one that maps onto contract
- * monetisation and excess-use recovery — the capability this business already
+ * monetisation and excess-use recovery; the capability this business already
  * has and the category largely ignores.
  *
  * The hard boundaries in section 55.2 govern everything here. This connector

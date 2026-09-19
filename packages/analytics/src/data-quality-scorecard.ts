@@ -9,7 +9,7 @@ import { payloadOf, payloadString, type ReportWindow } from './window.js';
  * decisive in month three. This surface makes it visible in week one."
  *
  * The most important number on it is one that should always read zero: owner
- * overwrites blocked. Reading zero *is the point* — it is the difference
+ * overwrites blocked. Reading zero *is the point*, it is the difference
  * between a vendor claiming it protects ownership and a vendor showing a
  * counter that has never moved, derived from a log that verifies.
  *

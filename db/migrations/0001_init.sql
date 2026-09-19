@@ -1,4 +1,4 @@
--- Detent Agentic Website Assistant — initial schema.
+-- Detent Agentic Website Assistant, initial schema.
 --
 -- Tenant isolation is enforced at the database under a restricted role, not by
 -- application-level filtering (decision 5, section 24.2). The application

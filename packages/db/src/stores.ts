@@ -242,7 +242,7 @@ export class PostgresUsageStore implements UsageStore {
    * `UPDATE ... SET x = x + $n ... RETURNING` is the whole fix: the read and
    * the write happen inside the same statement, so two concurrent turns cannot
    * both read the same snapshot and have the second overwrite the first. The
-   * guard is applied inside the same statement as a `WHERE` clause — an
+   * guard is applied inside the same statement as a `WHERE` clause, an
    * unapplied increment returns no row, which is how voice concurrency is
    * claimed without a check-then-act race.
    */
@@ -282,7 +282,7 @@ export class PostgresUsageStore implements UsageStore {
       const record = toUsageRecord(rows[0]!);
       if (guard && !guard(record)) {
         // The guard failed on the post-increment value, so the increment is
-        // undone inside the same transaction — which then commits as a no-op.
+        // undone inside the same transaction, which then commits as a no-op.
         // A rollback here would also discard anything else the caller did.
         const reverted = await sql.query(
           `UPDATE usage_period SET
@@ -359,7 +359,7 @@ export class PostgresConnectionStore implements SealedConnectionStore {
    * Tenants holding a credential, for key rotation.
    *
    * The one query that is legitimately cross-tenant, and it returns identifiers
-   * only — never a credential, never a ciphertext. It runs unbound because a
+   * only, never a credential, never a ciphertext. It runs unbound because a
    * rotation is a platform operation, and it is named so a reviewer sees that.
    */
   async tenants(): Promise<string[]> {

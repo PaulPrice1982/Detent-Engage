@@ -13,7 +13,7 @@ import type { ClmFacts, ContractedItem } from '@detent/awa-context';
  *  1. It **reads and cites**. It never interprets a term, never advises on its
  *     meaning, never predicts an outcome. Anything beyond reading is legal
  *     advice and is refused under section 13.3.
- *  2. It answers only from the **executed agreement with the verified party** —
+ *  2. It answers only from the **executed agreement with the verified party**,
  *     never a template, never another customer, never a draft.
  *  3. Excess use, arrears and renewal exposure are **never disclosed to the
  *     visitor.** They produce internal tasks only.
@@ -98,7 +98,7 @@ export class EntitlementService {
       await this.log(query, 'REFUSED_INTERPRETATION', { reason: 'question asks for interpretation of a term' });
       return {
         kind: 'REFUSED_INTERPRETATION',
-        say: 'I can tell you what your agreement says, but I cannot tell you what it means or what would happen — that needs someone qualified. Let me put you through.',
+        say: 'I can tell you what your agreement says, but I cannot tell you what it means or what would happen, that needs someone qualified. Let me put you through.',
         escalate: true,
       };
     }
@@ -150,7 +150,7 @@ export class EntitlementService {
       await this.log(query, 'IN_SCOPE', { category });
       return {
         kind: 'IN_SCOPE',
-        say: `Yes — ${inScope.label} is within what you have contracted. I can put you through to the team who can get you set up with it.`,
+        say: `Yes, ${inScope.label} is within what you have contracted. I can put you through to the team who can get you set up with it.`,
         escalate: false,
       };
     }

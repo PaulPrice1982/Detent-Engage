@@ -160,7 +160,7 @@ export class KnowledgeCorpus {
 
   /**
    * Read published chunks for exactly one tenant. The tenant id is a required
-   * argument, not an optional filter — binding at query construction rather
+   * argument, not an optional filter, binding at query construction rather
    * than post-filtering is what makes cross-tenant isolation testable.
    */
   published(tenantId: string): KnowledgeChunk[] {

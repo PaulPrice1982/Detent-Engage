@@ -15,6 +15,11 @@ import type { Database } from './database.js';
  * offers to overwrite an entry invites somebody to.
  */
 export class PostgresAuditStore implements AuditStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async append(entry: AuditEntry): Promise<void> {

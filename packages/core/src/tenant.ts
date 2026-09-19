@@ -23,7 +23,7 @@ export type Residency = 'UK' | 'EU';
 export interface PriceListEntry {
   readonly sku: string;
   readonly label: string;
-  /** Exactly one of `price` or `range` — a tenant cannot publish both. */
+  /** Exactly one of `price` or `range`; a tenant cannot publish both. */
   readonly price?: { readonly amount: number; readonly currency: string; readonly unit: string };
   readonly range?: { readonly min: number; readonly max: number; readonly currency: string; readonly unit: string };
   /** Conditions attached to the price, stated verbatim whenever the price is. */
@@ -109,7 +109,7 @@ export interface DisclosureConfig {
  *
  * `liaComplete` is the gate on lane two. The legitimate-interest follow-up lane
  * is disabled until the tenant's DPO has reviewed and completed the legitimate
- * interests assessment (FR-056) — not because the platform doubts the tenant,
+ * interests assessment (FR-056): not because the platform doubts the tenant,
  * but because the LIA is the thing that makes the lane lawful, and a lane that
  * is lawful only if a document exists must be gated on that document existing.
  */
@@ -230,7 +230,7 @@ export interface TenantConfig {
   /**
    * Web origins this tenant has registered for the widget (audit SEC-5, SEC-7).
    * Authentication rejects a widget key presented from anywhere else, and the
-   * panel's `frame-ancestors` is built from exactly this list — so a competitor
+   * panel's `frame-ancestors` is built from exactly this list, so a competitor
    * cannot drive a tenant's assistant or frame their panel.
    */
   readonly origins: readonly string[];
@@ -292,7 +292,7 @@ export function canGoLive(config: TenantConfig): boolean {
 
 /**
  * Whether CRM writes may reach the tenant's CRM at all. In dry-run the writes
- * are real, validated and diffable — they simply land in a staging ledger until
+ * are real, validated and diffable, they simply land in a staging ledger until
  * the tenant accepts the diff (FR-036).
  */
 export function writesReachCrm(config: Pick<TenantConfig, 'dryRun' | 'state'>): boolean {

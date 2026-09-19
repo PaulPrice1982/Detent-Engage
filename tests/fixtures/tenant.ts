@@ -6,8 +6,8 @@ import { Platform, Api, ApiKeyService } from '@detent/awa-server';
 /**
  * Shared fixture: a fully provisioned, live tenant with a sandbox CRM.
  *
- * Provisioning goes through the real lifecycle — DPA, connect, mapping, test
- * mode, live — rather than constructing a LIVE tenant directly, so every test
+ * Provisioning goes through the real lifecycle, DPA, connect, mapping, test
+ * mode, live, rather than constructing a LIVE tenant directly, so every test
  * also exercises the gates it depends on.
  */
 export interface Harness {

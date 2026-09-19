@@ -30,8 +30,8 @@ ALTER TABLE usage_period
   ADD COLUMN IF NOT EXISTS company_resolutions bigint NOT NULL DEFAULT 0;
 
 -- The atomic increment path is `INSERT ... ON CONFLICT DO UPDATE SET x = x + $n
--- RETURNING`, which needs the conflict target to exist. It does — the primary
--- key is (tenant_id, period) — and this comment is here so a future migration
+-- RETURNING`, which needs the conflict target to exist. It does, the primary
+-- key is (tenant_id, period): and this comment is here so a future migration
 -- does not quietly drop it and reintroduce the lost-update race.
 
 -- --------------------------------------------------------------------------

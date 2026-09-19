@@ -5,7 +5,7 @@ import { buildHarness, bearer } from './fixtures/tenant.js';
 
 /**
  * CI gates: AI disclosure (100% of sessions, both modalities) and adversarial
- * output validation — zero claims to be human, zero unapproved figures, zero
+ * output validation, zero claims to be human, zero unapproved figures, zero
  * outbound exfiltration references (sections 25.4, 30, 36.2).
  */
 describe('AI disclosure, EU AI Act Article 50', () => {
@@ -62,7 +62,7 @@ describe('output validation', async () => {
 
   it('blocks a claim to be human', () => {
     const verdict = validateOutput({
-      text: "No, I'm a real person — I work on the sales desk here.",
+      text: "No, I'm a real person, I work on the sales desk here.",
       config, approvedFigures: figures,
     });
     expect(verdict.allowed).toBe(false);
@@ -88,7 +88,7 @@ describe('output validation', async () => {
 
   it('blocks manufactured urgency', () => {
     const verdict = validateOutput({
-      text: 'Only 2 slots left this quarter — act now before prices go up.',
+      text: 'Only 2 slots left this quarter, act now before prices go up.',
       config, approvedFigures: figures,
     });
     expect(verdict.allowed).toBe(false);

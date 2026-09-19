@@ -28,7 +28,7 @@ export type OutcomeBasis = 'confirmed' | 'assistant_reply';
 
 /**
  * Per-unit prices in **millis of a minor unit** (thousandths of a penny).
- * Sub-penny rates are real — a text message is well under a penny — and
+ * Sub-penny rates are real, a text message is well under a penny, and
  * rounding once at the invoice line rather than per unit is what keeps a
  * thousand messages from drifting.
  */
@@ -180,7 +180,7 @@ export const PLAN_CATALOGUE: Readonly<Record<PlanCode, Plan>> = {
 /**
  * A per-account override of any plan field. Enterprise deals are the reason
  * this exists, but it is also how a retention discount or a pilot rate is
- * expressed — always as a recorded override with a reason, never by editing the
+ * expressed, always as a recorded override with a reason, never by editing the
  * catalogue underneath other accounts.
  */
 export interface PlanOverride {

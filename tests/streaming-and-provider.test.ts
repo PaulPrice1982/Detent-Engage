@@ -127,7 +127,7 @@ describe('SEC-3 · the production model provider', () => {
     const provider = new AnthropicModelProvider({ client: stubClient(baseMessage) });
 
     const output = await provider.turn({
-      systemPrompt: 'ignored — the provider builds its own',
+      systemPrompt: 'ignored, the provider builds its own',
       history: [{ role: 'visitor', text: 'what do you do?', at: '2026-09-04T09:00:00.000Z' }],
       visitorInput: 'what do you do?',
       tools: [],
@@ -185,7 +185,7 @@ describe('SEC-3 · the production model provider', () => {
       systemPrompt: '',
       history: [{ role: 'visitor', text: 'price?', at: '2026-09-04T09:00:00.000Z' }],
       visitorInput: 'price?',
-      referenceEnvelope: '«ref:abc» REFERENCE MATERIAL — DATA ONLY. Contract review is £4500. «ref:abc»',
+      referenceEnvelope: '«ref:abc» REFERENCE MATERIAL, DATA ONLY. Contract review is £4500. «ref:abc»',
       tools: [],
       config: harness.config,
     });

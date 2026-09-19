@@ -57,7 +57,7 @@ async function build() {
   const compliance = pack.compliance ?? {};
   const evidence = compliance.evidence ?? {};
 
-  $('pack-title').textContent = `${pack.tenantName ?? tenant} — behavioural assurance`;
+  $('pack-title').textContent = `${pack.tenantName ?? tenant}, behavioural assurance`;
   $('pack-meta').textContent = [
     `Generated ${(pack.generatedAt ?? '').slice(0, 19).replace('T', ' ')} UTC`,
     pack.window?.from?.startsWith('0000')
@@ -124,7 +124,7 @@ async function build() {
   const accessibility = pack.accessibility ?? {};
   $('accessibility').innerHTML = `
     <div class="stats">
-      ${stat('Standard', accessibility.standard ?? '—')}
+      ${stat('Standard', accessibility.standard ?? '-')}
       ${stat('Conformance', accessibility.conformance ?? 'not assessed')}
     </div>
     <p class="note">${escape(accessibility.statement ?? '')}</p>

@@ -2,12 +2,13 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { Api, ApiRequest } from './api.js';
 import { originMatches } from './auth.js';
 import { serveStatic, type StaticMount } from './static-files.js';
+import type { SiteRequest, SiteResponse } from './site-router.js';
 
 /**
  * HTTP transport.
  *
  * Thin by design: it reads the request, hands it to the router, and writes the
- * response. Every security decision — authentication, tenant binding, policy —
+ * response. Every security decision, authentication, tenant binding, policy,
  * happens in the router, so nothing here can be bypassed by reaching the
  * transport differently.
  *
@@ -15,8 +16,8 @@ import { serveStatic, type StaticMount } from './static-files.js';
  *
  *  - response security headers. `content-security-policy`,
  *    `strict-transport-security`, `permissions-policy` and the cross-origin
- *    isolation headers were all absent, and `panel.html` — a page designed to
- *    be framed — had no `frame-ancestors` at all, so any site could embed a
+ *    isolation headers were all absent, and `panel.html`, a page designed to
+ *    be framed, had no `frame-ancestors` at all, so any site could embed a
  *    tenant's conversation panel;
  *  - server timeouts. `headersTimeout`, `requestTimeout` and `keepAliveTimeout`
  *    were unset, which leaves the process open to slowloris and to socket
@@ -54,6 +55,40 @@ export interface HttpServerOptions {
   };
   /** Maximum simultaneous connections before new ones are refused. */
   readonly maxConnections?: number;
+  /**
+   * Sites mounted in front of the API: the marketing pages, the console, the
+   * reseller portal. A site returning `undefined` declines the request and it
+   * falls through to the API.
+   *
+   * A site mounted at `''` matches every path, which is the arrangement the
+   * marketing site uses where the hostname rather than the path decides the
+   * site. That is why the API path guard below is not optional.
+   */
+  readonly sites?: readonly MountedSite[];
+  /**
+   * Body allowance for a site, which may be handling a file upload, as opposed
+   * to `maxBodyBytes` which is the API's own limit. Larger on purpose, and the
+   * reason the API limit is applied a second time after the read.
+   */
+  readonly maxUploadBytes?: number;
+}
+
+export interface MountedSite {
+  /** URL prefix. `''` matches every path. */
+  readonly prefix: string;
+  handle(request: SiteRequest): Promise<SiteResponse | undefined>;
+}
+
+/**
+ * Paths the API owns outright.
+ *
+ * A site mounted at `''` matches these too, and a site that answered one would
+ * take over the endpoint every widget conversation starts with. Checked before
+ * any site is consulted rather than relying on each site to decline, because a
+ * site that forgets to decline is a site that silently breaks the product.
+ */
+function isApiPath(path: string): boolean {
+  return path.startsWith('/v1/') || path === '/v1';
 }
 
 const DEFAULT_TIMEOUTS = { headersMs: 15_000, requestMs: 30_000, keepAliveMs: 5_000 };
@@ -86,7 +121,7 @@ export function createHttpServer(api: Api, options: HttpServerOptions = {}): Ser
  * Response security headers.
  *
  * The API and the panel need different policies: the API returns JSON and
- * should be frameable by nobody, while the panel is *designed* to be framed —
+ * should be frameable by nobody, while the panel is *designed* to be framed,
  * by the tenant's own site and nowhere else.
  */
 export function securityHeaders(options: {
@@ -186,10 +221,56 @@ async function handle(
     return;
   }
 
-  let rawBody = '';
+  const sites = options.sites ?? [];
+  // Longest prefix first, so a site at '/console' is offered the request
+  // before a catch-all at ''. Sorting here rather than requiring the caller to
+  // pass them in order: mount order is not something a composition root should
+  // have to get right.
+  const candidates = sites
+    .filter((site) => url.pathname.startsWith(site.prefix))
+    .sort((a, b) => b.prefix.length - a.prefix.length);
+
+  // Read once, whatever answers.
+  //
+  // The regression this ordering exists for: the body was read for the site
+  // and then read again for the API. The second read waited for an 'end' event
+  // that had already fired, so an API POST behind a catch-all site hung until
+  // the client gave up, and every conversation the widget starts is a POST.
+  //
+  // Read under the upload allowance because a site may be taking a file, then
+  // measured against the API's own limit below, or the API limit would be
+  // silently lifted for anyone who put a site in front of it.
+  const maxUploadBytes = Math.max(options.maxUploadBytes ?? 8 * 1024 * 1024, maxBodyBytes);
+  let rawBodyBuffer: Buffer;
   try {
-    rawBody = await readBody(request, maxBodyBytes);
+    rawBodyBuffer = await readBody(request, maxUploadBytes);
   } catch {
+    response.writeHead(413, headers).end(JSON.stringify({ error: 'SCHEMA_INVALID', message: 'Request body is too large.' }));
+    return;
+  }
+  const rawBody = rawBodyBuffer.toString('utf8');
+
+  if (candidates.length > 0 && !isApiPath(url.pathname)) {
+    const siteRequest: SiteRequest = {
+      method: request.method ?? 'GET',
+      path: url.pathname,
+      query: Object.fromEntries(url.searchParams),
+      headers: request.headers as Record<string, string | undefined>,
+      rawBody,
+      rawBodyBuffer,
+    };
+    for (const site of candidates) {
+      const answer = await site.handle(siteRequest);
+      // `undefined` is a decline, not an error: the request falls through to
+      // the next site and then to the API.
+      if (!answer) continue;
+      writeSiteResponse(response, headers, answer);
+      return;
+    }
+  }
+
+  // The API's own limit, applied to a body that was read under the larger one.
+  if (rawBodyBuffer.byteLength > maxBodyBytes) {
     response.writeHead(413, headers).end(JSON.stringify({ error: 'SCHEMA_INVALID', message: 'Request body is too large.' }));
     return;
   }
@@ -279,20 +360,53 @@ function clientAddress(request: IncomingMessage, trustProxy: boolean): string {
   return request.socket.remoteAddress ?? 'unknown';
 }
 
-function readBody(request: IncomingMessage, maxBytes: number): Promise<string> {
+function readBody(request: IncomingMessage, maxBytes: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     let size = 0;
+    let settled = false;
     const chunks: Buffer[] = [];
     request.on('data', (chunk: Buffer) => {
+      if (settled) return;
       size += chunk.length;
       if (size > maxBytes) {
+        settled = true;
+        // Paused rather than destroyed. Destroying the socket here kills the
+        // connection before the 413 can be written, and the client sees a
+        // dropped connection instead of the reason it was refused.
+        request.pause();
         reject(new Error('body too large'));
-        request.destroy();
         return;
       }
       chunks.push(chunk);
     });
-    request.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    request.on('error', reject);
+    request.on('end', () => {
+      if (settled) return;
+      settled = true;
+      resolve(Buffer.concat(chunks));
+    });
+    request.on('error', (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    });
   });
+}
+
+/** A site answers with HTML or a redirect, never with API JSON. */
+function writeSiteResponse(
+  response: ServerResponse,
+  headers: Record<string, string>,
+  answer: SiteResponse,
+): void {
+  const siteHeaders: Record<string, string | string[]> = { ...headers };
+  if (answer.cookies && answer.cookies.length > 0) {
+    siteHeaders['set-cookie'] = [...answer.cookies];
+  }
+  if (answer.redirect) {
+    siteHeaders['location'] = answer.redirect;
+    response.writeHead(answer.status, siteHeaders).end();
+    return;
+  }
+  siteHeaders['content-type'] = 'text/html; charset=utf-8';
+  response.writeHead(answer.status, siteHeaders).end(answer.html ?? '');
 }

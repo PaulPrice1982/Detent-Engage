@@ -36,6 +36,11 @@ import type { Database } from './database.js';
  * is evaluated inside the same transaction as the update it authorises.
  */
 export class PostgresUsageStore implements UsageStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(tenantId: string, period: string): Promise<UsageRecord | undefined> {
@@ -221,6 +226,11 @@ interface UsageRow {
  * against the conversation.
  */
 export class PostgresConsentStore implements ConsentStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async put(event: ConsentEvent): Promise<void> {
@@ -306,6 +316,11 @@ function toConsent(row: ConsentRow): ConsentEvent {
  * deploy wrote a second copy of the same lead into a customer's CRM.
  */
 export class PostgresWriteReceiptStore implements WriteReceiptStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async find(tenantId: string, idempotencyKey: string): Promise<WriteReceipt | undefined> {
@@ -431,6 +446,11 @@ export function credentialKeyProblem(key: string): string | undefined {
 }
 
 export class PostgresConnectionStore implements ConnectionStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   private readonly key: Buffer;
   private readonly onUndecryptable: (tenantId: string) => void;
 
@@ -537,6 +557,11 @@ interface ConnectionRow {
 
 /** What the customer is charged for, which is not a thing to keep in memory. */
 export class PostgresOutcomeStore implements OutcomeStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async put(outcome: RecordedOutcome): Promise<void> {
@@ -599,6 +624,11 @@ export class PostgresOutcomeStore implements OutcomeStore {
  * deliverable again.
  */
 export class PostgresPaymentStore implements PaymentStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async get(paymentId: string): Promise<PaymentRecord | undefined> {
@@ -670,6 +700,11 @@ export class PostgresPaymentStore implements PaymentStore {
  * instruction was to be left alone.
  */
 export class PostgresSuppressionStore implements SuppressionStore {
+  /**
+   * Survives a restart, which is what `Platform.durable` measures rather than
+   * takes on trust from the deployment.
+   */
+  readonly durable = true;
   constructor(private readonly database: Database) {}
 
   async add(record: SuppressionRecord): Promise<void> {

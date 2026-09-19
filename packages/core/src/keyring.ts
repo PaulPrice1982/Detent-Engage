@@ -13,7 +13,7 @@
  * touching ciphertext; revoking one tenant's key cannot read another's, because
  * a data key is never shared between tenants.
  *
- * `LocalKeyring` exists so a development or test deployment is encrypted too —
+ * `LocalKeyring` exists so a development or test deployment is encrypted too,
  * the failure mode where the secure path is the one nobody exercises is exactly
  * how plaintext ends up in production.
  */

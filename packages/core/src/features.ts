@@ -4,7 +4,7 @@
  * The audit's commercial finding was that breadth without a spine reads as
  * risk: three specification versions fully built, roughly a third of the code
  * unreachable from a browser, and nothing to say which parts are load-bearing.
- * The answer is not to delete the work — it is tested and correct — but to make
+ * The answer is not to delete the work, it is tested and correct, but to make
  * the shipping surface explicit. Everything beyond the v1.0 spine is off by
  * default and named here, so what a pilot runs is a decision rather than an
  * accident.

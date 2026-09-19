@@ -28,7 +28,7 @@ const BASE = 'https://api.hubapi.com';
  * Two HubSpot-specific behaviours drive this implementation and neither is
  * optional:
  *
- *  1. HubSpot has no separate Lead object — the contact is unified — so the
+ *  1. HubSpot has no separate Lead object, the contact is unified, so the
  *     canonical qualification state is written to a property rather than
  *     materialised as a different object (section 21.3).
  *  2. A create that collides with an existing unique property returns 409

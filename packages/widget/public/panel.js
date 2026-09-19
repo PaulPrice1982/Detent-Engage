@@ -290,7 +290,7 @@ const params = new URLSearchParams(location.search);
     } catch (error) {
       clearTyping();
       // Degrade, never fail. The visitor is told the truth, offered a route on,
-      // and — the audit's UX-10 — offered their own text back rather than
+      // and, the audit's UX-10, offered their own text back rather than
       // losing it.
       append('system', error?.payload?.message ?? strings.errorGeneric ?? 'Something went wrong.');
       if (bubble) {

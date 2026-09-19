@@ -41,8 +41,8 @@ sufficient alone, and the pair costs nothing.
 Erasure runs across four stores (section 25.5): this database, the tenant's
 vector namespace, object storage for voice artefacts, and the conversational
 vendor's own retention. `audit_entry` is deliberately exempt on
-legal-obligation grounds — the evidence that an erasure happened cannot itself
-be erased — and holds no personal data to begin with, because payloads are
+legal-obligation grounds, the evidence that an erasure happened cannot itself
+be erased, and holds no personal data to begin with, because payloads are
 redacted before they are written.
 
 ## Migrations

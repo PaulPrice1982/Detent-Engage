@@ -1,13 +1,13 @@
-# Working agreement — Detent Agentic Website Assistant
+# Working agreement: Detent Agentic Website Assistant
 
 ## Standing instruction: deliver a zip and a Replit prompt on every change
 
 **This applies to every change, without being asked again.** After any change is
 committed and pushed, produce both:
 
-1. `dist-zip/detent-agentic-website-assistant.zip` — the full source, built from a
+1. `dist-zip/detent-agentic-website-assistant.zip`, the full source, built from a
    pristine `git ls-files` copy so no build artefact can leak in.
-2. `REPLIT-PROMPT.md` — rewritten for *that specific change*, not a generic
+2. `REPLIT-PROMPT.md`, rewritten for *that specific change*, not a generic
    rebuild prompt.
 
 Send both to the user. Do not wait to be asked.
@@ -42,7 +42,7 @@ Rules, in priority order:
 
 ### Build the zip like this
 
-Verify in a throwaway copy, never in place — an in-place `tsc --build` leaves
+Verify in a throwaway copy, never in place, an in-place `tsc --build` leaves
 `dist/` and `.tsbuildinfo` behind and they end up in the zip. Then zip from a
 second copy populated only from `git ls-files`. Confirm the file count and that
 no `dist/`, `node_modules/` or `*.tsbuildinfo` is present before sending.

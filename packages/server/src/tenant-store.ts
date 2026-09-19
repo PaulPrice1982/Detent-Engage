@@ -94,7 +94,7 @@ export class TenantStore {
       outcomes: DEFAULT_OUTCOMES,
       // Registered web origins. Empty until install verification runs, and an
       // empty list means the widget key is refused from every browser origin
-      // (audit SEC-5) — failing closed is the point.
+      // (audit SEC-5): failing closed is the point.
       origins: input.origins ?? [],
       locales: input.locales ?? DEFAULT_LOCALES,
       branding: input.branding ?? DEFAULT_BRANDING,

@@ -4,7 +4,7 @@ import { ChangeEventProcessor, type ChangeEvent } from '@detent/awa-server';
 import { buildHarness, bearer } from './fixtures/tenant.js';
 
 /**
- * CI gate: webhook replay and ordering — 100% idempotent under replay,
+ * CI gate: webhook replay and ordering, 100% idempotent under replay,
  * duplication and reordering (FR-020, sections 22.4, 30).
  */
 function event(over: Partial<ChangeEvent> = {}): ChangeEvent {

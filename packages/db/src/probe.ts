@@ -14,7 +14,7 @@ import type { Pool, SqlExecutor, SqlRow } from './executor.js';
  *
  *  - rows carry a `tenant_id`, and a SELECT returns only rows matching the
  *    binding set by `set_config('app.tenant_id', ..., true)` in the current
- *    transaction. With no binding, it returns nothing — the same failing-closed
+ *    transaction. With no binding, it returns nothing, the same failing-closed
  *    behaviour `current_setting('app.tenant_id', true)` produces under a
  *    `FORCE`d policy, because `tenant_id = NULL` is never true;
  *  - the binding is transaction-local. `COMMIT` and `ROLLBACK` clear it, so a
@@ -23,7 +23,7 @@ import type { Pool, SqlExecutor, SqlRow } from './executor.js';
  *
  * It is a fake, and it is honest about being one: it proves the adapters bind
  * and that an unbound read sees nothing. It does not prove the production
- * database is configured correctly — only a migration applied to a real cluster
+ * database is configured correctly, only a migration applied to a real cluster
  * does that, and `db/migrations` is where that lives.
  */
 export interface ProbeRecord extends SqlRow {

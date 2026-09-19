@@ -126,7 +126,7 @@ export class InMemoryCalendarService implements CalendarService {
  * "Push to email" is four distinct actions and they are never conflated
  * (section 18.2, table 28). Three are permitted by default. The fourth,
  * marketing enrolment, is structurally incapable of executing without a stored
- * consent event id — enforced in the policy engine, not here.
+ * consent event id, enforced in the policy engine, not here.
  */
 export type NotificationKind = 'internal_owner_notification' | 'transactional' | 'marketing_enrolment';
 

@@ -26,7 +26,7 @@ export const VERIFICATION_LADDER: Readonly<Record<VerificationLevel, Verificatio
   },
   1: {
     level: 1, label: 'Email stated', reachedBy: 'the visitor stated an email address',
-    permits: 'relationship and standing bands, never disclosed — behaviour only',
+    permits: 'relationship and standing bands, never disclosed, behaviour only',
   },
   2: {
     level: 2, label: 'Email verified', reachedBy: 'a one-time code sent to the address on the contract',

@@ -53,7 +53,7 @@ export interface CompilationResult {
   readonly rules: readonly CompiledRule[];
   /** Sentences that expressed no enforceable rule. Kept as prompt guidance. */
   readonly guidanceFragments: readonly string[];
-  /** Sentences that looked like rules but could not be compiled — surfaced, not swallowed. */
+  /** Sentences that looked like rules but could not be compiled, surfaced, not swallowed. */
   readonly uncompiled: readonly { text: string; reason: string }[];
 }
 

@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Detent — trust and security</title>
+<title>Detent, trust and security</title>
 <meta name="description" content="Security posture, sub-processors, data residency, retention, availability and certification roadmap for the Detent Agentic Website Assistant.">
 <!--
   The public trust page (audit BIZ-4).
 
   Mid-market UK buyers gate on exactly this list, and answering it late costs
   weeks per deal. It is public, it is written for a buyer's security reviewer,
-  and where something is not done it says so — an overstatement here surfaces in
+  and where something is not done it says so, an overstatement here surfaces in
   a DPA review in front of the person who can veto the purchase.
 
   The long form lives in docs/TRUST.md and docs/SECURITY-QUESTIONNAIRE.md; this
@@ -34,7 +34,7 @@
 
   <h1>Trust and security</h1>
   <p class="lede">
-    What this product does with data, what protects it, and — just as important —
+    What this product does with data, what protects it, and, just as important,
     what is not done yet. Everything on this page can be checked against the
     tenant's own hash-chained audit log rather than taken on trust.
   </p>
@@ -42,9 +42,9 @@
   <section>
     <h2>The short version</h2>
     <ul class="ticks">
-      <li><b>Your CRM records never reach the model.</b> Identity resolution returns a classification and a permitted behaviour — never a record, a name, a company or a deal.</li>
+      <li><b>Your CRM records never reach the model.</b> Identity resolution returns a classification and a permitted behaviour, never a record, a name, a company or a deal.</li>
       <li><b>Consent comes before matching, in code.</b> Absence of an affirmative event is refusal, not a default, and the exact wording shown is stored verbatim in the visitor's own language.</li>
-      <li><b>The AI disclosure cannot be switched off.</b> It is in the surface, on the first screen, every conversation — and the coverage figure is on a scorecard you can export.</li>
+      <li><b>The AI disclosure cannot be switched off.</b> It is in the surface, on the first screen, every conversation, and the coverage figure is on a scorecard you can export.</li>
       <li><b>Ownership, lifecycle stage and pipeline are read-only.</b> Enforced in three independent places, because overwriting a CRM owner is the one thing a RevOps buyer will not forgive.</li>
       <li><b>A commitment made to a person is never retracted</b> to keep a system consistent. A confirmed booking stays confirmed; the CRM is repaired behind it.</li>
     </ul>
@@ -57,7 +57,7 @@
       <dd>The tenant id is derived from the API key, never accepted from the caller. Under the Postgres adapters every query runs inside a transaction that binds <code>SET LOCAL app.tenant_id</code>, under a <code>NOBYPASSRLS</code> role with a forced row-level security policy: a query that forgets the binding returns zero rows.</dd>
 
       <dt>Credentials at rest</dt>
-      <dd>CRM credentials are sealed with a per-tenant data key under a KMS root key, with the tenant id authenticated as additional data — a ciphertext moved between rows does not decrypt. Rotation rewraps without the plaintext leaving the process.</dd>
+      <dd>CRM credentials are sealed with a per-tenant data key under a KMS root key, with the tenant id authenticated as additional data, a ciphertext moved between rows does not decrypt. Rotation rewraps without the plaintext leaving the process.</dd>
 
       <dt>Keys</dt>
       <dd>Stored as SHA-256 digests, compared in constant time, shown once. They expire, record last use, and rotate with an overlap window. A public widget key is bound to your registered web origins and refused from anywhere else.</dd>
@@ -66,7 +66,7 @@
       <dd>Per-key, per-IP and per-session rate limits, a hard message ceiling per conversation, an input length cap before tokenisation, and your spend cap checked before the model is called rather than reconciled afterwards.</dd>
 
       <dt>Prompt injection and output</dt>
-      <dd>Retrieved content never enters the system prompt; it arrives inside a per-turn unguessable delimiter as data. Detection runs over normalised text with multilingual patterns and an optional classifier stage, and every answer — including each sentence of a streamed one — is validated before emission for invented prices, human claims and exfiltration links.</dd>
+      <dd>Retrieved content never enters the system prompt; it arrives inside a per-turn unguessable delimiter as data. Detection runs over normalised text with multilingual patterns and an optional classifier stage, and every answer, including each sentence of a streamed one, is validated before emission for invented prices, human claims and exfiltration links.</dd>
 
       <dt>Browser and transport</dt>
       <dd>A strict Content-Security-Policy with no <code>'unsafe-inline'</code>, <code>frame-ancestors</code> on the conversation panel restricted to your registered origins, HSTS, a restrictive <code>Permissions-Policy</code>, and HTTP timeouts.</dd>

@@ -83,7 +83,7 @@ describe('PERF-2 · chain verification is incremental and the export is paginate
     const entries = await store.list('t_a');
     const target = entries[entries.length - 2]!;
     // Edit an entry after the checkpoint and rehash it so it is internally
-    // consistent — the chain link is what should catch it.
+    // consistent; the chain link is what should catch it.
     (target as { payload?: unknown }).payload = { index: 'tampered' };
 
     const verification = await log.verify('t_a');
@@ -103,7 +103,7 @@ describe('PERF-2 · chain verification is incremental and the export is paginate
     });
 
     // The signature does not open, so the checkpoint is ignored and the chain
-    // is walked in full — which still verifies, because it is intact.
+    // is walked in full, which still verifies, because it is intact.
     expect((await log.verify('t_a')).valid).toBe(true);
   });
 

@@ -16,7 +16,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
  *
  * Audit PERF-6: every page view on every tenant site re-downloaded the loader
  * script, the panel and the logo. No compression, no ETag, no conditional
- * requests, no content-hashed filenames — with a comment conceding the point
+ * requests, no content-hashed filenames, with a comment conceding the point
  * ("correctness over bandwidth until there is a build hash"). There is now a
  * build hash, derived from the file's size and mtime, so:
  *
@@ -96,7 +96,7 @@ export function resolveStaticPath(mount: StaticMount, urlPath: string): string |
 
   // Reject any parent-directory segment outright, before normalising.
   //
-  // Normalising an absolute path silently *clamps* a traversal at the root —
+  // Normalising an absolute path silently *clamps* a traversal at the root,
   // `/../secrets` becomes `/secrets`, which then joins to a real file inside the
   // mount. That is safe but surprising, and a security surface should not rely
   // on a surprise. No browser sends `..` in a legitimate asset request, so

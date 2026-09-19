@@ -31,7 +31,7 @@ export class PipedriveConnector implements CrmConnector {
   /**
    * Pipedrive custom fields are addressed by a generated 40-character hash key,
    * so the tenant provisions a "Detent write key" field at onboarding and the
-   * key is supplied here — the same pattern as the Salesforce External ID field
+   * key is supplied here, the same pattern as the Salesforce External ID field
    * and the Dynamics alternate key. Without it a write leaves no trace that
    * reconciliation can read back, which is exactly the case Pipedrive's missing
    * native upsert makes most likely.

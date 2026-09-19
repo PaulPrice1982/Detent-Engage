@@ -3,7 +3,7 @@
  *
  * This is what lets every test file keep `import { describe, expect, it } from
  * 'vitest'` unchanged. The tests are identical under both runners, so the
- * fallback proves the same thing the primary runner proves — which is the whole
+ * fallback proves the same thing the primary runner proves, which is the whole
  * point of having one.
  */
 import { fileURLToPath, pathToFileURL } from 'node:url';

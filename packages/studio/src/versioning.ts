@@ -9,7 +9,7 @@ import type { CompiledPolicy } from './authoring.js';
  * Every publish creates an immutable version with an author, a timestamp and a
  * diff against the prior version. Rollback is instant and requires no redeploy,
  * consistent with NFR-018, and any prior version must be restorable within 60
- * seconds — which is why restoring is a pointer move, not a replay.
+ * seconds, which is why restoring is a pointer move, not a replay.
  *
  * Conversations record the playbook version alongside the prompt, policy and
  * model versions, so any past outcome is explicable.
@@ -122,7 +122,7 @@ export class PlaybookVersionStore {
    * an audit trail, and "we rolled back to version 3" is itself an event a
    * reviewer needs to see.
    *
-   * A restore does not re-run simulation, deliberately — the version being
+   * A restore does not re-run simulation, deliberately, the version being
    * restored already passed it, and requiring a fresh run would put a delay
    * between an operator deciding to roll back and the rollback happening.
    */

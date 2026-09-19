@@ -119,7 +119,7 @@ export class ApiKeyService {
    * The overlap window is the whole point. A tenant has the old key pasted into
    * their site's markup; revoking on the spot breaks their assistant until they
    * redeploy. With an overlap, both work, and the console can show when the old
-   * one was last used — which is how a tenant knows the swap is complete.
+   * one was last used, which is how a tenant knows the swap is complete.
    */
   rotate(keyId: string, overlapMs = 7 * 24 * 60 * 60 * 1000): { key: string; record: ApiKeyRecord } {
     const current = this.byId.get(keyId);
@@ -273,7 +273,7 @@ export function assertOriginAllowed(
 /**
  * Exact origin match, with one deliberate extension: a registered origin of
  * `https://*.example.com` matches any single-label subdomain. No other
- * wildcarding — `*` alone is not an origin, it is the absence of one.
+ * wildcarding, `*` alone is not an origin, it is the absence of one.
  */
 export function originMatches(origin: string, allowed: readonly string[]): boolean {
   const normalised = normaliseOrigin(origin);

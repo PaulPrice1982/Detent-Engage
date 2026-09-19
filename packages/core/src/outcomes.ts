@@ -7,7 +7,7 @@
  * Billability is a commercial design as much as a product one. Making
  * escalation, disqualification and abandonment explicitly non-billable aligns
  * the platform's revenue with the tenant's outcome and removes the incentive to
- * over-qualify — the most common criticism of per-conversation pricing.
+ * over-qualify, the most common criticism of per-conversation pricing.
  */
 export type ConversationOutcome =
   | 'book_meeting'
