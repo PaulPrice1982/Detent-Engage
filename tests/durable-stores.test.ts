@@ -26,6 +26,14 @@ import { resolve } from 'node:path';
 const url = process.env['TEST_DATABASE_URL'];
 
 if (!url) {
+  /** A period with no history, so a counter test asserts its own arithmetic. */
+  async function freshPeriod(period: string): Promise<void> {
+    await database.queryAs(
+      TENANT, 'DELETE FROM usage_period WHERE tenant_id = $1 AND period = $2',
+      [TENANT, period],
+    );
+  }
+
   describe('the durable platform stores', () => {
     it.skip('needs TEST_DATABASE_URL', () => undefined);
   });
@@ -45,6 +53,14 @@ if (!url) {
     }, TENANT);
   }
 
+  /** A period with no history, so a counter test asserts its own arithmetic. */
+  async function freshPeriod(period: string): Promise<void> {
+    await database.queryAs(
+      TENANT, 'DELETE FROM usage_period WHERE tenant_id = $1 AND period = $2',
+      [TENANT, period],
+    );
+  }
+
   describe('the durable platform stores', () => {
     it('keeps the metering the customer is billed from', async () => {
       await ready();
@@ -59,6 +75,69 @@ if (!url) {
       // Pence carry a fraction. Rounding here is money quietly going missing.
       expect(back?.spendPence).toBe(12.5);
       expect(back?.qualifiedOutcomes).toBe(1);
+    });
+
+    /**
+     * The lost update this exists for.
+     *
+     * A whole-record put is a read-modify-write across an await: two concurrent
+     * turns read the same snapshot and the second write discards the first
+     * one's spend. It is most likely under exactly the load that makes a spend
+     * cap matter, so the arithmetic has to happen in one statement the database
+     * serialises. A hundred parallel increments either total a hundred or the
+     * adapter is losing writes.
+     */
+    it('counts every one of a hundred concurrent increments', async () => {
+      await ready();
+      const store = new PostgresUsageStore(database);
+      // `period` is character(7): a calendar month, as the billing period is.
+      const period = '2026-11';
+      await freshPeriod(period);
+
+      await Promise.all(
+        Array.from({ length: 100 }, () =>
+          store.increment(TENANT, period, { conversations: 1, spendPence: 0.5 })),
+      );
+
+      const total = await store.get(TENANT, period);
+      expect(total?.conversations).toBe(100);
+      // Sub-penny amounts must not drift over a long month of increments.
+      expect(total?.spendPence).toBe(50);
+    });
+
+    it('does not keep an increment its guard refused', async () => {
+      await ready();
+      const store = new PostgresUsageStore(database);
+      const period = '2026-12';
+      await freshPeriod(period);
+
+      const first = await store.increment(TENANT, period, { spendPence: 10 });
+      expect(first.applied).toBe(true);
+      expect(first.record.spendPence).toBe(10);
+
+      // Evaluated against the post-increment record, inside the same
+      // transaction as the update it authorises. Checking beforehand instead
+      // would be a check-then-act race, which is the thing this removes.
+      const refused = await store.increment(
+        TENANT, period, { spendPence: 100 }, (next) => next.spendPence <= 50,
+      );
+      expect(refused.applied).toBe(false);
+      // Rolled back: a refused call leaves the counters as it found them.
+      expect(refused.record.spendPence).toBe(10);
+      expect((await store.get(TENANT, period))?.spendPence).toBe(10);
+    });
+
+    it('never lets the voice concurrency gauge go negative', async () => {
+      await ready();
+      const store = new PostgresUsageStore(database);
+      const period = '2026-10';
+      await freshPeriod(period);
+      await store.increment(TENANT, period, { concurrentVoice: 1 });
+      // Two releases for one claim. A gauge that goes negative hands out a
+      // free concurrent slot on the next claim.
+      await store.increment(TENANT, period, { concurrentVoice: -1 });
+      await store.increment(TENANT, period, { concurrentVoice: -1 });
+      expect((await store.get(TENANT, period))?.concurrentVoice).toBe(0);
     });
 
     it('keeps consent evidence with the exact wording that was shown', async () => {

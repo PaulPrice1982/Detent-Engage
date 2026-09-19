@@ -19,7 +19,6 @@
 --
 -- Applied as `awa_migrator`. `awa_app` has no DDL rights.
 
-BEGIN;
 
 -- --------------------------------------------------------------------------
 -- SEC-3 / PERF-3: usage counters
@@ -119,12 +118,17 @@ BEGIN
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', target);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', target);
+    -- CREATE POLICY has no IF NOT EXISTS; the drop is what keeps this
+    -- re-runnable, and guarantees the policy in the database is this one.
+    EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I', target);
     EXECUTE format(
       'CREATE POLICY tenant_isolation ON %I USING (tenant_id = current_setting(''app.tenant_id'', true))
        WITH CHECK (tenant_id = current_setting(''app.tenant_id'', true))',
       target
     );
-    EXECUTE format('GRANT SELECT, INSERT, UPDATE ON %I TO awa_app', target);
+    IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'awa_app') THEN
+      EXECUTE format('GRANT SELECT, INSERT, UPDATE ON %I TO awa_app', target);
+    END IF;
   END LOOP;
 END
 $$;
@@ -132,6 +136,11 @@ $$;
 -- A checkpoint is evidence about the chain, so it is append-only for the same
 -- reason the chain is: a checkpoint that can be rewritten is a checkpoint that
 -- can be made to endorse a tampered history.
-REVOKE UPDATE ON audit_checkpoint FROM awa_app;
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'awa_app') THEN
+    REVOKE UPDATE ON audit_checkpoint FROM awa_app;
+  END IF;
+END
+$$;
 
-COMMIT;

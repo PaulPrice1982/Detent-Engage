@@ -25,7 +25,7 @@
  * the files and are what regresses.
  */
 import { describe, expect, it } from 'vitest';
-import { mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { migrate } from '../packages/persistence/src/database.js';
@@ -42,6 +42,20 @@ function statementsOf(sql: string): string {
 }
 
 describe('every migration', () => {
+  it('has a version prefix nothing else shares', () => {
+    // Two files sharing a prefix leaves their relative order to whatever the
+    // filenames happen to sort to, which is not a decision anybody made. The
+    // delivered tree had two 0002_ files.
+    const byPrefix = new Map<string, string[]>();
+    for (const file of FILES) {
+      const prefix = /^(\d+)/.exec(file)?.[1];
+      if (!prefix) continue;
+      byPrefix.set(prefix, [...(byPrefix.get(prefix) ?? []), file]);
+    }
+    const shared = [...byPrefix.values()].filter((group) => group.length > 1);
+    expect(shared, `these share a version prefix: ${JSON.stringify(shared)}`).toEqual([]);
+  });
+
   it('exists', () => {
     expect(FILES.length).toBeGreaterThan(0);
     expect(FILES).toContain('0001_init.sql');
@@ -156,5 +170,64 @@ describe('a migrations directory with nothing in it', () => {
   it('is refused when the directory is not there at all', async () => {
     const missing = join(tmpdir(), 'detent-migrations-that-do-not-exist');
     await expect(migrate(unusedDatabase as never, missing)).rejects.toThrow(/No migrations/i);
+  });
+});
+
+/**
+ * A migration that arrives behind one already applied.
+ *
+ * Two branches each add a migration, the later-numbered one merges first, and
+ * the other now sorts before something that has run. Applying it then runs it
+ * against a schema it was never written for, and the ledger afterwards
+ * describes an order that never happened.
+ */
+describe('a migration that sorts before one already applied', () => {
+  function databaseWith(appliedFilenames: readonly string[]) {
+    const applied = [...appliedFilenames];
+    return {
+      query: async (text: string) => {
+        if (/FROM schema_migration/i.test(text)) {
+          return applied.map((filename) => ({ filename }));
+        }
+        return [];
+      },
+      transaction: async () => {
+        throw new Error('no migration should be applied once the order is wrong');
+      },
+    };
+  }
+
+  it('is refused, naming the file and the one it sorts behind', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'detent-order-'));
+    writeFileSync(join(directory, '0001_early.sql'), 'SELECT 1;');
+    writeFileSync(join(directory, '0002_late.sql'), 'SELECT 1;');
+
+    // 0002 has run; 0001 has not. Applying 0001 now is the fault.
+    await expect(
+      migrate(databaseWith(['0002_late.sql']) as never, directory),
+    ).rejects.toThrow(/out of order/i);
+    await expect(
+      migrate(databaseWith(['0002_late.sql']) as never, directory),
+    ).rejects.toThrow(/0001_early\.sql/);
+  });
+
+  it('is content when everything applied is behind what is pending', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'detent-order-ok-'));
+    writeFileSync(join(directory, '0001_early.sql'), 'SELECT 1;');
+    writeFileSync(join(directory, '0002_late.sql'), 'SELECT 1;');
+    // 0001 applied, 0002 pending: ordinary, and must not be refused. It throws
+    // from the stub transaction, which is how we know it got that far.
+    await expect(
+      migrate(databaseWith(['0001_early.sql']) as never, directory),
+    ).rejects.toThrow(/no migration should be applied/);
+  });
+
+  it('refuses two files that share a version prefix', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'detent-prefix-'));
+    writeFileSync(join(directory, '0002_platform.sql'), 'SELECT 1;');
+    writeFileSync(join(directory, '0002_audit.sql'), 'SELECT 1;');
+    await expect(
+      migrate(databaseWith([]) as never, directory),
+    ).rejects.toThrow(/share a version prefix/i);
   });
 });

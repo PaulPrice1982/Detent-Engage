@@ -185,6 +185,42 @@ export async function migrate(database: Database, directory: string): Promise<st
       .map((row) => row.filename),
   );
 
+  // A file that sorts before something already applied is a migration that was
+  // merged behind another branch's. Applying it now runs it against a schema it
+  // was never written for, and the version ledger afterwards describes an order
+  // that never happened. Refused rather than reordered, because only the author
+  // knows whether it is still correct.
+  //
+  // Two files also sharing a numeric prefix is the same fault a step earlier:
+  // their relative order is then whatever the filenames sort to, which is not a
+  // decision anybody made.
+  const highestApplied = [...applied].sort().pop();
+  if (highestApplied !== undefined) {
+    const late = files.filter((name) => !applied.has(name) && name < highestApplied);
+    if (late.length > 0) {
+      throw new Error(
+        `Migrations out of order: ${late.join(', ')} sort before ${highestApplied}, `
+        + 'which has already been applied. Renumber them after the highest applied '
+        + 'migration and check the schema they now run against. Nothing has been changed.',
+      );
+    }
+  }
+
+  const prefixes = new Map<string, string[]>();
+  for (const name of files) {
+    const prefix = /^(\d+)/.exec(name)?.[1];
+    if (!prefix) continue;
+    prefixes.set(prefix, [...(prefixes.get(prefix) ?? []), name]);
+  }
+  const clashes = [...prefixes.values()].filter((group) => group.length > 1);
+  if (clashes.length > 0) {
+    throw new Error(
+      'Two migrations share a version prefix, so their order is whatever the '
+      + `filenames happen to sort to: ${clashes.map((g) => g.join(' and ')).join('; ')}. `
+      + 'Renumber one of each pair. Nothing has been changed.',
+    );
+  }
+
   const ran: string[] = [];
   for (const filename of files) {
     if (applied.has(filename)) continue;

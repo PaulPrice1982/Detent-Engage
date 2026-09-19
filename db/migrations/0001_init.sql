@@ -7,8 +7,15 @@
 --
 -- Every session sets `app.tenant_id` inside the transaction. A statement run
 -- without it sees nothing at all, which is the correct failure mode.
-
-BEGIN;
+--
+-- This file does not manage its own transaction. The runner wraps each
+-- migration together with the row recording it as applied, so the two either
+-- both land or neither does. A COMMIT here ended the runner's transaction
+-- early: the schema committed, the ledger row did not, and every later start
+-- re-ran a migration whose tables already existed and stopped on
+-- 'relation "tenant" already exists'. Every statement below is also safe to
+-- run again, so a database that already carries the schema is adopted rather
+-- than refused.
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -16,6 +23,11 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Roles
 -- --------------------------------------------------------------------------
 
+-- RDS, Cloud SQL and Neon hand the application an ordinary owner role that
+-- cannot CREATE ROLE. The isolation this schema relies on is the policy, FORCE
+-- ROW LEVEL SECURITY and SET LOCAL app.tenant_id, none of which need awa_app,
+-- so a hosted PostgreSQL that refuses the role must not take the whole schema
+-- down with it. The grants below are skipped in the same way.
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'awa_app') THEN
@@ -26,6 +38,9 @@ BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'awa_migrator') THEN
     CREATE ROLE awa_migrator NOLOGIN;
   END IF;
+EXCEPTION WHEN insufficient_privilege THEN
+  RAISE NOTICE 'Not permitted to create roles here; continuing without awa_app. '
+    'Row level security still applies: grant an existing NOBYPASSRLS role instead.';
 END
 $$;
 
@@ -33,7 +48,7 @@ $$;
 -- Tenancy
 -- --------------------------------------------------------------------------
 
-CREATE TABLE tenant (
+CREATE TABLE IF NOT EXISTS tenant (
   tenant_id                 text PRIMARY KEY,
   name                      text        NOT NULL,
   state                     text        NOT NULL
@@ -62,7 +77,7 @@ CREATE TABLE tenant (
 -- Per-tenant CRM credentials. The ciphertext is produced by envelope
 -- encryption under a per-tenant KMS key; this table never holds plaintext, and
 -- the key id is stored so a rotation can be audited and replayed.
-CREATE TABLE crm_connection (
+CREATE TABLE IF NOT EXISTS crm_connection (
   tenant_id        text        PRIMARY KEY REFERENCES tenant(tenant_id) ON DELETE CASCADE,
   connector        text        NOT NULL,
   state            text        NOT NULL CHECK (state IN ('CONNECTED','DEGRADED','DISCONNECTED')),
@@ -78,7 +93,7 @@ CREATE TABLE crm_connection (
 -- Consent evidence
 -- --------------------------------------------------------------------------
 
-CREATE TABLE consent_event (
+CREATE TABLE IF NOT EXISTS consent_event (
   id             text        PRIMARY KEY,
   tenant_id      text        NOT NULL REFERENCES tenant(tenant_id) ON DELETE CASCADE,
   subject_ref    text        NOT NULL,
@@ -95,7 +110,7 @@ CREATE TABLE consent_event (
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX consent_event_lookup ON consent_event (tenant_id, subject_ref, purpose, created_at DESC);
+CREATE INDEX IF NOT EXISTS consent_event_lookup ON consent_event (tenant_id, subject_ref, purpose, created_at DESC);
 
 -- Consent evidence is append-only. An UPDATE or DELETE is refused outright: a
 -- withdrawal is a new event, not an edit to an old one.
@@ -105,6 +120,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS consent_event_append_only ON consent_event;
 CREATE TRIGGER consent_event_append_only
   BEFORE UPDATE OR DELETE ON consent_event
   FOR EACH ROW EXECUTE FUNCTION awa_append_only();
@@ -113,7 +129,7 @@ CREATE TRIGGER consent_event_append_only
 -- Conversations
 -- --------------------------------------------------------------------------
 
-CREATE TABLE conversation (
+CREATE TABLE IF NOT EXISTS conversation (
   id              text        PRIMARY KEY,
   tenant_id       text        NOT NULL REFERENCES tenant(tenant_id) ON DELETE CASCADE,
   subject_ref     text        NOT NULL,
@@ -133,10 +149,10 @@ CREATE TABLE conversation (
   ended_at        timestamptz
 );
 
-CREATE INDEX conversation_by_tenant ON conversation (tenant_id, started_at DESC);
-CREATE INDEX conversation_by_correlation ON conversation (tenant_id, correlation_id);
+CREATE INDEX IF NOT EXISTS conversation_by_tenant ON conversation (tenant_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS conversation_by_correlation ON conversation (tenant_id, correlation_id);
 
-CREATE TABLE conversation_message (
+CREATE TABLE IF NOT EXISTS conversation_message (
   id             bigserial   PRIMARY KEY,
   tenant_id      text        NOT NULL REFERENCES tenant(tenant_id) ON DELETE CASCADE,
   conversation_id text       NOT NULL REFERENCES conversation(id) ON DELETE CASCADE,
@@ -145,13 +161,13 @@ CREATE TABLE conversation_message (
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX conversation_message_by_conversation ON conversation_message (tenant_id, conversation_id, id);
+CREATE INDEX IF NOT EXISTS conversation_message_by_conversation ON conversation_message (tenant_id, conversation_id, id);
 
 -- --------------------------------------------------------------------------
 -- Write receipts and reconciliation
 -- --------------------------------------------------------------------------
 
-CREATE TABLE write_receipt (
+CREATE TABLE IF NOT EXISTS write_receipt (
   id              text        PRIMARY KEY,
   tenant_id       text        NOT NULL REFERENCES tenant(tenant_id) ON DELETE CASCADE,
   correlation_id  text        NOT NULL,
@@ -171,14 +187,14 @@ CREATE TABLE write_receipt (
   CONSTRAINT write_receipt_idempotent UNIQUE (tenant_id, idempotency_key)
 );
 
-CREATE INDEX write_receipt_reconciliation ON write_receipt (tenant_id, state)
+CREATE INDEX IF NOT EXISTS write_receipt_reconciliation ON write_receipt (tenant_id, state)
   WHERE state IN ('PENDING','RECONCILING');
 
 -- --------------------------------------------------------------------------
 -- Audit
 -- --------------------------------------------------------------------------
 
-CREATE TABLE audit_entry (
+CREATE TABLE IF NOT EXISTS audit_entry (
   id             text        PRIMARY KEY,
   tenant_id      text        NOT NULL,
   sequence       bigint      NOT NULL,
@@ -200,9 +216,10 @@ CREATE TABLE audit_entry (
   CONSTRAINT audit_chain_link UNIQUE (tenant_id, hash)
 );
 
-CREATE INDEX audit_by_correlation ON audit_entry (tenant_id, correlation_id, sequence);
-CREATE INDEX audit_by_type ON audit_entry (tenant_id, type, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS audit_by_correlation ON audit_entry (tenant_id, correlation_id, sequence);
+CREATE INDEX IF NOT EXISTS audit_by_type ON audit_entry (tenant_id, type, recorded_at DESC);
 
+DROP TRIGGER IF EXISTS audit_entry_append_only ON audit_entry;
 CREATE TRIGGER audit_entry_append_only
   BEFORE UPDATE OR DELETE ON audit_entry
   FOR EACH ROW EXECUTE FUNCTION awa_append_only();
@@ -211,7 +228,7 @@ CREATE TRIGGER audit_entry_append_only
 -- Knowledge
 -- --------------------------------------------------------------------------
 
-CREATE TABLE knowledge_chunk (
+CREATE TABLE IF NOT EXISTS knowledge_chunk (
   id             text        PRIMARY KEY,
   tenant_id      text        NOT NULL REFERENCES tenant(tenant_id) ON DELETE CASCADE,
   corpus_version integer     NOT NULL,
@@ -232,13 +249,13 @@ CREATE TABLE knowledge_chunk (
   )
 );
 
-CREATE INDEX knowledge_published ON knowledge_chunk (tenant_id, state) WHERE state = 'PUBLISHED';
+CREATE INDEX IF NOT EXISTS knowledge_published ON knowledge_chunk (tenant_id, state) WHERE state = 'PUBLISHED';
 
 -- --------------------------------------------------------------------------
 -- Metering
 -- --------------------------------------------------------------------------
 
-CREATE TABLE usage_period (
+CREATE TABLE IF NOT EXISTS usage_period (
   tenant_id        text        NOT NULL REFERENCES tenant(tenant_id) ON DELETE CASCADE,
   period           char(7)     NOT NULL,
   conversations    bigint      NOT NULL DEFAULT 0,
@@ -273,12 +290,18 @@ BEGIN
   LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', target);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', target);
+    -- CREATE POLICY has no IF NOT EXISTS, so the drop is how this stays
+    -- re-runnable. Dropped and recreated rather than left alone, so the
+    -- policy in the database is always the one this file states.
+    EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I', target);
     EXECUTE format(
       'CREATE POLICY tenant_isolation ON %I USING (tenant_id = current_setting(''app.tenant_id'', true))
        WITH CHECK (tenant_id = current_setting(''app.tenant_id'', true))',
       target
     );
-    EXECUTE format('GRANT SELECT, INSERT, UPDATE ON %I TO awa_app', target);
+    IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'awa_app') THEN
+      EXECUTE format('GRANT SELECT, INSERT, UPDATE ON %I TO awa_app', target);
+    END IF;
   END LOOP;
 END
 $$;
@@ -286,7 +309,12 @@ $$;
 -- Append-only tables get no UPDATE or DELETE grant either. Two independent
 -- controls, because a trigger can be dropped by a migration and a missing
 -- grant cannot be worked around from application code.
-REVOKE UPDATE ON consent_event, audit_entry FROM awa_app;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO awa_app;
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'awa_app') THEN
+    REVOKE UPDATE ON consent_event, audit_entry FROM awa_app;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO awa_app;
+  END IF;
+END
+$$;
 
-COMMIT;

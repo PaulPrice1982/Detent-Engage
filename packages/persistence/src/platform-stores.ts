@@ -76,7 +76,7 @@ export class PostgresUsageStore implements UsageStore {
              (tenant_id, period, conversations, text_messages, voice_minutes, crm_calls,
               llm_tokens, qualified_outcomes, enrichment_records, company_resolutions,
               spend_pence, concurrent_voice, updated_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, now())
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, greatest(0, $12), now())
            ON CONFLICT (tenant_id, period) DO UPDATE SET
              conversations = usage_period.conversations + EXCLUDED.conversations,
              text_messages = usage_period.text_messages + EXCLUDED.text_messages,
@@ -90,8 +90,11 @@ export class PostgresUsageStore implements UsageStore {
              -- month of sub-penny increments does not accumulate float drift.
              spend_pence = round((usage_period.spend_pence + EXCLUDED.spend_pence)::numeric, 3),
              -- Concurrency is a gauge, not a total: it goes down as well as up
-             -- and must never be negative, or a released slot is counted twice.
-             concurrent_voice = greatest(0, usage_period.concurrent_voice + EXCLUDED.concurrent_voice),
+             -- and must never be negative, or a release is lost and the slot
+             -- leaks. $12 rather than EXCLUDED, because the value proposed for
+             -- insertion is clamped at zero for the insert path and would turn
+             -- every release into a no-op here.
+             concurrent_voice = greatest(0, usage_period.concurrent_voice + $12),
              updated_at = now()
            RETURNING *`,
           [
@@ -100,7 +103,10 @@ export class PostgresUsageStore implements UsageStore {
             delta.crmCalls ?? 0, delta.llmTokens ?? 0, delta.qualifiedOutcomes ?? 0,
             delta.enrichmentRecords ?? 0, delta.companyResolutions ?? 0,
             delta.spendPence ?? 0,
-            Math.max(0, delta.concurrentVoice ?? 0),
+            // Passed as given, including a release. Clamping the delta rather
+            // than the result would silently discard every release and leak a
+            // concurrency slot on each one.
+            delta.concurrentVoice ?? 0,
           ],
         );
         const next = toUsageRecord(result.rows[0]!);
