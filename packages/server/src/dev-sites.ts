@@ -179,7 +179,27 @@ export interface DevSites {
   /** Which payment provider is live, for the boot banner. */
   readonly paymentProviderName: string;
   /** Whether sessions will survive a restart, for the boot banner. */
+  /**
+   * Whether the configured session secret was good enough to use.
+   *
+   * False when it is missing or too short, in which case a secret is generated
+   * for this boot and every cookie signed with it stops verifying at the next
+   * restart.
+   *
+   * This is one of the two things a person needs true to still be signed in
+   * after a restart. The other is `sessionStoreDurable`.
+   */
   readonly sessionsPersist: boolean;
+  /**
+   * Whether the session records themselves outlive the process.
+   *
+   * Separate from `sessionsPersist` because they fail differently and a single
+   * field reporting both was reporting neither: with a stable secret and an
+   * in-memory store the boot banner said sessions were durable and everybody
+   * was signed out at the next restart anyway. A cookie that still verifies
+   * and names a session that no longer exists is not a signed-in person.
+   */
+  readonly sessionStoreDurable: boolean;
   readonly accounts: AccountService;
   readonly users: UserService;
   readonly operatorEmail: string;
@@ -1569,5 +1589,6 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
     emailSender, marketing, pages, copy,
     paymentProviderName: paymentProvider.name,
     sessionsPersist: !secretTooShort && Boolean(configuredSecret),
+    sessionStoreDurable: Boolean(database),
   };
 }

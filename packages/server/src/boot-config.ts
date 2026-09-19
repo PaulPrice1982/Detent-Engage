@@ -45,11 +45,12 @@ export function bootEnvironmentFrom(
   env: Record<string, string | undefined> = process.env,
 ): BootEnvironment {
   const flag = (name: string): boolean => env[name]?.trim() === '1' || env[name]?.trim() === 'true';
+  // Either marker, so a container that sets only its platform's own variable is
+  // still treated as a deployment rather than as somebody's laptop.
+  const deployed = flag('DETENT_DEPLOYED') || flag('REPLIT_DEPLOYMENT')
+    || env['NODE_ENV']?.trim() === 'production';
   return {
-    // Either marker, so a container that sets only its platform's own variable
-    // is still treated as a deployment rather than as somebody's laptop.
-    deployed: flag('DETENT_DEPLOYED') || flag('REPLIT_DEPLOYMENT')
-      || env['NODE_ENV']?.trim() === 'production',
+    deployed,
     databaseUrl: env['DATABASE_URL']?.trim() || undefined,
     rootKey: env['AWA_ROOT_KEY']?.trim() || undefined,
     checkpointKey: env['AWA_CHECKPOINT_KEY']?.trim() || undefined,
@@ -60,7 +61,11 @@ export function bootEnvironmentFrom(
     // Keys are stored as digests, so boot is the only moment they exist in
     // readable form. Printing them is a development convenience and never
     // something a deployment should do into its platform's log aggregator.
-    printKeys: flag('AWA_DEV_PRINT_KEYS') && env['NODE_ENV']?.trim() !== 'production',
+    //
+    // Gated on `deployed`, not on NODE_ENV alone: a hosting platform that marks
+    // a deployment with its own variable and leaves NODE_ENV unset would
+    // otherwise print three live keys into its logs on every boot.
+    printKeys: flag('AWA_DEV_PRINT_KEYS') && !deployed,
   };
 }
 

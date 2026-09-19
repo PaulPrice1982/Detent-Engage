@@ -259,7 +259,14 @@ server.listen(port, host, () => {
   console.log(`  model            ${model.id}`);
   console.log(`  hosts            ${recognisedHosts(hosts).join(', ') || '(path prefixes)'}`);
   console.log(`  operator         ${sites.operatorConfigured ? sites.operatorEmail : 'not configured; set DETENT_CONSOLE_PASSWORD'}`);
-  console.log(`  sessions         ${sites.sessionsPersist ? 'durable' : 'lost on restart'}`);
+  // Both, because they fail differently: a regenerated secret invalidates every
+  // cookie, and an in-memory store loses the sessions the cookies name.
+  console.log(`  sessions         ${sites.sessionsPersist && sites.sessionStoreDurable
+    ? 'survive a restart'
+    : `lost on restart (${[
+        sites.sessionsPersist ? undefined : 'no stable DETENT_SESSION_SECRET',
+        sites.sessionStoreDurable ? undefined : 'no DATABASE_URL',
+      ].filter(Boolean).join(', ')})`}`);
   console.log(`  payments         ${sites.paymentProviderName}`);
   if (boot.printKeys) {
     // Keys are stored as digests, so this is the only moment they exist in

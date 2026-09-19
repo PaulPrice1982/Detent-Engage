@@ -91,12 +91,20 @@ describe('printing api keys', () => {
     expect(bootEnvironmentFrom({}).printKeys).toBe(false);
   });
 
-  it('is refused in production even when asked for', () => {
+  it('is refused in any deployment even when asked for', () => {
     // A key on stdout is a key in whatever aggregates the logs, held by
-    // whoever can read them and for as long as they are retained.
-    expect(bootEnvironmentFrom({
-      AWA_DEV_PRINT_KEYS: '1', NODE_ENV: 'production',
-    }).printKeys).toBe(false);
+    // whoever can read them and for as long as they are retained. Checked
+    // against every deployment marker, not NODE_ENV alone: a host that marks a
+    // deployment its own way and leaves NODE_ENV unset would otherwise print
+    // three live keys on every boot.
+    for (const marker of [
+      { NODE_ENV: 'production' }, { REPLIT_DEPLOYMENT: '1' }, { DETENT_DEPLOYED: 'true' },
+    ]) {
+      expect(
+        bootEnvironmentFrom({ AWA_DEV_PRINT_KEYS: '1', ...marker }).printKeys,
+        JSON.stringify(marker),
+      ).toBe(false);
+    }
     expect(bootEnvironmentFrom({ AWA_DEV_PRINT_KEYS: '1' }).printKeys).toBe(true);
   });
 });
