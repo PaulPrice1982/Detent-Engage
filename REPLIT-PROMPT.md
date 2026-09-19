@@ -17,7 +17,7 @@ Agent is not.
 ---
 
 ```
-This repository is COMPLETE. It typechecks clean and all 1,182 tests pass. Do
+This repository is COMPLETE. It typechecks clean and all 1,187 tests pass. Do
 NOT write, refactor, reformat or "improve" any source, test, dependency or
 migration. Your only job is to update it, run it, and report what the commands
 printed.
@@ -67,10 +67,10 @@ where the registry installed it and under the built-in runner where it did not.
 Both run the same files and both must report the same counts:
 
     Test Files  67 passed | 2 skipped (69)          <- vitest
-         Tests  1185 passed | 3 skipped (1188)
+         Tests  1187 passed | 3 skipped (1190)
 
     Test files  69                                   <- built-in runner
-    Tests       1185 passed, 3 skipped
+    Tests       1187 passed, 3 skipped
 
 Either is a pass. The 3 skipped tests need a PostgreSQL and a Redis and skip
 themselves without one, which is correct on Replit and is not a failure.
@@ -145,18 +145,33 @@ Then sign in at /console/signin with:
 
 Expected: it redirects to /console and shows the accounts screen.
 
-Then, in the Shell, with the widget key printed at boot:
+Then, in the Shell, put the widget key printed at boot into a variable and send
+one request. Two lines, no backslash continuations, because a line continuation
+that gets mangled on the way into a shell produces a malformed request rather
+than an obvious error:
 
-    curl -s -XPOST localhost:8787/v1/sessions \
-      -H "authorization: Bearer <WIDGET_KEY>" \
-      -H "origin: http://localhost:8787" \
-      -H "content-type: application/json" \
-      -d '{"jurisdiction":"UK"}'
+    KEY=awa_pub_...paste_the_widget_key_here...
 
-Expected: a JSON object containing sessionId, disclosure, locale and streaming
-fields. The `origin` header is required: widget keys are bound to the tenant's
-registered origins and a request without one is refused with 403. That refusal
-is the control working, not a bug.
+    curl -s -i -XPOST localhost:8787/v1/sessions -H "authorization: Bearer $KEY" -H "origin: http://localhost:8787" -H "content-type: application/json" -d '{"jurisdiction":"UK"}'
+
+Expected: `HTTP/1.1 201 Created`, and a JSON body containing session_id,
+disclosure, locale and streaming fields.
+
+How to read anything else:
+
+  - 403 with `POLICY_DENIED` means the key or the origin was refused. The
+    `origin` header is required: widget keys are bound to the tenant's
+    registered origins. That refusal is the control working, not a bug. Check
+    that KEY holds the widget key (`awa_pub_`), not one of the two `awa_sk_`
+    keys, and that nothing was left as a placeholder.
+  - 400 with `SCHEMA_INVALID` means the body was not JSON. Check the quoting.
+  - **400 with `MALFORMED_REQUEST`** means the HTTP parser rejected the request
+    before the application saw it, so it is not an authentication, origin or
+    schema failure. It is a malformed header or content-length, usually a
+    mangled command line. Retype the curl by hand rather than pasting it.
+  - **400 with an empty body** means you are not running this build. Every
+    refusal in this build carries a reason; a bare 400 with nothing in it is
+    Node's own parser reply from an older version. Re-run STEP 1.
 
 Report the output of STEP 2, STEP 3 and STEP 4 and STOP. Do not commit, do not
 open a pull request, do not modify configuration, and do not continue to any

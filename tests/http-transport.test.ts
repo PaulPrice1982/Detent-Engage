@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AddressInfo } from 'node:net';
+import { connect, type AddressInfo } from 'node:net';
 import { createHttpServer, type Api, type ApiRequest, type ApiResponse } from '@detent/awa-server';
 
 /**
@@ -136,5 +136,77 @@ describe('a POST to the API when a site is mounted at the root', () => {
       }));
     expect(response.status).toBe(200);
     expect(seen[0]?.body).toEqual({ direct: true });
+  });
+});
+
+/**
+ * A request Node's own parser rejects, answered so somebody can act on it.
+ *
+ * Node replies to a malformed request with `400 Bad Request` and an empty
+ * body, then closes the connection. From the outside that is indistinguishable
+ * from the application refusing the request, and it is the one 400 no log line
+ * explains, because no application code ran: the parser rejected the bytes
+ * before there was a request to handle.
+ *
+ * It cost a release. A verification step got an empty 400 and there was no way
+ * to tell it from a rejected key, a blocked origin or an invalid body, each of
+ * which answers with a reason. Behind a proxy that inserts its own headers,
+ * this is exactly how the fault presents.
+ */
+describe('a request the HTTP parser rejects', () => {
+  /** Speaks HTTP by hand, because a client library will not send a bad header. */
+  async function raw(port: number, request: string): Promise<string> {
+    return await new Promise((settle, fail) => {
+      const socket = connect(port, '127.0.0.1', () => socket.write(request));
+      let received = '';
+      socket.setTimeout(5_000, () => { socket.destroy(); fail(new Error('timed out')); });
+      socket.on('data', (chunk: Buffer) => { received += chunk.toString(); });
+      socket.on('end', () => settle(received));
+      socket.on('close', () => settle(received));
+      socket.on('error', fail);
+    });
+  }
+
+  it('says the parser refused it, and why, rather than answering with nothing', async () => {
+    const { api } = recordingApi();
+    const answer = await withServer({}, api, async (baseUrl) => {
+      const port = Number(new URL(baseUrl).port);
+      // A space in a header name. Valid-looking to a person, refused by the
+      // parser, and the commonest thing a misconfigured proxy inserts.
+      return raw(port, [
+        'POST /v1/sessions HTTP/1.1',
+        'Host: 127.0.0.1',
+        'Bad Header: x',
+        'Content-Length: 2',
+        '', '{}',
+      ].join('\r\n'));
+    });
+
+    expect(answer).toMatch(/^HTTP\/1\.1 400 Bad Request/);
+    expect(answer, 'the body was empty, which is the fault this exists for').toContain('MALFORMED_REQUEST');
+    // Names the parser's own code, so the reason is actionable.
+    expect(answer).toMatch(/HPE_/);
+    // And says the application never saw it, which is the distinction that
+    // sends somebody to the right place.
+    expect(answer).toMatch(/before it reached the application/);
+  });
+
+  it('never echoes the offending request back', async () => {
+    // A malformed request is often malformed because it carries something it
+    // should not, and echoing it would publish it to whoever sent it.
+    const { api } = recordingApi();
+    const answer = await withServer({}, api, async (baseUrl) => {
+      const port = Number(new URL(baseUrl).port);
+      return raw(port, [
+        'POST /v1/sessions HTTP/1.1',
+        'Host: 127.0.0.1',
+        'X Secret: swordfish-do-not-echo',
+        'Content-Length: 0',
+        '', '',
+      ].join('\r\n'));
+    });
+
+    expect(answer).toContain('MALFORMED_REQUEST');
+    expect(answer).not.toContain('swordfish-do-not-echo');
   });
 });

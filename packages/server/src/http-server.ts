@@ -114,6 +114,51 @@ export function createHttpServer(api: Api, options: HttpServerOptions = {}): Ser
   }
   if (options.maxConnections) server.maxConnections = options.maxConnections;
 
+  /**
+   * A request Node's own parser rejected, answered so somebody can act on it.
+   *
+   * Without this handler Node replies `400 Bad Request` with an empty body and
+   * closes the connection. That is indistinguishable, from the outside, from
+   * the application refusing the request, and it is the one 400 no log line
+   * explains because no application code ever ran: the parser rejected the
+   * bytes before the request existed.
+   *
+   * It cost a release. A verification step got an empty 400 from a malformed
+   * header, and there was no way to tell that from a rejected key, a blocked
+   * origin or an invalid body, all of which answer with a reason. Behind a
+   * proxy or a load balancer that inserts its own headers this is exactly how
+   * the fault presents, and the operator has nothing to go on.
+   *
+   * The reply names the parser's own code and nothing else: no header values,
+   * no body, no request line. A malformed request is often malformed because
+   * it carries something it should not, and echoing it back would publish it.
+   */
+  server.on('clientError', (error: NodeJS.ErrnoException, socket) => {
+    // A connection the client already dropped, which is ordinary and not a
+    // fault worth answering.
+    if (socket.destroyed || !socket.writable || error.code === 'ECONNRESET') {
+      socket.destroy();
+      return;
+    }
+    const code = typeof error.code === 'string' ? error.code : 'HPE_UNKNOWN';
+    const status = code === 'HPE_HEADER_OVERFLOW' ? 431 : 400;
+    const reason = status === 431
+      ? 'The request headers are larger than this server accepts.'
+      : 'This request was rejected by the HTTP parser before it reached the '
+        + 'application, so it was not refused by authentication, origin or schema. '
+        + 'Check for a malformed header, a bad content-length, or a proxy in front '
+        + 'of this service inserting one.';
+    const body = JSON.stringify({ error: 'MALFORMED_REQUEST', message: reason, code });
+    socket.end(
+      `HTTP/1.1 ${status} ${status === 431 ? 'Request Header Fields Too Large' : 'Bad Request'}\r\n`
+      + 'content-type: application/json; charset=utf-8\r\n'
+      + `content-length: ${Buffer.byteLength(body)}\r\n`
+      + 'x-content-type-options: nosniff\r\n'
+      + 'connection: close\r\n'
+      + `\r\n${body}`,
+    );
+  });
+
   return server;
 }
 
