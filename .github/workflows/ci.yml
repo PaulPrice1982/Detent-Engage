@@ -131,6 +131,43 @@ jobs:
           TEST_REDIS_URL: redis://localhost:6379
         run: pnpm test:vitest
 
+  production-install:
+    name: production tree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Deliberately no dev dependencies. A deployment installs this tree, and
+      # a security scan reads it: a test runner in it blocks a release over an
+      # advisory in a tool that never runs in production, which is what
+      # happened. tsx is a dev dependency too, so this also proves the server
+      # still boots on Node's own TypeScript transform.
+      - run: pnpm install --prod
+      - name: nothing that only tests or builds is installed
+        run: |
+          for tool in vitest tsx typescript; do
+            if [ -d "node_modules/$tool" ]; then
+              echo "$tool is in the production tree"; exit 1
+            fi
+          done
+          echo "production tree is clean"
+      - name: the server boots and answers on this tree alone
+        run: |
+          PORT=8787 HOST=127.0.0.1 \
+          DETENT_CONSOLE_PASSWORD='a-development-password-for-ci' \
+          DETENT_SESSION_SECRET='a-session-secret-of-at-least-32-characters' \
+            node tools/serve.mjs &
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:8787/health >/dev/null 2>&1 && break
+            sleep 1
+          done
+          node tools/smoke.mjs --port 8787
+
   supply-chain:
     name: dependencies
     runs-on: ubuntu-latest

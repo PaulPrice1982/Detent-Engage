@@ -17,7 +17,7 @@ Agent is not.
 ---
 
 ```
-This repository is COMPLETE. It typechecks clean and all 1,206 tests pass. Do
+This repository is COMPLETE. It typechecks clean and all 1,208 tests pass. Do
 NOT write, refactor, reformat or "improve" any source, test, dependency or
 migration. Your only job is to update it, run it, and report what the commands
 printed.
@@ -67,10 +67,10 @@ where the registry installed it and under the built-in runner where it did not.
 Both run the same files and both must report the same counts:
 
     Test Files  68 passed | 2 skipped (70)          <- vitest
-         Tests  1206 passed | 3 skipped (1209)
+         Tests  1208 passed | 3 skipped (1211)
 
     Test files  70                                   <- built-in runner
-    Tests       1206 passed, 3 skipped
+    Tests       1208 passed, 3 skipped
 
 Either is a pass. The 3 skipped tests need a PostgreSQL and a Redis and skip
 themselves without one, which is correct on Replit and is not a failure.
@@ -251,6 +251,24 @@ rather than crash-looping.
 | `DETENT_MARKETING_HOST`, `DETENT_APP_HOST`, `DETENT_CONSOLE_HOST`, `DETENT_RESELLER_HOST` | Hostname per site. The console may not share a hostname with the others; a deployment refuses to start if it does. |
 | `AWA_DEV_PRINT_KEYS` | Prints the three API keys at boot. Ignored in a deployment. |
 | `AWA_HSTS`, `AWA_TRUST_PROXY`, `AWA_ALLOW_PAGE_PROBE` | Off by default; each a deliberate opt-in. |
+
+## The deployment security scan
+
+A deployment scan reads the production dependency tree, and this build ships
+nothing that only tests or builds. `vitest` used to sit in
+`optionalDependencies`, which is a production section whose contents are
+merely permitted to be absent, so a test runner was in the shipped tree and a
+critical advisory in it blocked a release. It is a dev dependency now, and on
+a version the advisory does not cover.
+
+`@anthropic-ai/sdk` moved the other way, into `dependencies`. It is imported
+statically and reached at boot, so an install allowed to skip it would succeed
+and the server would then fail to start on a missing module.
+
+`pnpm install --prod` therefore installs no vitest, no tsx and no typescript,
+and the server still boots: `pnpm serve` falls back to Node's own TypeScript
+transform when tsx is absent. CI runs that tree and the full runtime check
+against it on every push.
 
 ## Deploying, as opposed to previewing
 
