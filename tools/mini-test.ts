@@ -394,20 +394,50 @@ interface TestCase {
   readonly skip: boolean;
 }
 
+/**
+ * Lifecycle hooks, per suite and per file.
+ *
+ * `beforeAll` and `afterAll` run once around a suite; `beforeEach` and
+ * `afterEach` run around every test in it and in every suite nested inside it,
+ * which is what makes a fixture declared once at the top of a file apply to
+ * the whole file.
+ */
+interface Hooks {
+  readonly beforeAll: Hook[];
+  readonly afterAll: Hook[];
+  readonly beforeEach: Hook[];
+  readonly afterEach: Hook[];
+}
+
+type Hook = () => void | Promise<void>;
+
+function emptyHooks(): Hooks {
+  return { beforeAll: [], afterAll: [], beforeEach: [], afterEach: [] };
+}
+
 interface Suite {
   readonly name: string;
   readonly tests: TestCase[];
   readonly children: Suite[];
   readonly parent?: Suite;
+  readonly hooks: Hooks;
 }
 
 const rootSuites: Suite[] = [];
+/**
+ * Hooks registered outside any `describe`.
+ *
+ * They belong to the file rather than to a suite, so they wrap every suite in
+ * it. Keeping them separate rather than inventing a synthetic root suite means
+ * the order suites run in, and the names in a failure label, are unchanged.
+ */
+let fileHooks: Hooks = emptyHooks();
 let currentSuite: Suite | undefined;
 /** Queued async describe bodies, awaited before the run starts. */
 const pendingSuiteBodies: Promise<unknown>[] = [];
 
 export function describe(name: string, body: () => void | Promise<void>): void {
-  const suite: Suite = { name, tests: [], children: [], parent: currentSuite };
+  const suite: Suite = { name, tests: [], children: [], parent: currentSuite, hooks: emptyHooks() };
   if (currentSuite) currentSuite.children.push(suite);
   else rootSuites.push(suite);
 
@@ -429,13 +459,15 @@ export function describe(name: string, body: () => void | Promise<void>): void {
 }
 
 describe.each = <T>(cases: readonly T[]) =>
-  (name: string, body: (value: T) => void | Promise<void>): void => {
-    for (const value of cases) describe(interpolate(name, value), () => body(value));
+  (name: string, body: (...args: never[]) => void | Promise<void>): void => {
+    for (const value of cases) {
+      describe(interpolate(name, value), () => (body as (...a: unknown[]) => void)(...spread(value)));
+    }
   };
 
 function register(name: string, fn: () => void | Promise<void>, skip: boolean): void {
   const suite = currentSuite ?? (rootSuites.find((s) => s.name === '') ?? (() => {
-    const implicit: Suite = { name: '', tests: [], children: [] };
+    const implicit: Suite = { name: '', tests: [], children: [], hooks: emptyHooks() };
     rootSuites.push(implicit);
     return implicit;
   })());
@@ -448,16 +480,54 @@ export function it(name: string, fn: () => void | Promise<void>): void {
 
 it.skip = (name: string, fn: () => void | Promise<void>): void => register(name, fn, true);
 it.each = <T>(cases: readonly T[]) =>
-  (name: string, body: (value: T) => void | Promise<void>): void => {
-    for (const value of cases) it(interpolate(name, value), () => body(value));
+  (name: string, body: (...args: never[]) => void | Promise<void>): void => {
+    for (const value of cases) {
+      it(interpolate(name, value), () => (body as (...a: unknown[]) => unknown)(...spread(value)) as void);
+    }
   };
 
 export const test = it;
 
-/** Vitest's `%s` placeholder, which is all the suite uses. */
+/**
+ * The lifecycle hooks, which the suite uses and this runner did not have.
+ *
+ * Three test files used `beforeAll` and `afterAll` and ran only under vitest;
+ * under this runner they failed to load with "does not provide an export
+ * named". That broke the promise the three runners exist to keep, which is
+ * that all of them run the same files unmodified. A fallback runner that only
+ * runs some of the tests is not a fallback.
+ */
+export function beforeAll(fn: Hook): void { (currentSuite?.hooks ?? fileHooks).beforeAll.push(fn); }
+export function afterAll(fn: Hook): void { (currentSuite?.hooks ?? fileHooks).afterAll.push(fn); }
+export function beforeEach(fn: Hook): void { (currentSuite?.hooks ?? fileHooks).beforeEach.push(fn); }
+export function afterEach(fn: Hook): void { (currentSuite?.hooks ?? fileHooks).afterEach.push(fn); }
+
+/**
+ * A table row becomes the test's arguments.
+ *
+ * Vitest spreads an array case across the parameters, so
+ * `it.each([['/a', /x/]])('serves %s', (path, pattern) => ...)` receives two
+ * arguments and not one array. This runner passed the array whole, which made
+ * the second parameter undefined and the first an array: the test still ran,
+ * still reported a name, and asserted something other than what it says.
+ * A wrong answer with a green tick is worse than a missing runner.
+ */
+function spread(value: unknown): unknown[] {
+  return Array.isArray(value) ? [...(value as unknown[])] : [value];
+}
+
+/** Vitest's `%s` placeholder, filled positionally from the row. */
 function interpolate(name: string, value: unknown): string {
-  const rendered = typeof value === 'string' ? value : show(value);
-  return name.includes('%s') ? name.replace('%s', rendered) : `${name} ${rendered}`;
+  const parts = spread(value);
+  if (!name.includes('%s')) {
+    return `${name} ${typeof value === 'string' ? value : show(value)}`;
+  }
+  let index = 0;
+  return name.replace(/%s/g, () => {
+    const part = parts[index];
+    index += 1;
+    return typeof part === 'string' ? part : show(part);
+  });
 }
 
 // --------------------------------------------------------------------------
@@ -488,6 +558,7 @@ export async function runFiles(files: readonly string[]): Promise<RunResult> {
     rootSuites.length = 0;
     pendingSuiteBodies.length = 0;
     currentSuite = undefined;
+    fileHooks = emptyHooks();
 
     const label = relative(process.cwd(), file);
     try {
@@ -503,12 +574,29 @@ export async function runFiles(files: readonly string[]): Promise<RunResult> {
     await Promise.all(pendingSuiteBodies);
 
     const before = failed;
-    for (const suite of rootSuites) {
-      const outcome = await runSuite(suite, [], label);
-      passed += outcome.passed;
-      failed += outcome.failed;
-      skipped += outcome.skipped;
-      failures.push(...outcome.failures);
+    const fileSetup = await runHooks(fileHooks.beforeAll, `${label} > beforeAll`);
+    if (fileSetup) {
+      failed++;
+      failures.push(fileSetup);
+    } else {
+      for (const suite of rootSuites) {
+        const outcome = await runSuite(suite, [], label, {
+          before: fileHooks.beforeEach,
+          after: fileHooks.afterEach,
+        });
+        passed += outcome.passed;
+        failed += outcome.failed;
+        skipped += outcome.skipped;
+        failures.push(...outcome.failures);
+      }
+    }
+    // Teardown runs even when setup or a test failed, or a file that fails
+    // leaves its server listening and its database connection open, and every
+    // file after it fails for reasons of its own.
+    const fileTeardown = await runHooks([...fileHooks.afterAll].reverse(), `${label} > afterAll`);
+    if (fileTeardown) {
+      failed++;
+      failures.push(fileTeardown);
     }
     const mark = failed === before ? green('✓') : red('✗');
     console.log(`${mark} ${label}`);
@@ -517,34 +605,92 @@ export async function runFiles(files: readonly string[]): Promise<RunResult> {
   return { files: files.length, passed, failed, skipped, failures };
 }
 
-async function runSuite(suite: Suite, path: string[], file: string): Promise<RunResult> {
+/** Each-hooks inherited from the file and from every enclosing suite. */
+interface InheritedHooks {
+  readonly before: readonly Hook[];
+  readonly after: readonly Hook[];
+}
+
+/** Runs hooks in order, returning the first failure rather than throwing. */
+async function runHooks(
+  hooks: readonly Hook[],
+  label: string,
+): Promise<{ path: string; error: unknown } | undefined> {
+  for (const hook of hooks) {
+    try {
+      await hook();
+    } catch (error) {
+      return { path: label, error };
+    }
+  }
+  return undefined;
+}
+
+async function runSuite(
+  suite: Suite,
+  path: string[],
+  file: string,
+  inherited: InheritedHooks = { before: [], after: [] },
+): Promise<RunResult> {
   const trail = suite.name ? [...path, suite.name] : path;
+  const where = trail.length > 0 ? `${file} > ${trail.join(' > ')}` : file;
   const failures: { path: string; error: unknown }[] = [];
   let passed = 0;
   let failed = 0;
   let skipped = 0;
 
-  for (const testCase of suite.tests) {
-    const label = `${file} > ${[...trail, testCase.name].join(' > ')}`;
-    if (testCase.skip) {
-      skipped++;
-      continue;
+  const setup = await runHooks(suite.hooks.beforeAll, `${where} > beforeAll`);
+  if (setup) {
+    // Nothing in the suite can be trusted to mean anything once its fixture
+    // did not build, so it is reported once rather than as a wall of
+    // identical failures from every test in it.
+    failures.push(setup);
+    failed++;
+  } else {
+    // Outermost first going in, innermost first coming out, which is the order
+    // a fixture built in layers has to be taken down in.
+    const eachBefore = [...inherited.before, ...suite.hooks.beforeEach];
+    const eachAfter = [...suite.hooks.afterEach, ...inherited.after];
+
+    for (const testCase of suite.tests) {
+      const label = `${file} > ${[...trail, testCase.name].join(' > ')}`;
+      if (testCase.skip) {
+        skipped++;
+        continue;
+      }
+      const preparation = await runHooks(eachBefore, `${label} > beforeEach`);
+      if (preparation) {
+        failed++;
+        failures.push(preparation);
+        continue;
+      }
+      try {
+        await testCase.fn();
+        passed++;
+      } catch (error) {
+        failed++;
+        failures.push({ path: label, error });
+      }
+      const cleanup = await runHooks(eachAfter, `${label} > afterEach`);
+      if (cleanup) {
+        failed++;
+        failures.push(cleanup);
+      }
     }
-    try {
-      await testCase.fn();
-      passed++;
-    } catch (error) {
-      failed++;
-      failures.push({ path: label, error });
+
+    for (const child of suite.children) {
+      const outcome = await runSuite(child, trail, file, { before: eachBefore, after: eachAfter });
+      passed += outcome.passed;
+      failed += outcome.failed;
+      skipped += outcome.skipped;
+      failures.push(...outcome.failures);
     }
   }
 
-  for (const child of suite.children) {
-    const outcome = await runSuite(child, trail, file);
-    passed += outcome.passed;
-    failed += outcome.failed;
-    skipped += outcome.skipped;
-    failures.push(...outcome.failures);
+  const teardown = await runHooks([...suite.hooks.afterAll].reverse(), `${where} > afterAll`);
+  if (teardown) {
+    failed++;
+    failures.push(teardown);
   }
 
   return { files: 1, passed, failed, skipped, failures };

@@ -30,9 +30,24 @@ Run, in the Shell:
 
 Expected: pnpm reports up-to-date or installs packages, and exits 0.
 
-If this is not a git checkout, unzip the supplied
-dist-zip/detent-agentic-website-assistant.zip over the project root instead
-(overwrite everything), then run `pnpm install`.
+If this is not a git checkout, use the supplied zip instead. Delete the source
+directories FIRST, then extract:
+
+    rm -rf packages tests tools docs db brand examples
+    unzip -o detent-agentic-website-assistant.zip
+    pnpm install
+
+The deletion is not optional. Extracting a zip over a project adds and
+overwrites files and never removes one, so anything renamed in this build
+leaves its old copy behind. This build renumbered two migrations, and a
+workspace that kept the old names ends up with two files sharing a version
+prefix, which the migration runner and `tests/migrations.test.ts` both refuse
+outright. That refusal is correct: the order two migrations with the same
+prefix run in is whatever the filenames happen to sort to, which is not a
+decision anybody made.
+
+The command above removes only directories the zip restores in full. It leaves
+node_modules, .git, .replit and the Secrets pane untouched.
 
 NOTE: never run `pnpm install --no-optional`. It breaks esbuild's platform
 binary, which tsx needs, and the failure looks like a broken repository.
@@ -47,13 +62,18 @@ Do not "fix" a type error.
 
     pnpm test
 
-Expected final lines:
+Expected final lines. There are two shapes, because the suite runs under vitest
+where the registry installed it and under the built-in runner where it did not.
+Both run the same files and both must report the same counts:
 
-    Test Files  66 passed | 2 skipped (68)
-         Tests  1182 passed | 3 skipped (1185)
+    Test Files  67 passed | 2 skipped (69)          <- vitest
+         Tests  1185 passed | 3 skipped (1188)
 
-The 3 skipped tests need a PostgreSQL and a Redis and skip themselves without
-one. That is correct on Replit and is not a failure.
+    Test files  69                                   <- built-in runner
+    Tests       1185 passed, 3 skipped
+
+Either is a pass. The 3 skipped tests need a PostgreSQL and a Redis and skip
+themselves without one, which is correct on Replit and is not a failure.
 
 If a test fails, STOP and report the failing test name and its output verbatim.
 Do not delete, skip, loosen or rewrite a test to make the suite pass.
