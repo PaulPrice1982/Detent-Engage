@@ -68,29 +68,10 @@ AWA_DEV_PRINT_KEYS = "1"
 [deployment]
 # Migrations run as their own step, before anything serves. A container that
 # migrates on start races itself the moment the platform runs a second one.
+#
+# A database an earlier release already migrated needs nothing done to it: the
+# first deploy of this build repairs its version ledger by itself and says so
+# in the log. It refuses only when replaying would not be safe, and then names
+# the file and the reason.
 run = ["sh", "-c", "node tools/migrate.mjs && pnpm serve"]
 deploymentTarget = "cloudrun"
-
-[workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=5000 pnpm serve"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"

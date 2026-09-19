@@ -174,4 +174,24 @@ if (!url) {
       expect(unbound).toHaveLength(2);
     });
   });
+
+  describe('the connection string', () => {
+    /**
+     * Every managed Postgres hands out a URL ending `?sslmode=require`, and pg
+     * warns on every boot that it treats that as `verify-full` today and will
+     * not in its next major version. That is a silent change to whether the
+     * server's certificate is checked, so the decision is made explicitly in
+     * `Database` rather than inherited, and the URL still has to work.
+     */
+    it('accepts an sslmode the way a managed provider writes it', async () => {
+      const withMode = new URL(url);
+      withMode.searchParams.set('sslmode', 'disable');
+      const other = new Database({ connectionString: withMode.toString() });
+      try {
+        expect(await other.healthy()).toBe(true);
+      } finally {
+        await other.close();
+      }
+    });
+  });
 }

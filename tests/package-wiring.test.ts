@@ -134,3 +134,86 @@ describe('every barrel exports the package it belongs to', () => {
     expect(missing, `${dir}/src/index.ts does not export: ${missing.join(', ')}`).toEqual([]);
   });
 });
+
+/**
+ * Nothing that only tests or builds is shipped to production.
+ *
+ * `vitest` sat in the root `optionalDependencies`. Optional dependencies are
+ * production dependencies that are permitted to be absent, so a test runner
+ * was part of the shipped tree, and a deployment security scan blocked a
+ * release over a critical advisory in a tool that never runs in production.
+ *
+ * The same section held `@anthropic-ai/sdk`, which is the opposite error. It
+ * is imported statically by the agent's provider and reached through the
+ * barrel the server loads at boot, so it is required for the process to start
+ * at all. Being optional meant an install that skipped it would succeed and
+ * the server would then die on a missing module.
+ *
+ * Both are one mistake: a dependency in a section that does not describe when
+ * it is needed.
+ */
+describe('the shipped dependency tree', () => {
+  /** Tools that exist to test or build, and never to run. */
+  const DEV_ONLY = ['vitest', 'tsx', 'typescript', 'esbuild', 'ioredis'];
+
+  const manifests = (): { name: string; json: Record<string, Record<string, string>> }[] => [
+    { name: 'package.json', json: JSON.parse(readFileSync('package.json', 'utf8')) },
+    ...names.map((dir) => ({
+      name: `packages/${dir}/package.json`,
+      json: JSON.parse(readFileSync(join(PACKAGES, dir, 'package.json'), 'utf8')),
+    })),
+  ];
+
+  it('carries no test or build tooling in a production section', () => {
+    const shipped: string[] = [];
+    for (const { name, json } of manifests()) {
+      for (const section of ['dependencies', 'optionalDependencies']) {
+        for (const dependency of Object.keys(json[section] ?? {})) {
+          const bare = dependency.replace(/^@types\//, '');
+          if (DEV_ONLY.includes(dependency) || DEV_ONLY.includes(bare)
+            || dependency.startsWith('@types/')) {
+            shipped.push(`${name} ${section}.${dependency}`);
+          }
+        }
+      }
+    }
+    expect(
+      shipped,
+      `these run only in development and are in the shipped tree: ${shipped.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('declares a statically imported package as required, never as optional', () => {
+    // An optional dependency may be absent. A static import may not be.
+    const wrong: string[] = [];
+    for (const dir of names) {
+      const manifest = JSON.parse(
+        readFileSync(join(PACKAGES, dir, 'package.json'), 'utf8'),
+      ) as Record<string, Record<string, string>>;
+      const optional = Object.keys(manifest['optionalDependencies'] ?? {});
+      if (optional.length === 0) continue;
+      const src = join(PACKAGES, dir, 'src');
+      if (!existsSync(src)) continue;
+      const imported = new Set<string>();
+      const walk = (at: string): void => {
+        for (const entry of readdirSync(at)) {
+          const full = join(at, entry);
+          if (statSync(full).isDirectory()) { walk(full); continue; }
+          if (!entry.endsWith('.ts')) continue;
+          const source = readFileSync(full, 'utf8');
+          for (const match of source.matchAll(/^import\s[^;]*?from\s+'([^'.][^']*)'/gm)) {
+            imported.add(match[1] ?? '');
+          }
+        }
+      };
+      walk(src);
+      for (const dependency of optional) {
+        if (imported.has(dependency)) wrong.push(`${dir} imports ${dependency} statically`);
+      }
+    }
+    expect(
+      wrong,
+      `optional means "may be absent", and a static import means "must not be": ${wrong.join(', ')}`,
+    ).toEqual([]);
+  });
+});

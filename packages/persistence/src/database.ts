@@ -19,6 +19,49 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
+/**
+ * Take `sslmode` out of the URL and pass TLS settings explicitly.
+ *
+ * Every managed Postgres hands out a URL ending `?sslmode=require`, and pg
+ * warns on every boot that it currently treats that as `verify-full` and will
+ * stop doing so in its next major version. The warning is right to exist: the
+ * two differ in whether the server's certificate is actually checked, and a
+ * silent change of that is a silent downgrade of transport security.
+ *
+ * So the decision is made here rather than inherited. `require` and above
+ * verify the certificate, which is what the current behaviour already is and
+ * what a managed provider's own certificate chain supports. `disable` is
+ * honoured as written, because a sidecar proxy on localhost is a real
+ * arrangement. Nothing is guessed at connection time and no warning is
+ * printed, because there is nothing left to warn about.
+ */
+function splitSsl(url: string): {
+  connectionString: string;
+  ssl?: { rejectUnauthorized: boolean };
+} {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    // Not a URL this can parse. Left exactly as given: the caller's own error
+    // about it is clearer than one invented here.
+    return { connectionString: url };
+  }
+  const mode = parsed.searchParams.get('sslmode');
+  if (mode === null) return { connectionString: url };
+  parsed.searchParams.delete('sslmode');
+  const connectionString = parsed.toString();
+  switch (mode) {
+    case 'disable':
+      return { connectionString };
+    case 'no-verify':
+      // Encrypted, certificate unchecked. Only ever a deliberate choice.
+      return { connectionString, ssl: { rejectUnauthorized: false } };
+    default:
+      return { connectionString, ssl: { rejectUnauthorized: true } };
+  }
+}
+
 export interface DatabaseOptions {
   readonly connectionString: string;
   /** Bounded so a burst cannot exhaust the server's connection slots. */
@@ -30,8 +73,10 @@ export class Database {
   private readonly pool: pg.Pool;
 
   constructor(options: DatabaseOptions) {
+    const { connectionString, ssl } = splitSsl(options.connectionString);
     this.pool = new Pool({
-      connectionString: options.connectionString,
+      connectionString,
+      ...(ssl === undefined ? {} : { ssl }),
       max: options.maxConnections ?? 10,
       // A query that will never finish should not hold a connection for ever.
       statement_timeout: options.statementTimeoutMs ?? 15_000,
@@ -141,7 +186,74 @@ export class Database {
  * A migration recorded but not applied is the state nobody can recover from by
  * reading the database.
  */
-export async function migrate(database: Database, directory: string): Promise<string[]> {
+/**
+ * Whether replaying the whole sequence is provably safe, and why not if it is not.
+ *
+ * Replay is safe when every migration only declares schema and declares it
+ * idempotently: re-running one then re-states what is already there. It is not
+ * safe when a migration carries data, because a second INSERT is a second row,
+ * and not safe when a migration is written to run exactly once, because a bare
+ * CREATE TABLE fails the second time and takes the whole release with it.
+ *
+ * These are the same rules `tests/migrations.test.ts` enforces on the files.
+ * Checked again here, at the moment the decision is made, because a rule that
+ * only holds in CI is a rule that does not hold on the machine that matters.
+ */
+function replaySafety(sources: ReadonlyMap<string, string>): string[] {
+  const reasons: string[] = [];
+  for (const [name, raw] of sources) {
+    const body = raw
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('--'))
+      .join('\n');
+
+    if (/^\s*(BEGIN|COMMIT|ROLLBACK)\s*;/m.test(body)) {
+      reasons.push(`${name} manages its own transaction`);
+    }
+    // A second INSERT is a second row. Nothing here may carry data.
+    if (/^\s*(INSERT|UPDATE|DELETE)\s/im.test(body)) {
+      reasons.push(`${name} changes data, not only schema`);
+    }
+    for (const line of body.split('\n')) {
+      if (!/^\s*CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|SCHEMA|SEQUENCE|EXTENSION)\b/i.test(line)) continue;
+      if (!/IF NOT EXISTS/i.test(line)) reasons.push(`${name} has a create that runs only once`);
+    }
+    for (const [, trigger] of body.matchAll(/CREATE TRIGGER\s+(\w+)/gi)) {
+      if (!new RegExp(`DROP TRIGGER IF EXISTS ${trigger}\\b`, 'i').test(body)) {
+        reasons.push(`${name} creates trigger ${trigger} without dropping it first`);
+      }
+    }
+    if (/CREATE POLICY/i.test(body) && !/DROP POLICY IF EXISTS/i.test(body)) {
+      reasons.push(`${name} creates a policy without dropping it first`);
+    }
+  }
+  return [...new Set(reasons)];
+}
+
+export interface MigrateOptions {
+  /**
+   * Apply pending migrations wherever they sort, instead of refusing.
+   *
+   * The remedy for a ledger that lost rows. Every migration in this release is
+   * idempotent by construction, asserted by `tests/migrations.test.ts`, so
+   * re-running one against a schema that already has it changes nothing. That
+   * property is what makes this safe, and it is why the ordering guard can be
+   * strict by default: there is a documented way out that does not involve
+   * somebody typing SQL into production.
+   *
+   * Never the default. Applying a migration out of order is the thing the
+   * guard exists to prevent, and doing it has to be somebody's decision.
+   */
+  readonly repair?: boolean;
+  /** Told what happened, so a deployment log says why the schema changed. */
+  readonly onNotice?: (line: string) => void;
+}
+
+export async function migrate(
+  database: Database,
+  directory: string,
+  options: MigrateOptions = {},
+): Promise<string[]> {
   let present: string[];
   try {
     present = await readdir(directory);
@@ -180,10 +292,50 @@ export async function migrate(database: Database, directory: string): Promise<st
       checksum    text        NOT NULL
     )`);
 
-  const applied = new Set(
-    (await database.query<{ filename: string }>('SELECT filename FROM schema_migration'))
-      .map((row) => row.filename),
+  let ledger = await database.query<{ filename: string; checksum: string }>(
+    'SELECT filename, checksum FROM schema_migration',
   );
+
+  /**
+   * A migration that was renamed is the same migration.
+   *
+   * Its identity is its content, not the number somebody gave it. Renumbering
+   * two files to remove a duplicate prefix left a deployed database recording
+   * names that no longer exist, and the ordering guard below then refused every
+   * later release: correct, and a hard outage over a rename.
+   *
+   * Matched on the checksum already stored for exactly this purpose. A row
+   * whose file is gone, and a file with no row and the same checksum, are one
+   * migration under two names, so the row is renamed and nothing is re-run.
+   */
+  const onDisk = new Set(files);
+  const sources = new Map<string, string>();
+  const byChecksum = new Map<string, string>();
+  for (const file of files) {
+    const sql = await readFile(resolve(directory, file), 'utf8');
+    sources.set(file, sql);
+    byChecksum.set(await digest(sql), file);
+  }
+  const renames: { from: string; to: string }[] = [];
+  for (const row of ledger) {
+    if (onDisk.has(row.filename)) continue;
+    const now = byChecksum.get(row.checksum);
+    if (!now || ledger.some((other) => other.filename === now)) continue;
+    renames.push({ from: row.filename, to: now });
+  }
+  for (const rename of renames) {
+    await database.query(
+      'UPDATE schema_migration SET filename = $1 WHERE filename = $2',
+      [rename.to, rename.from],
+    );
+  }
+  if (renames.length > 0) {
+    ledger = await database.query<{ filename: string; checksum: string }>(
+      'SELECT filename, checksum FROM schema_migration',
+    );
+  }
+
+  const applied = new Set(ledger.map((row) => row.filename));
 
   // A file that sorts before something already applied is a migration that was
   // merged behind another branch's. Applying it now runs it against a schema it
@@ -194,14 +346,52 @@ export async function migrate(database: Database, directory: string): Promise<st
   // Two files also sharing a numeric prefix is the same fault a step earlier:
   // their relative order is then whatever the filenames sort to, which is not a
   // decision anybody made.
+  let replay = options.repair ?? false;
   const highestApplied = [...applied].sort().pop();
-  if (highestApplied !== undefined) {
+  if (highestApplied !== undefined && !replay) {
     const late = files.filter((name) => !applied.has(name) && name < highestApplied);
     if (late.length > 0) {
-      throw new Error(
-        `Migrations out of order: ${late.join(', ')} sort before ${highestApplied}, `
-        + 'which has already been applied. Renumber them after the highest applied '
-        + 'migration and check the schema they now run against. Nothing has been changed.',
+      /**
+       * Out of order, and there are two ways to be here.
+       *
+       * A migration merged behind another branch's, or a ledger that lost the
+       * rows for migrations the schema plainly has, which is what an earlier
+       * release of this application caused by letting its files carry their
+       * own COMMIT.
+       *
+       * The runner cannot tell those apart from the outside, and for a while
+       * it refused both and named a command to run by hand. That is the wrong
+       * trade when the command cannot be run: a deployment in this state
+       * crash-loops, and nobody can reach it to repair it.
+       *
+       * It does not have to tell them apart. When every migration only
+       * declares schema and declares it idempotently, replaying the whole
+       * sequence in order ends exactly where a fresh install ends, whichever
+       * of the two caused it. So the question is not "which is it" but "is
+       * replay safe here", and that is answerable by reading the files.
+       *
+       * When it is not safe, the refusal stands.
+       */
+      const unsafe = replaySafety(sources);
+      if (unsafe.length > 0) {
+        throw new Error(
+          `Migrations out of order: ${late.join(', ')} sort before ${highestApplied}, `
+          + 'which has already been applied.\n\n'
+          + 'This would normally be recovered by replaying every migration in order, '
+          + 'which is safe when they only declare schema and do it idempotently. These '
+          + 'do not:\n'
+          + unsafe.map((reason) => `  - ${reason}`).join('\n')
+          + '\n\nFix those, or renumber the migrations after the highest applied one '
+          + 'and check the schema they now run against. Nothing has been changed.',
+        );
+      }
+      replay = true;
+      options.onNotice?.(
+        `Migration ledger does not match the files: ${late.join(', ')} sort before `
+        + `${highestApplied}, which is already applied. Every migration here only `
+        + 'declares schema and does so idempotently, so the whole sequence is being '
+        + 'replayed in order, which ends where a fresh install ends. Nothing is lost '
+        + 'and no data is touched.',
       );
     }
   }
@@ -221,15 +411,36 @@ export async function migrate(database: Database, directory: string): Promise<st
     );
   }
 
+  /**
+   * Repair replays the whole sequence, not only what is pending.
+   *
+   * Idempotent per file does not mean safe in any order. A later migration
+   * removes things an earlier one creates: 0004 takes row-level security off
+   * the tenant registry, which is the platform's own list of customers and is
+   * read unbound. Re-running only the pending 0001 put that policy back, after
+   * the migration that removes it had already run, and the platform could then
+   * read zero tenants. The schema was self-consistent and wrong.
+   *
+   * Replaying every file in order ends where a fresh install ends, because
+   * each one is idempotent and the last writer for any object is the same one
+   * it would be on a new database. That is the only ordering with a guarantee
+   * attached to it.
+   */
   const ran: string[] = [];
   for (const filename of files) {
-    if (applied.has(filename)) continue;
-    const sql = await readFile(resolve(directory, filename), 'utf8');
+    if (!replay && applied.has(filename)) continue;
+    const sql = sources.get(filename)!;
     const checksum = await digest(sql);
     await database.transaction(async (client) => {
       await client.query(sql);
+      // The checksum is refreshed as well as the row inserted: a migration
+      // whose content changed after it was applied would otherwise keep
+      // reporting the checksum of a file that no longer exists, and the
+      // rename adoption above reads it.
       await client.query(
-        'INSERT INTO schema_migration (filename, checksum) VALUES ($1, $2)',
+        `INSERT INTO schema_migration (filename, checksum) VALUES ($1, $2)
+         ON CONFLICT (filename) DO UPDATE SET checksum = EXCLUDED.checksum,
+                                              applied_at = now()`,
         [filename, checksum],
       );
     });

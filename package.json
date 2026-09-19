@@ -27,9 +27,11 @@
     "@types/node": "^22.10.0",
     "ioredis": "5.11.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "3.2.7"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.125.0",
     "@detent/awa-agent": "workspace:*",
     "@detent/awa-analytics": "workspace:*",
     "@detent/awa-assurance": "workspace:*",
@@ -62,9 +64,5 @@
     "@detent/awa-support": "workspace:*",
     "@detent/awa-voice": "workspace:*",
     "@detent/awa-widget": "workspace:*"
-  },
-  "optionalDependencies": {
-    "@anthropic-ai/sdk": "0.125.0",
-    "vitest": "^2.1.9"
   }
 }

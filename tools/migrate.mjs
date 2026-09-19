@@ -10,6 +10,15 @@
  *
  *   DATABASE_URL=postgres://... node tools/migrate.mjs           # apply
  *   DATABASE_URL=postgres://... node tools/migrate.mjs --status  # report only
+ *   DATABASE_URL=postgres://... node tools/migrate.mjs --repair  # see below
+ *
+ * `--repair` applies pending migrations wherever they sort, instead of
+ * refusing. It is the way out of a ledger that lost rows, which an earlier
+ * release of this application caused by letting migration files carry their
+ * own COMMIT: the schema was committed and the row recording it was not. Every
+ * migration here is idempotent, so re-running one against a schema that
+ * already has it changes nothing. It is never the default, because applying a
+ * migration out of order is the thing the ordering guard exists to prevent.
  *
  * Exit codes: 0 applied or already current, 78 (EX_CONFIG) misconfigured,
  * 1 a migration failed. Nothing here prints a connection string: a URL carries
@@ -42,6 +51,7 @@ const { Database, migrate } = await import(
 const database = new Database({ connectionString: url });
 const directory = resolve(root, 'db/migrations');
 const statusOnly = process.argv.includes('--status');
+const repair = process.argv.includes('--repair');
 
 try {
   if (statusOnly) {
@@ -56,7 +66,16 @@ try {
       }
     }
   } else {
-    const ran = await migrate(database, directory);
+    if (repair) {
+      process.stdout.write(
+        'Repairing: applying pending migrations wherever they sort. Every migration\n'
+        + 'here is idempotent, so one that is already in the schema changes nothing.\n',
+      );
+    }
+    const ran = await migrate(database, directory, {
+      repair,
+      onNotice: (line) => process.stdout.write(`${line}\n`),
+    });
     process.stdout.write(
       ran.length === 0
         ? 'Schema is already current; nothing to apply.\n'

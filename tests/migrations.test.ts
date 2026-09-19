@@ -26,6 +26,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { migrate } from '../packages/persistence/src/database.js';
@@ -197,10 +198,24 @@ describe('a migration that sorts before one already applied', () => {
     };
   }
 
+  /**
+   * This asserted that an out-of-order migration is always refused. The
+   * contract changed deliberately: when every migration only declares schema
+   * and declares it idempotently, the runner replays the whole sequence
+   * instead, because refusing and naming a manual command is useless to a
+   * deployment that crash-loops before anybody can run it.
+   *
+   * The intent is unchanged and still worth holding: an out-of-order
+   * migration is never *quietly* applied. It is either replayed as a whole
+   * ordered sequence and said out loud, or refused. So the fixture now uses a
+   * migration replay cannot make safe, which is where refusal is still right,
+   * and the replay path is covered in the suite below.
+   */
   it('is refused, naming the file and the one it sorts behind', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'detent-order-'));
-    writeFileSync(join(directory, '0001_early.sql'), 'SELECT 1;');
-    writeFileSync(join(directory, '0002_late.sql'), 'SELECT 1;');
+    // Not idempotent, so replaying it would fail the second time.
+    writeFileSync(join(directory, '0001_early.sql'), 'CREATE TABLE early (id int);');
+    writeFileSync(join(directory, '0002_late.sql'), 'CREATE TABLE IF NOT EXISTS late (id int);');
 
     // 0002 has run; 0001 has not. Applying 0001 now is the fault.
     await expect(
@@ -229,5 +244,198 @@ describe('a migration that sorts before one already applied', () => {
     await expect(
       migrate(databaseWith([]) as never, directory),
     ).rejects.toThrow(/share a version prefix/i);
+  });
+});
+
+/**
+ * Recovering a database whose ledger no longer describes the files.
+ *
+ * Two ways it gets there, and a deployment hit both at once.
+ *
+ * Renumbering two files to remove a duplicate prefix left the deployed
+ * database recording names that no longer exist. Every later release was then
+ * refused by the ordering guard: correct, and a hard outage over a rename.
+ *
+ * And an earlier release's migration files carried their own COMMIT, which
+ * ended the runner's transaction early: the schema was committed and the row
+ * recording it was not. The ledger came out missing rows for migrations the
+ * database plainly has.
+ */
+describe('a ledger that no longer matches the files', () => {
+  const sum = (sql: string): string => createHash('sha256').update(sql).digest('hex');
+
+  /** A database whose ledger and applied statements can both be inspected. */
+  function databaseWith(rows: readonly { filename: string; checksum: string }[]) {
+    const ledger = rows.map((row) => ({ ...row }));
+    const applied: string[] = [];
+    const statements: string[] = [];
+    return {
+      ledger,
+      applied,
+      statements,
+      query: async (text: string, values: readonly unknown[] = []) => {
+        if (/FROM schema_migration/i.test(text)) return ledger.map((row) => ({ ...row }));
+        if (/UPDATE schema_migration SET filename/i.test(text)) {
+          const [to, from] = values as [string, string];
+          const row = ledger.find((one) => one.filename === from);
+          if (row) row.filename = to;
+          statements.push(`rename ${from} -> ${to}`);
+          return [];
+        }
+        return [];
+      },
+      transaction: async (body: (client: {
+        query: (text: string, values?: readonly unknown[]) => Promise<unknown>;
+      }) => Promise<unknown>) => body({
+        query: async (text: string, values: readonly unknown[] = []) => {
+          if (/INSERT INTO schema_migration/i.test(text)) {
+            const [filename, checksum] = values as [string, string];
+            const row = ledger.find((one) => one.filename === filename);
+            if (row) row.checksum = checksum;
+            else ledger.push({ filename, checksum });
+            applied.push(filename);
+          }
+          return [];
+        },
+      }),
+    };
+  }
+
+  function directoryOf(files: Record<string, string>): string {
+    const directory = mkdtempSync(join(tmpdir(), 'detent-ledger-'));
+    for (const [name, body] of Object.entries(files)) {
+      writeFileSync(join(directory, name), body);
+    }
+    return directory;
+  }
+
+  it('adopts a migration that was renamed, without running it again', async () => {
+    // Identity is the content, not the number somebody gave it.
+    const body = 'SELECT 1;';
+    const directory = directoryOf({ '0001_a.sql': 'SELECT 0;', '0003_renamed.sql': body });
+    const database = databaseWith([
+      { filename: '0001_a.sql', checksum: sum('SELECT 0;') },
+      { filename: '0002_old_name.sql', checksum: sum(body) },
+    ]);
+
+    await migrate(database as never, directory);
+
+    expect(database.statements).toContain('rename 0002_old_name.sql -> 0003_renamed.sql');
+    // Adopted, not re-run.
+    expect(database.applied).not.toContain('0003_renamed.sql');
+    expect(database.ledger.map((row) => row.filename).sort())
+      .toEqual(['0001_a.sql', '0003_renamed.sql']);
+  });
+
+  it('recovers by itself when every migration is safe to replay', async () => {
+    /**
+     * Refusing and naming a command to run by hand is the wrong trade when the
+     * command cannot be run. A deployment in this state crash-loops, and
+     * nobody can reach it to repair it: the remedy was unreachable from
+     * exactly the situation that needed it.
+     *
+     * The runner cannot tell a branch-ordering mistake from a ledger that lost
+     * rows, and it does not have to. When every migration only declares schema
+     * and declares it idempotently, replaying the sequence in order ends where
+     * a fresh install ends either way, so the question is whether replay is
+     * safe, which is answerable by reading the files.
+     */
+    const directory = directoryOf({
+      '0001_a.sql': 'CREATE TABLE IF NOT EXISTS a (id int);',
+      '0002_b.sql': 'CREATE TABLE IF NOT EXISTS b (id int);',
+    });
+    const database = databaseWith([
+      { filename: '0002_b.sql', checksum: sum('CREATE TABLE IF NOT EXISTS b (id int);') },
+    ]);
+    const notices: string[] = [];
+
+    const ran = await migrate(database as never, directory, {
+      onNotice: (line) => notices.push(line),
+    });
+
+    expect(ran).toEqual(['0001_a.sql', '0002_b.sql']);
+    // Said out loud. A schema that changed itself without saying so is worse
+    // than one that refused.
+    expect(notices.join(' ')).toMatch(/replayed in order/);
+    expect(notices.join(' ')).toMatch(/no data is touched/);
+  });
+
+  it('still refuses when a migration carries data', async () => {
+    // A second INSERT is a second row. Replay is only safe for schema.
+    const directory = directoryOf({
+      '0001_a.sql': "CREATE TABLE IF NOT EXISTS a (id int);\nINSERT INTO a VALUES (1);",
+      '0002_b.sql': 'CREATE TABLE IF NOT EXISTS b (id int);',
+    });
+    const database = databaseWith([
+      { filename: '0002_b.sql', checksum: sum('CREATE TABLE IF NOT EXISTS b (id int);') },
+    ]);
+
+    await expect(migrate(database as never, directory)).rejects.toThrow(/changes data/);
+    expect(database.applied, 'nothing may be applied when it refuses').toEqual([]);
+  });
+
+  it('still refuses when a migration can only run once', async () => {
+    const directory = directoryOf({
+      '0001_a.sql': 'CREATE TABLE a (id int);',
+      '0002_b.sql': 'CREATE TABLE IF NOT EXISTS b (id int);',
+    });
+    const database = databaseWith([
+      { filename: '0002_b.sql', checksum: sum('CREATE TABLE IF NOT EXISTS b (id int);') },
+    ]);
+
+    await expect(migrate(database as never, directory)).rejects.toThrow(/runs only once/);
+  });
+
+  it('refuses when a migration manages its own transaction', async () => {
+    // The fault that lost the ledger rows in the first place.
+    const directory = directoryOf({
+      '0001_a.sql': 'BEGIN;\nCREATE TABLE IF NOT EXISTS a (id int);\nCOMMIT;',
+      '0002_b.sql': 'CREATE TABLE IF NOT EXISTS b (id int);',
+    });
+    const database = databaseWith([
+      { filename: '0002_b.sql', checksum: sum('CREATE TABLE IF NOT EXISTS b (id int);') },
+    ]);
+
+    await expect(migrate(database as never, directory)).rejects.toThrow(/own transaction/);
+  });
+
+  it('replays the whole sequence on repair, not only what is pending', async () => {
+    /**
+     * The regression this exists for.
+     *
+     * Idempotent per file does not mean safe in any order. A later migration
+     * removes what an earlier one creates: 0004 takes row-level security off
+     * the tenant registry, which is read unbound. Re-running only the pending
+     * 0001 put that policy back after the migration that removes it had run,
+     * and the platform could then read zero tenants. The schema was
+     * self-consistent and wrong.
+     */
+    const directory = directoryOf({
+      '0001_creates.sql': 'SELECT 1;',
+      '0002_keeps.sql': 'SELECT 2;',
+      '0003_removes.sql': 'SELECT 3;',
+    });
+    const database = databaseWith([
+      { filename: '0003_removes.sql', checksum: sum('SELECT 3;') },
+    ]);
+
+    const ran = await migrate(database as never, directory, { repair: true });
+
+    // Every file, in order, so the last writer for any object is the same one
+    // it would be on a new database.
+    expect(ran).toEqual(['0001_creates.sql', '0002_keeps.sql', '0003_removes.sql']);
+    expect(database.applied).toEqual(['0001_creates.sql', '0002_keeps.sql', '0003_removes.sql']);
+    expect(database.ledger).toHaveLength(3);
+  });
+
+  it('does not replay anything when there is nothing wrong', async () => {
+    const directory = directoryOf({ '0001_a.sql': 'SELECT 0;', '0002_b.sql': 'SELECT 1;' });
+    const database = databaseWith([
+      { filename: '0001_a.sql', checksum: sum('SELECT 0;') },
+      { filename: '0002_b.sql', checksum: sum('SELECT 1;') },
+    ]);
+
+    expect(await migrate(database as never, directory)).toEqual([]);
+    expect(database.applied).toEqual([]);
   });
 });
