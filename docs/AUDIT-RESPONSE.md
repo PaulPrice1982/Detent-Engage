@@ -1,15 +1,58 @@
 # Response to the independent code audit, 18 September 2026
 
-Every recommendation in the audit has been accepted and implemented. This is the
-finding-by-finding record: what was found, what changed, and where to look. It
-is written to be checked rather than believed — each row names the file that
-closes the finding and, where there is one, the test that would fail if it
-regressed.
+This is the finding-by-finding record: what was found, what changed, and where
+to look. Each row names the file that closes the finding and, where there is
+one, the test that would fail if it regressed.
 
-Two figures that moved: the suite went from 387 tests to 484, and the shipping
-surface is now explicit rather than implicit — everything beyond the v1.0 spine
-is behind a feature flag (`packages/core/src/features.ts`), which is the
-structural half of the audit's "cut scope hard and ship a spine".
+## What an earlier version of this document got wrong
+
+It opened by saying every recommendation had been implemented and that the
+repository was finished, typechecked and tested. On a clean checkout it did not
+compile (115 errors), 58 of 587 tests failed, and nine packages were absent from
+the build entirely, so twenty-two test files never loaded and their tests were
+never counted. A suite that fails to load is not a failing test, which is why
+the reported total of 484 could look green while a thousand tests were not
+running.
+
+That is corrected below, and the shape of this document has changed with it.
+Claims are now sorted by how far they have actually been verified, because the
+distinction between "implemented" and "verified against the thing it has to work
+against" is where all of the above hid.
+
+## Status key
+
+| | Meaning |
+|---|---|
+| **Verified in CI** | Exercised against the real thing: a real PostgreSQL under a role that cannot bypass row-level security, a real Redis, or a booted process answering over a socket. |
+| **Verified against fakes** | Implemented and tested, but the test supplies the dependency it is asking about. |
+| **Interface only** | The shape exists; no implementation a deployment can use. |
+| **Open** | Not done. |
+
+## Measured state, on a clean clone
+
+| Check | Result |
+|---|---|
+| `pnpm install --frozen-lockfile` | Passes. No direct dependency published within 7 days (`tools/check-dependency-age.mjs`). |
+| `pnpm typecheck` | 0 errors. |
+| `pnpm test:vitest` | 1,224 tests, all passing. |
+| With `TEST_DATABASE_URL` and `TEST_REDIS_URL` | 1,224 passing, **zero skipped**. |
+| `node tools/secret-lint.mjs` | Clean. |
+| Migrations against PostgreSQL 16 | All five apply, are a no-op on a second pass, re-adopt a database whose version ledger was lost, and apply in full as a `NOCREATEROLE` owner. |
+| Cross-tenant isolation | Asserted on real row-level security under a `NOBYPASSRLS` role (`tests/real-rls-isolation.test.ts`). |
+
+## Still open, stated plainly
+
+| Item | Status |
+|---|---|
+| Cloud KMS key provider | **Interface only.** `LocalKeyProvider` is the only implementation; a deployment must set `AWA_ROOT_KEY` or explicitly allow the local provider. |
+| Console user management screen | **Open.** Create, set roles, disable and end-all-sessions exist in the service layer with no screen. A second console user has to be created through the service layer today. |
+| OIDC / SSO | **Open.** Implemented and not connected; the buttons dead-end and no provider credentials are read from the environment. |
+| API key persistence | **Open.** Keys are held in memory and are lost on restart; the `api_key` table exists and no store uses it. |
+| Row-level security on the platform tables | **Partial.** `auth_user`, `account`, `subscription`, `invoice` and `support_request` now carry FORCE row-level security with a policy that confines any tenant-bound access. Unbound platform access is still permitted, because sign-in looks a user up by email before any tenant is known. Closing that needs the auth and billing stores to bind a tenant. |
+| WebAuthn, SCIM, multi-region residency routing, signed audit exports, load-test harness | **Open.** Phase 2. |
+| Independent penetration test and accessibility audit | **Open.** Neither commissioned. The accessibility conformance statement correctly refuses to claim conformance without a named auditor and a date. |
+
+---
 
 ---
 

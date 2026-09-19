@@ -79,7 +79,7 @@ examples/      two runnable end-to-end demonstrations
 ```bash
 pnpm install
 pnpm typecheck   # strict TypeScript across every package
-pnpm test        # 484 tests, one file per CI gate
+pnpm test:vitest # 1,224 tests, one file per CI gate
 pnpm demo          # three visitor scenarios, end to end, with the audit trail
 pnpm demo:customer # the v1.2 flagship: declining to sell to an unhappy customer
 pnpm serve         # HTTP gateway on :8787 with a provisioned demo tenant
