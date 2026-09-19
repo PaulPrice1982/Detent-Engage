@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { connect, type AddressInfo } from 'node:net';
-import { createHttpServer, type Api, type ApiRequest, type ApiResponse } from '@detent/awa-server';
+import { createHttpServer, listenFailureMessage, type Api, type ApiRequest, type ApiResponse } from '@detent/awa-server';
 
 /**
  * The transport, exercised over a real socket.
@@ -191,6 +191,33 @@ describe('a request the HTTP parser rejects', () => {
     expect(answer).toMatch(/before it reached the application/);
   });
 
+  it('names a stray carriage return as a pasted command, not a mystery', async () => {
+    // HPE_LF_EXPECTED is what a copied and pasted command produces when it
+    // picks up a line break, and it is what a working release was reported as
+    // broken on. The code alone leaves somebody searching for it; this says
+    // what to do instead.
+    const { api } = recordingApi();
+    const answer = await withServer({}, api, async (baseUrl) => {
+      const port = Number(new URL(baseUrl).port);
+      // A carriage return inside a header value, which is what the parser
+      // answered HPE_LF_EXPECTED to on the release this was written after:
+      // an API key pasted into the header brought a line break with it.
+      return raw(port, [
+        'POST /v1/sessions HTTP/1.1',
+        'Host: 127.0.0.1',
+        'authorization: Bearer awa_pub_key\rwith_a_stray_return',
+        'content-length: 0',
+        '', '',
+      ].join('\r\n'));
+    });
+
+    expect(answer).toContain('MALFORMED_REQUEST');
+    expect(answer).toMatch(/carriage return/i);
+    expect(answer).toMatch(/copied and pasted|retype/i);
+    // And points at the command that cannot be mangled.
+    expect(answer).toContain('pnpm smoke');
+  });
+
   it('never echoes the offending request back', async () => {
     // A malformed request is often malformed because it carries something it
     // should not, and echoing it would publish it to whoever sent it.
@@ -208,5 +235,45 @@ describe('a request the HTTP parser rejects', () => {
 
     expect(answer).toContain('MALFORMED_REQUEST');
     expect(answer).not.toContain('swordfish-do-not-echo');
+  });
+});
+
+/**
+ * A server that cannot take its port says so.
+ *
+ * Without a handler a failed listen reaches Node's default for an unhandled
+ * 'error' event: a stack trace through node:net whose first line is "throw er"
+ * and whose reason is four lines down. A release was reported as not running
+ * on exactly this, with an earlier instance still holding the port.
+ */
+describe('a port that cannot be taken', () => {
+  const as = (code: string): NodeJS.ErrnoException =>
+    Object.assign(new Error(`listen ${code}`), { code });
+
+  it('names the port and what is almost certainly holding it', () => {
+    const message = listenFailureMessage(as('EADDRINUSE'), 8787, '0.0.0.0');
+    expect(message).toContain('0.0.0.0:8787');
+    expect(message).toMatch(/already in use/i);
+    // The remedy, not just the diagnosis.
+    expect(message).toMatch(/stop it and start again|set PORT/i);
+  });
+
+  it('explains a privileged port rather than only refusing it', () => {
+    expect(listenFailureMessage(as('EACCES'), 80, '0.0.0.0')).toMatch(/below 1024/);
+    // And does not claim that about a high port, which would send somebody
+    // hunting for a privilege problem that is not there.
+    expect(listenFailureMessage(as('EACCES'), 8787, '0.0.0.0')).not.toMatch(/below 1024/);
+  });
+
+  it('points at HOST when the address does not exist on the machine', () => {
+    const message = listenFailureMessage(as('EADDRNOTAVAIL'), 8787, '10.1.2.3');
+    expect(message).toContain('10.1.2.3');
+    expect(message).toContain('0.0.0.0');
+  });
+
+  it('still says something useful for a code it does not know', () => {
+    const message = listenFailureMessage(as('ESOMETHINGNEW'), 8787, '0.0.0.0');
+    expect(message).toContain('ESOMETHINGNEW');
+    expect(message).toContain('8787');
   });
 });

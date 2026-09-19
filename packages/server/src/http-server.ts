@@ -142,12 +142,7 @@ export function createHttpServer(api: Api, options: HttpServerOptions = {}): Ser
     }
     const code = typeof error.code === 'string' ? error.code : 'HPE_UNKNOWN';
     const status = code === 'HPE_HEADER_OVERFLOW' ? 431 : 400;
-    const reason = status === 431
-      ? 'The request headers are larger than this server accepts.'
-      : 'This request was rejected by the HTTP parser before it reached the '
-        + 'application, so it was not refused by authentication, origin or schema. '
-        + 'Check for a malformed header, a bad content-length, or a proxy in front '
-        + 'of this service inserting one.';
+    const reason = parseFailureReason(code);
     const body = JSON.stringify({ error: 'MALFORMED_REQUEST', message: reason, code });
     socket.end(
       `HTTP/1.1 ${status} ${status === 431 ? 'Request Header Fields Too Large' : 'Bad Request'}\r\n`
@@ -160,6 +155,91 @@ export function createHttpServer(api: Api, options: HttpServerOptions = {}): Ser
   });
 
   return server;
+}
+
+/**
+ * What a parser code actually means, in terms of what to do about it.
+ *
+ * Naming the code alone is better than an empty body and still leaves somebody
+ * searching for it. These are the codes that reach a real deployment, and each
+ * one has a cause specific enough to act on.
+ */
+function parseFailureReason(code: string): string {
+  const preamble = 'This request was rejected by the HTTP parser before it reached '
+    + 'the application, so it was not refused by authentication, origin or schema. ';
+  switch (code) {
+    case 'HPE_HEADER_OVERFLOW':
+      return 'The request headers are larger than this server accepts.';
+    case 'HPE_LF_EXPECTED':
+    case 'HPE_CR_EXPECTED':
+    case 'HPE_STRICT':
+    case 'HPE_INVALID_EOF_STATE':
+      return preamble
+        + 'A line ending is wrong: there is a carriage return without its line feed. '
+        + 'A program talking to this service does not do that. A command that was '
+        + 'copied and pasted does, and the usual carrier is a value pasted into a '
+        + 'header, such as an API key that brought a line break with it. Retype the '
+        + 'request on one line rather than pasting it, or run `pnpm smoke`, which '
+        + 'makes the same request from Node with no shell in the way.';
+    case 'HPE_INVALID_HEADER_TOKEN':
+      return preamble
+        + 'A header name contains a character that is not allowed in one, usually a '
+        + 'space. Check the headers being sent, and any proxy in front of this '
+        + 'service that adds its own.';
+    case 'HPE_INVALID_CONTENT_LENGTH':
+    case 'HPE_UNEXPECTED_CONTENT_LENGTH':
+      return preamble
+        + 'The content-length does not agree with the body that followed it.';
+    case 'HPE_INVALID_METHOD':
+      return preamble + 'The request line does not begin with a method this server knows.';
+    case 'HPE_INVALID_VERSION':
+      return preamble + 'The request line does not name an HTTP version this server speaks.';
+    default:
+      return preamble
+        + 'Check for a malformed header, a bad content-length, or a proxy in front '
+        + 'of this service inserting one.';
+  }
+}
+
+/**
+ * Why the server could not take the port, in the operator's words.
+ *
+ * Without this a failed `listen` reaches Node's default handler for an
+ * unhandled 'error' event, which prints a stack trace through node:net and
+ * exits. The reason is in there, on the fourth line, under two frames of
+ * internals, and the first thing anybody reads is "throw er". A container that
+ * cannot start should say what it needs, not how it died.
+ *
+ * The commonest case by far is a previous instance still holding the port,
+ * which on a platform that runs a managed process looks like the new release
+ * simply not starting.
+ */
+export function listenFailureMessage(
+  error: NodeJS.ErrnoException,
+  port: number,
+  host: string,
+): string {
+  switch (error.code) {
+    case 'EADDRINUSE':
+      return `Nothing started: ${host}:${port} is already in use.\n`
+        + '  Something else is listening there, almost always an earlier instance of\n'
+        + '  this service that was not stopped. Stop it and start again, or set PORT\n'
+        + '  to a free port. Two instances cannot share one port, and the one that\n'
+        + '  already holds it is serving the older release.';
+    case 'EACCES':
+      return `Nothing started: not permitted to listen on ${host}:${port}.\n`
+        + (port < 1024
+          ? '  Ports below 1024 need privileges most containers do not have. Listen on\n'
+            + '  a high port and map it, which is what the platform expects anyway.'
+          : '  Check whether the host or a sandbox policy restricts this port.');
+    case 'EADDRNOTAVAIL':
+      return `Nothing started: ${host} is not an address this machine has.\n`
+        + '  Set HOST to 0.0.0.0 to listen on every interface, which is what a\n'
+        + '  container behind a proxy needs.';
+    default:
+      return `Nothing started: could not listen on ${host}:${port} (${error.code ?? 'unknown'}).\n`
+        + `  ${error.message}`;
+  }
 }
 
 /**

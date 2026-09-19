@@ -24,7 +24,7 @@
 import { SandboxConnector } from '@detent/awa-connectors';
 import { AnthropicModelProvider, ScriptedModelProvider, type ModelProvider } from '@detent/awa-agent';
 import { ALL_FEATURES, JsonLogger, LocalKeyProvider, MetricsRegistry, featuresFromEnv } from '@detent/awa-core';
-import { Api, ApiKeyService, Platform, RequestRateLimiter, createHttpServer } from './index.js';
+import { Api, ApiKeyService, Platform, RequestRateLimiter, createHttpServer, listenFailureMessage } from './index.js';
 import { bootEnvironmentFrom, configurationProblems, databaseProblem } from './boot-config.js';
 import { createNotConfiguredServer } from './not-configured-server.js';
 import { buildDevSites } from './dev-sites.js';
@@ -70,6 +70,10 @@ if (boot.deployed) {
     const refusal = createNotConfiguredServer({
       problems,
       log: (line) => console.error(line),
+    });
+    refusal.on('error', (error: NodeJS.ErrnoException) => {
+      console.error(listenFailureMessage(error, port, host));
+      process.exit(75);
     });
     refusal.listen(port, host);
     // Nothing below this point runs. Returning rather than exiting is the
@@ -173,6 +177,10 @@ if (hostProblems.length > 0 && boot.deployed) {
     problems: hostProblems.map((problem) => problem.message),
     log: (line) => console.error(line),
   });
+  refusal.on('error', (error: NodeJS.ErrnoException) => {
+    console.error(listenFailureMessage(error, port, host));
+    process.exit(75);
+  });
   refusal.listen(port, host);
   await new Promise<never>(() => {});
 }
@@ -248,6 +256,18 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     server.close(() => process.exit(0));
   });
 }
+
+// A failed listen is a message, not a stack trace through node:net. The
+// commonest cause is an earlier instance still holding the port, which on a
+// platform running a managed process presents as the new release simply not
+// starting, with the reason four lines into an exception nobody reads.
+server.on('error', (error: NodeJS.ErrnoException) => {
+  console.error(listenFailureMessage(error, port, host));
+  // 75 is EX_TEMPFAIL: a supervisor should retry, because the port may be
+  // freed by whatever is holding it. A crash loop here is a true statement
+  // about the environment rather than a fault in the release.
+  process.exit(75);
+});
 
 server.listen(port, host, () => {
   // Printed once, at boot, on a development server only. Keys are stored as

@@ -2,7 +2,7 @@
   "name": "@detent/agentic-website-assistant",
   "version": "1.0.0",
   "private": true,
-  "description": "Detent Agentic Website Assistant — multi-tenant, multi-CRM governed conversational sales assistant.",
+  "description": "Detent Agentic Website Assistant \u2014 multi-tenant, multi-CRM governed conversational sales assistant.",
   "license": "UNLICENSED",
   "type": "module",
   "engines": {
@@ -20,7 +20,8 @@
     "test:vitest": "vitest run",
     "test:fallback": "node --experimental-transform-types --disable-warning=ExperimentalWarning --import ./tools/register-fallback.mjs tools/run-tests.ts",
     "serve:tsx": "tsx packages/server/src/main.ts",
-    "serve:node": "node --experimental-transform-types --disable-warning=ExperimentalWarning --import ./tools/register-ts.mjs packages/server/src/main.ts"
+    "serve:node": "node --experimental-transform-types --disable-warning=ExperimentalWarning --import ./tools/register-ts.mjs packages/server/src/main.ts",
+    "smoke": "node tools/smoke.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

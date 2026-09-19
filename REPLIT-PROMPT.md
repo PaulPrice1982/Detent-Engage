@@ -17,7 +17,7 @@ Agent is not.
 ---
 
 ```
-This repository is COMPLETE. It typechecks clean and all 1,187 tests pass. Do
+This repository is COMPLETE. It typechecks clean and all 1,192 tests pass. Do
 NOT write, refactor, reformat or "improve" any source, test, dependency or
 migration. Your only job is to update it, run it, and report what the commands
 printed.
@@ -67,10 +67,10 @@ where the registry installed it and under the built-in runner where it did not.
 Both run the same files and both must report the same counts:
 
     Test Files  67 passed | 2 skipped (69)          <- vitest
-         Tests  1187 passed | 3 skipped (1190)
+         Tests  1192 passed | 3 skipped (1195)
 
     Test files  69                                   <- built-in runner
-    Tests       1187 passed, 3 skipped
+    Tests       1192 passed, 3 skipped
 
 Either is a pass. The 3 skipped tests need a PostgreSQL and a Redis and skip
 themselves without one, which is correct on Replit and is not a failure.
@@ -145,33 +145,51 @@ Then sign in at /console/signin with:
 
 Expected: it redirects to /console and shows the accounts screen.
 
-Then, in the Shell, put the widget key printed at boot into a variable and send
-one request. Two lines, no backslash continuations, because a line continuation
-that gets mangled on the way into a shell produces a malformed request rather
-than an obvious error:
+Then, in the Shell, run the runtime check. It makes the session request from
+Node rather than from a shell, so there is nothing to quote and nothing to
+mangle:
 
-    KEY=awa_pub_...paste_the_widget_key_here...
+    pnpm smoke
 
-    curl -s -i -XPOST localhost:8787/v1/sessions -H "authorization: Bearer $KEY" -H "origin: http://localhost:8787" -H "content-type: application/json" -d '{"jurisdiction":"UK"}'
+Expected, with the widget key taken from the boot output:
 
-Expected: `HTTP/1.1 201 Created`, and a JSON body containing session_id,
-disclosure, locale and streaming fields.
+    node tools/smoke.mjs --key awa_pub_...paste_the_widget_key_here...
+
+    Pages
+      PASS  /
+      PASS  /console/signin
+      PASS  /app/signin
+      PASS  /reseller/signin
+      PASS  /console.html
+      PASS  /trust.html
+      PASS  /widget/panel.html
+
+    Session API
+      PASS  POST /v1/sessions  201, session sess_...
+
+    All checks passed.
+
+Without `--key` it checks the pages and reports the session check as SKIP,
+which is a pass for the pages and not a failure.
 
 How to read anything else:
 
-  - 403 with `POLICY_DENIED` means the key or the origin was refused. The
-    `origin` header is required: widget keys are bound to the tenant's
-    registered origins. That refusal is the control working, not a bug. Check
-    that KEY holds the widget key (`awa_pub_`), not one of the two `awa_sk_`
-    keys, and that nothing was left as a placeholder.
-  - 400 with `SCHEMA_INVALID` means the body was not JSON. Check the quoting.
-  - **400 with `MALFORMED_REQUEST`** means the HTTP parser rejected the request
-    before the application saw it, so it is not an authentication, origin or
-    schema failure. It is a malformed header or content-length, usually a
-    mangled command line. Retype the curl by hand rather than pasting it.
-  - **400 with an empty body** means you are not running this build. Every
-    refusal in this build carries a reason; a bare 400 with nothing in it is
-    Node's own parser reply from an older version. Re-run STEP 1.
+  - `FAIL ... 403` means the key or the origin was refused. The message names
+    the origin it sent; it must be one of AWA_ORIGINS, and the key must be the
+    `awa_pub_` one rather than either `awa_sk_` key. That refusal is the
+    control working, not a bug.
+  - `FAIL ... MALFORMED_REQUEST` from `pnpm smoke` would mean something between
+    this command and the server is rewriting the request, because the script
+    builds it itself. It has never been seen.
+
+Do not verify this with a hand-typed curl. Two releases were reported broken on
+a mangled command rather than on the server: once when line continuations were
+lost, and once when a pasted key carried a line break into a header, which the
+HTTP parser refuses with HPE_LF_EXPECTED. `pnpm smoke` exists because of both.
+
+If the server does not start at all, read the first line it prints. A port
+already held by an earlier instance now says so in one line, names the port,
+and exits: it does not print a stack trace. Stop the older process, or set PORT.
 
 Report the output of STEP 2, STEP 3 and STEP 4 and STOP. Do not commit, do not
 open a pull request, do not modify configuration, and do not continue to any
