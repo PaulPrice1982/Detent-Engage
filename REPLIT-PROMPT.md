@@ -17,7 +17,7 @@ Agent is not.
 ---
 
 ```
-This repository is COMPLETE. It typechecks clean and all 1,212 tests pass. Do
+This repository is COMPLETE. It typechecks clean and all 1,215 tests pass. Do
 NOT write, refactor, reformat or "improve" any source, test, dependency or
 migration. Your only job is to update it, run it, and report what the commands
 printed.
@@ -67,10 +67,10 @@ where the registry installed it and under the built-in runner where it did not.
 Both run the same files and both must report the same counts:
 
     Test Files  68 passed | 2 skipped (70)          <- vitest
-         Tests  1212 passed | 3 skipped (1215)
+         Tests  1215 passed | 3 skipped (1218)
 
     Test files  70                                   <- built-in runner
-    Tests       1212 passed, 3 skipped
+    Tests       1215 passed, 3 skipped
 
 Either is a pass. The 3 skipped tests need a PostgreSQL and a Redis and skip
 themselves without one, which is correct on Replit and is not a failure.
@@ -285,40 +285,35 @@ and it is the build working as intended.
 `[deployment]` runs `node tools/migrate.mjs` before serving, so the schema is
 applied as a step of its own rather than by several containers racing at boot.
 
-### If the deploy crash-loops on "Migrations out of order"
+### A database an earlier release already migrated
 
-    Migration failed: Migrations out of order: 0001_init.sql, 0002_audit_findings.sql
-    sort before 0004_durable.sql, which has already been applied.
+Nothing to do. The first deploy of this build repairs the version ledger by
+itself and says so in the log:
 
-This happens once, to a database an earlier release already migrated, and it
-means the version ledger no longer describes the files. Two causes, and a
-deployment can have both:
+    Migration ledger does not match the files: 0002_audit_findings.sql sorts
+    before 0004_durable.sql, which is already applied. Every migration here
+    only declares schema and does so idempotently, so the whole sequence is
+    being replayed in order, which ends where a fresh install ends. Nothing is
+    lost and no data is touched.
 
-  - Two migrations were renumbered to remove a duplicate prefix, so the ledger
-    records names that no longer exist. This release repairs that by itself:
-    a renamed migration is recognised by its checksum, the row is renamed, and
-    nothing is re-run.
-  - An earlier release's migration files carried their own COMMIT, which ended
-    the runner's transaction early. The schema was committed and the row
-    recording it was not, so the ledger is missing rows for migrations the
-    database plainly has. That is the case this message is about.
+Two things put a database in that state, and a deployment can have both. Two
+migrations were renumbered to remove a duplicate prefix, so the ledger records
+names that no longer exist: a renamed migration is recognised by its checksum
+and the row is renamed. And an earlier release's migration files carried their
+own COMMIT, which ended the runner's transaction early, so the schema was
+committed and the row recording it was not.
 
-The way out, run once against the deployment's database from the Shell:
+The runner cannot tell that apart from a migration merged behind another
+branch's, and it does not have to. When every migration only declares schema
+and does so idempotently, replaying the sequence in order ends where a fresh
+install ends whichever caused it, so the question is whether replay is safe,
+and that is answerable by reading the files. Verified: a database recovered
+this way matches a freshly migrated one exactly, 32 tables, 16 policies and
+253 columns.
 
-    DATABASE_URL="<the deployment database URL>" node tools/migrate.mjs --repair
-
-It replays the whole sequence in order. Every migration in this release is
-idempotent, so one already in the schema changes nothing, and replaying in
-order is what makes the result identical to a fresh install rather than merely
-self-consistent. Verified: a database repaired this way matches a freshly
-migrated one exactly, 32 tables, 16 policies and 253 columns.
-
-Then deploy again. The ordinary `node tools/migrate.mjs` will report "Schema is
-already current" and the container will start.
-
-`--repair` is never automatic. Applying a migration out of order is the thing
-the ordering guard exists to prevent, and doing it has to be a decision
-somebody makes.
+When replay would not be safe, because a migration carries data or can only
+run once, it still refuses and names the file and the reason. `--repair`
+remains for running the same thing by hand.
 
 ## If the Agent stalls
 

@@ -72,7 +72,10 @@ try {
         + 'here is idempotent, so one that is already in the schema changes nothing.\n',
       );
     }
-    const ran = await migrate(database, directory, { repair });
+    const ran = await migrate(database, directory, {
+      repair,
+      onNotice: (line) => process.stdout.write(`${line}\n`),
+    });
     process.stdout.write(
       ran.length === 0
         ? 'Schema is already current; nothing to apply.\n'

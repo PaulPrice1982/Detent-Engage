@@ -65,11 +65,9 @@ AWA_DEV_PRINT_KEYS = "1"
 # Migrations run as their own step, before anything serves. A container that
 # migrates on start races itself the moment the platform runs a second one.
 #
-# If this refuses with "Migrations out of order", the database was migrated by
-# an earlier release whose files carried their own COMMIT, so its version
-# ledger is missing rows for migrations the schema plainly has. Run this once
-# from the Shell against the deployment database, then deploy again:
-#
-#   DATABASE_URL="<deployment database URL>" node tools/migrate.mjs --repair
+# A database an earlier release already migrated needs nothing done to it: the
+# first deploy of this build repairs its version ledger by itself and says so
+# in the log. It refuses only when replaying would not be safe, and then names
+# the file and the reason.
 run = ["sh", "-c", "node tools/migrate.mjs && pnpm serve"]
 deploymentTarget = "cloudrun"

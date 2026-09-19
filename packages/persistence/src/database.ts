@@ -186,6 +186,50 @@ export class Database {
  * A migration recorded but not applied is the state nobody can recover from by
  * reading the database.
  */
+/**
+ * Whether replaying the whole sequence is provably safe, and why not if it is not.
+ *
+ * Replay is safe when every migration only declares schema and declares it
+ * idempotently: re-running one then re-states what is already there. It is not
+ * safe when a migration carries data, because a second INSERT is a second row,
+ * and not safe when a migration is written to run exactly once, because a bare
+ * CREATE TABLE fails the second time and takes the whole release with it.
+ *
+ * These are the same rules `tests/migrations.test.ts` enforces on the files.
+ * Checked again here, at the moment the decision is made, because a rule that
+ * only holds in CI is a rule that does not hold on the machine that matters.
+ */
+function replaySafety(sources: ReadonlyMap<string, string>): string[] {
+  const reasons: string[] = [];
+  for (const [name, raw] of sources) {
+    const body = raw
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('--'))
+      .join('\n');
+
+    if (/^\s*(BEGIN|COMMIT|ROLLBACK)\s*;/m.test(body)) {
+      reasons.push(`${name} manages its own transaction`);
+    }
+    // A second INSERT is a second row. Nothing here may carry data.
+    if (/^\s*(INSERT|UPDATE|DELETE)\s/im.test(body)) {
+      reasons.push(`${name} changes data, not only schema`);
+    }
+    for (const line of body.split('\n')) {
+      if (!/^\s*CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|SCHEMA|SEQUENCE|EXTENSION)\b/i.test(line)) continue;
+      if (!/IF NOT EXISTS/i.test(line)) reasons.push(`${name} has a create that runs only once`);
+    }
+    for (const [, trigger] of body.matchAll(/CREATE TRIGGER\s+(\w+)/gi)) {
+      if (!new RegExp(`DROP TRIGGER IF EXISTS ${trigger}\\b`, 'i').test(body)) {
+        reasons.push(`${name} creates trigger ${trigger} without dropping it first`);
+      }
+    }
+    if (/CREATE POLICY/i.test(body) && !/DROP POLICY IF EXISTS/i.test(body)) {
+      reasons.push(`${name} creates a policy without dropping it first`);
+    }
+  }
+  return [...new Set(reasons)];
+}
+
 export interface MigrateOptions {
   /**
    * Apply pending migrations wherever they sort, instead of refusing.
@@ -201,6 +245,8 @@ export interface MigrateOptions {
    * guard exists to prevent, and doing it has to be somebody's decision.
    */
   readonly repair?: boolean;
+  /** Told what happened, so a deployment log says why the schema changed. */
+  readonly onNotice?: (line: string) => void;
 }
 
 export async function migrate(
@@ -263,9 +309,12 @@ export async function migrate(
    * migration under two names, so the row is renamed and nothing is re-run.
    */
   const onDisk = new Set(files);
+  const sources = new Map<string, string>();
   const byChecksum = new Map<string, string>();
   for (const file of files) {
-    byChecksum.set(await digest(await readFile(resolve(directory, file), 'utf8')), file);
+    const sql = await readFile(resolve(directory, file), 'utf8');
+    sources.set(file, sql);
+    byChecksum.set(await digest(sql), file);
   }
   const renames: { from: string; to: string }[] = [];
   for (const row of ledger) {
@@ -297,22 +346,52 @@ export async function migrate(
   // Two files also sharing a numeric prefix is the same fault a step earlier:
   // their relative order is then whatever the filenames sort to, which is not a
   // decision anybody made.
+  let replay = options.repair ?? false;
   const highestApplied = [...applied].sort().pop();
-  if (highestApplied !== undefined && !options.repair) {
+  if (highestApplied !== undefined && !replay) {
     const late = files.filter((name) => !applied.has(name) && name < highestApplied);
     if (late.length > 0) {
-      throw new Error(
-        `Migrations out of order: ${late.join(', ')} sort before ${highestApplied}, `
-        + 'which has already been applied.\n\n'
-        + 'Two things cause this. A migration merged behind another branch\'s, in which '
-        + 'case renumber it after the highest applied one and check the schema it now '
-        + 'runs against. Or a ledger that lost rows, which is what an earlier release of '
-        + 'this application did: its migration files carried their own COMMIT, so the '
-        + 'schema was committed and the row recording it was not.\n\n'
-        + 'If it is the second, every migration here is idempotent and re-running one '
-        + 'against a schema that already has it changes nothing, so:\n'
-        + '    node tools/migrate.mjs --repair\n'
-        + 'Nothing has been changed.',
+      /**
+       * Out of order, and there are two ways to be here.
+       *
+       * A migration merged behind another branch's, or a ledger that lost the
+       * rows for migrations the schema plainly has, which is what an earlier
+       * release of this application caused by letting its files carry their
+       * own COMMIT.
+       *
+       * The runner cannot tell those apart from the outside, and for a while
+       * it refused both and named a command to run by hand. That is the wrong
+       * trade when the command cannot be run: a deployment in this state
+       * crash-loops, and nobody can reach it to repair it.
+       *
+       * It does not have to tell them apart. When every migration only
+       * declares schema and declares it idempotently, replaying the whole
+       * sequence in order ends exactly where a fresh install ends, whichever
+       * of the two caused it. So the question is not "which is it" but "is
+       * replay safe here", and that is answerable by reading the files.
+       *
+       * When it is not safe, the refusal stands.
+       */
+      const unsafe = replaySafety(sources);
+      if (unsafe.length > 0) {
+        throw new Error(
+          `Migrations out of order: ${late.join(', ')} sort before ${highestApplied}, `
+          + 'which has already been applied.\n\n'
+          + 'This would normally be recovered by replaying every migration in order, '
+          + 'which is safe when they only declare schema and do it idempotently. These '
+          + 'do not:\n'
+          + unsafe.map((reason) => `  - ${reason}`).join('\n')
+          + '\n\nFix those, or renumber the migrations after the highest applied one '
+          + 'and check the schema they now run against. Nothing has been changed.',
+        );
+      }
+      replay = true;
+      options.onNotice?.(
+        `Migration ledger does not match the files: ${late.join(', ')} sort before `
+        + `${highestApplied}, which is already applied. Every migration here only `
+        + 'declares schema and does so idempotently, so the whole sequence is being '
+        + 'replayed in order, which ends where a fresh install ends. Nothing is lost '
+        + 'and no data is touched.',
       );
     }
   }
@@ -349,8 +428,8 @@ export async function migrate(
    */
   const ran: string[] = [];
   for (const filename of files) {
-    if (!options.repair && applied.has(filename)) continue;
-    const sql = await readFile(resolve(directory, filename), 'utf8');
+    if (!replay && applied.has(filename)) continue;
+    const sql = sources.get(filename)!;
     const checksum = await digest(sql);
     await database.transaction(async (client) => {
       await client.query(sql);
