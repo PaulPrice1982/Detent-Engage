@@ -277,3 +277,57 @@ describe('a port that cannot be taken', () => {
     expect(message).toContain('8787');
   });
 });
+
+/**
+ * The platform's health probe reaches the API, not a website.
+ *
+ * Mounting the websites put a catch-all in front of the API, and `/health`
+ * stopped being the liveness endpoint and became the marketing site's 404. The
+ * homepage's own status banner reads that endpoint, so it showed "Service
+ * unreachable" about a server that was serving every page correctly.
+ *
+ * The consequence is worse than a wrong banner. A platform decides a container
+ * is alive by asking for one of these and requiring a 200; a 404 means it stops
+ * routing to the container and restarts it, for ever. This repository already
+ * documents three deployments killed that way, and `isPlatformProbe` exists to
+ * prevent it. The site mount routed around it.
+ */
+describe('a platform health probe behind a catch-all site', () => {
+  /** Answers every path, as the marketing site does when the host decides. */
+  const GREEDY_SITE = {
+    prefix: '',
+    async handle() {
+      return { status: 404, html: '<p>the site answered, which it must not</p>' };
+    },
+  };
+
+  it.each(['/health', '/healthz', '/livez', '/_health'])(
+    'answers %s from the API', async (path) => {
+      const { api, seen } = recordingApi();
+      const response = await withServer({ sites: [GREEDY_SITE] }, api, (baseUrl) =>
+        fetchWithin(`${baseUrl}${path}`, {}));
+
+      expect(response.status, `${path} was answered by the site`).toBe(200);
+      expect(seen.map((request) => request.path)).toEqual([path]);
+    },
+  );
+
+  it('leaves / to the site, which is both the probe and the home page', async () => {
+    // Reserving / would take the marketing home page away from the site. The
+    // home page answers 200, which is what the probe is asking for anyway.
+    const { api, seen } = recordingApi();
+    const response = await withServer({ sites: [GREEDY_SITE] }, api, (baseUrl) =>
+      fetchWithin(`${baseUrl}/`, {}));
+
+    expect(response.status).toBe(404); // this greedy fixture's answer
+    expect(seen, '/ must not be taken from the site').toHaveLength(0);
+  });
+
+  it('still refuses an unknown path rather than treating it as a probe', async () => {
+    const { api } = recordingApi();
+    const response = await withServer({ sites: [GREEDY_SITE] }, api, (baseUrl) =>
+      fetchWithin(`${baseUrl}/healthy-looking-marketing-page`, {}));
+    // The site's, not the API's: only the exact probe paths are reserved.
+    expect(await response.text()).toContain('the site answered');
+  });
+});

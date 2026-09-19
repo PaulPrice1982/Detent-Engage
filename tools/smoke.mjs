@@ -57,6 +57,35 @@ for (const path of [
 }
 
 console.log('');
+console.log('Platform probes');
+/**
+ * Every spelling, because which one a platform asks for is its choice.
+ *
+ * A 404 here is how a container gets restarted for ever with a healthy process
+ * inside it, and it is also what the homepage status banner reads, so it
+ * presents as "Service unreachable" about a server serving every page.
+ */
+for (const path of ['/health', '/healthz', '/readyz', '/livez', '/_health']) {
+  try {
+    const response = await fetch(`${base}${path}`, {
+      headers: { accept: 'application/json' },
+      signal: AbortSignal.timeout(10_000),
+    });
+    const text = await response.text();
+    if (response.status !== 200) {
+      fail(path, `expected 200, got ${response.status}. A probe answered by a website `
+        + 'rather than the API is how a platform decides this container is dead.');
+    } else if (!text.trimStart().startsWith('{')) {
+      fail(path, 'answered with something that is not JSON, which means a website answered it.');
+    } else {
+      pass(path, text.slice(0, 48));
+    }
+  } catch (error) {
+    fail(path, error instanceof Error ? error.message : String(error));
+  }
+}
+
+console.log('');
 console.log('Session API');
 if (!key) {
   skip('POST /v1/sessions', 'no widget key given. Pass --key, or set AWA_DEV_PRINT_KEYS=1 and read it from the boot output.');

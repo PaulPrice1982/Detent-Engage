@@ -161,10 +161,36 @@ export class Api {
     const segments = request.path.split('/').filter(Boolean);
     const [version, resource, ...rest] = segments;
 
-    if (request.method === 'GET' && request.path === '/health') {
-      // Liveness only. The platform kill-switch state used to be disclosed
-      // unauthenticated, which told an attacker exactly when to push (SEC-10).
+    /**
+     * Liveness: is this process running and able to answer.
+     *
+     * Every spelling a platform might use, because which one it asks for is
+     * the platform's choice and not ours, and a probe that 404s is read as a
+     * dead container and restarted for ever. Answered before anything else in
+     * the router so no later branch can shadow it.
+     *
+     * Liveness only. The platform kill-switch state used to be disclosed
+     * unauthenticated, which told an attacker exactly when to push (SEC-10).
+     */
+    if (request.method === 'GET'
+      && ['/health', '/healthz', '/_health', '/livez'].includes(request.path)) {
       return json(200, { status: 'ok' });
+    }
+
+    /**
+     * Readiness: is this process able to serve real traffic yet.
+     *
+     * Distinct from liveness on purpose. A process that is alive but whose
+     * stores are in memory should still be restarted rather than sent traffic
+     * in a deployment, and the two questions have different answers during a
+     * rollout. `durable` is measured from the stores rather than declared, so
+     * this reports what is actually wired.
+     */
+    if (request.method === 'GET' && request.path === '/readyz') {
+      return json(200, {
+        status: 'ready',
+        durable: this.platform.durable,
+      });
     }
 
     if (version !== 'v1') return json(404, { error: 'NOT_FOUND', message: 'Unknown route.' });

@@ -3,6 +3,7 @@ import type { Api, ApiRequest } from './api.js';
 import { originMatches } from './auth.js';
 import { serveStatic, type StaticMount } from './static-files.js';
 import type { SiteRequest, SiteResponse } from './site-router.js';
+import { isPlatformProbe } from './host-routing.js';
 
 /**
  * HTTP transport.
@@ -80,15 +81,28 @@ export interface MountedSite {
 }
 
 /**
- * Paths the API owns outright.
+ * Paths the API owns outright, which no site may answer.
  *
- * A site mounted at `''` matches these too, and a site that answered one would
- * take over the endpoint every widget conversation starts with. Checked before
+ * A site mounted at `''` matches every path, and a site that answered one of
+ * these would take over the endpoint every widget conversation starts with, or
+ * the endpoint the platform decides this container is alive by. Checked before
  * any site is consulted rather than relying on each site to decline, because a
  * site that forgets to decline is a site that silently breaks the product.
+ *
+ * The health paths are here because they were lost exactly that way. Mounting
+ * the websites put a catch-all in front of the API, and `/health` stopped being
+ * the API's liveness endpoint and started being the marketing site's 404. The
+ * platform reads a 404 from its probe as a dead container, stops routing to it
+ * and restarts it, which is the failure this repository already documents as
+ * having killed three deployments. A probe answered by a website is not a probe.
+ *
+ * `/` is deliberately not reserved. It is both the platform's default probe and
+ * the marketing home page, and the marketing home answers 200, which is what
+ * the probe is asking.
  */
 function isApiPath(path: string): boolean {
-  return path.startsWith('/v1/') || path === '/v1';
+  if (path.startsWith('/v1/') || path === '/v1') return true;
+  return path !== '/' && isPlatformProbe(path);
 }
 
 const DEFAULT_TIMEOUTS = { headersMs: 15_000, requestMs: 30_000, keepAliveMs: 5_000 };

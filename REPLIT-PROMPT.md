@@ -17,7 +17,7 @@ Agent is not.
 ---
 
 ```
-This repository is COMPLETE. It typechecks clean and all 1,192 tests pass. Do
+This repository is COMPLETE. It typechecks clean and all 1,206 tests pass. Do
 NOT write, refactor, reformat or "improve" any source, test, dependency or
 migration. Your only job is to update it, run it, and report what the commands
 printed.
@@ -66,11 +66,11 @@ Expected final lines. There are two shapes, because the suite runs under vitest
 where the registry installed it and under the built-in runner where it did not.
 Both run the same files and both must report the same counts:
 
-    Test Files  67 passed | 2 skipped (69)          <- vitest
-         Tests  1192 passed | 3 skipped (1195)
+    Test Files  68 passed | 2 skipped (70)          <- vitest
+         Tests  1206 passed | 3 skipped (1209)
 
-    Test files  69                                   <- built-in runner
-    Tests       1192 passed, 3 skipped
+    Test files  70                                   <- built-in runner
+    Tests       1206 passed, 3 skipped
 
 Either is a pass. The 3 skipped tests need a PostgreSQL and a Redis and skip
 themselves without one, which is correct on Replit and is not a failure.
@@ -164,10 +164,21 @@ Expected, with the widget key taken from the boot output:
       PASS  /trust.html
       PASS  /widget/panel.html
 
+    Platform probes
+      PASS  /health   {"status":"ok"}
+      PASS  /healthz  {"status":"ok"}
+      PASS  /readyz   {"status":"ready","durable":false}
+      PASS  /livez    {"status":"ok"}
+      PASS  /_health  {"status":"ok"}
+
     Session API
       PASS  POST /v1/sessions  201, session sess_...
 
     All checks passed.
+
+`durable: false` on /readyz is correct without a DATABASE_URL and is not a
+failure. It reports what is actually wired rather than what the deployment
+claims about itself.
 
 Without `--key` it checks the pages and reports the session check as SKIP,
 which is a pass for the pages and not a failure.
