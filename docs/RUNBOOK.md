@@ -13,8 +13,22 @@ and it will save you a day.
 A visitor lands on **a customer's** website. A panel offers to help. The
 visitor types a question. An AI assistant answers it, qualifies them, and
 either books a meeting, hands them to a person, or decides they are not a
-fit. Detent charges the customer for the **confirmed outcome**, not for seats
-and not for messages.
+fit.
+
+**How Detent charges for that, stated carefully, because it is easy to get
+wrong and somebody already has.** The customer buys a **monthly or annual
+subscription** that includes a credit balance, and their replies, voice
+minutes, conversations and enrichment draw against it. On top of that, most
+plans carry a **fee per confirmed outcome** — `starter` £6, `growth` £5,
+`command` £4 — and `answers`, the self-serve plan with no CRM to confirm an
+outcome in, charges 50p per assistant reply instead, capped at six billable
+replies a conversation so a conversation cannot exceed £3 however long
+somebody talks. A reply the assistant could not answer from approved
+knowledge is not charged at all.
+
+"We charge for the outcome, not for messages" is a good line and it is not
+the whole model. The subscription is the base; the outcome fee is one line
+item on it. `packages/billing/src/plans.ts` is the truth.
 
 The thing that makes it sellable is not the assistant. It is everything
 around the assistant:
@@ -62,22 +76,36 @@ Do not take this from the marketing site. Take it from here.
 | Dual control over money, role and MFA gating | `packages/console/src/rbac.ts` |
 | The customer area: install, knowledge, billing, status | `packages/server/src/app-*.ts` |
 | The reseller portal and commission | `packages/reseller` |
+| The spoken assistant, end to end | `packages/voice`, `packages/widget/public/panel.js` |
+
+**On voice specifically**, because this section used to say the opposite and
+you may have been told it. It is wired. A visitor presses the microphone,
+the panel switches the session to voice modality, the tenant's spoken
+disclosure is played **before** capture is armed, the transcript goes through
+the same governed pipeline as a typed message, the reply comes back as text
+and audio, and the voice minute is metered from the duration that actually
+played. `tests/voice-wiring.test.ts` is the gate.
+
+Two things about it are worth knowing before you change anything.
+
+`assertApprovedForSpeech` and `Platform.speakApproved` are the whole safety
+argument: the synthesiser is handed text that has already been through the
+pipeline and is given no history, no question and no tools. The `approved`
+parameter looks redundant. It is not. Leave it.
+
+Capture is the **browser's own** speech recogniser, so the visitor's audio
+stays on their machine and what crosses the network is a transcript. That
+means no microphone audio for us to store, and it means Chrome. Firefox and
+Safari do not implement it, and the panel correctly hides the microphone
+there rather than offering one that does nothing.
 
 ### Built but not connected
 
-**The voice channel.** `packages/voice` is 730 lines: a `VoiceProvider` port,
-an OpenAI Realtime adapter, and a `GovernedVoiceSession` wrapper whose guard
-refuses to open any session where the provider is allowed to answer on its
-own. It has its own test file. **Nothing imports it.** No dependency in
-`packages/server/package.json`, no route, no audio transport.
-
-Connecting it is Tom and Tony's. It needs an OpenAI Realtime key, a transport
-route on the server, and the guard left exactly where it is.
-
-The governance around voice *is* live: a session opened with
-`modality: "voice"` returns the spoken-form disclosure, voice minutes are
-metered, concurrent calls are capped, and there is always a text-only route
-out.
+`packages/voice`'s **realtime** half. `GovernedVoiceSession` and the OpenAI
+Realtime adapter are for a live bidirectional session — telephony, or
+streaming audio — and this server holds no sockets open. What is wired is
+the turn-shaped surface beside it. If you want a phone channel, that is the
+piece to connect, and the guard stays exactly where it is.
 
 ### Not built
 
@@ -101,7 +129,7 @@ out.
 ```sh
 pnpm install            # never with --no-optional; it breaks esbuild's binary
 pnpm typecheck          # two lines of output, then nothing
-pnpm test               # 1,233 passed, 3 skipped
+pnpm test               # 1,254 passed, 3 skipped
 pnpm serve
 ```
 
@@ -230,7 +258,8 @@ part-time attention.
 | 4 | Read `docs/ARCHITECTURE.md` and `docs/OPERATIONS.md`. | You can say which package owns the consent gate without looking. |
 | 5 | Wire the Platform core onto the Postgres adapters. | The boot banner stops printing the in-memory NOTE. |
 
-After that, the voice channel.
+After that: the console user-management screen, and the realtime voice
+channel if a phone product is wanted.
 
 ---
 

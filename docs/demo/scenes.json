@@ -1,6 +1,8 @@
 {
   "title": "Detent Engage",
   "subtitle": "End-to-end demonstration for the CRO, CFO, COO and CIO",
+  "frames": "frames",
+  "out": "detent-engage-demo.mp4",
   "voices": {
     "narrator": "Jim Executive (ElevenLabs) — the narrator, not the product",
     "assistant": "Ophelia (ElevenLabs) — the assistant's own English voice, as a visitor hears it",

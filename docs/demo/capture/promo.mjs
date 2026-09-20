@@ -118,8 +118,13 @@ run(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', silent]);
 
 const OUT = resolve(DEMO, promo.out ?? 'detent-engage-promo.mp4');
 if (hasVoice) {
+  // `apad` before `-shortest`, so the cut lands on the end of the video and
+  // not on the last word of the read. The beats are laid out to the voice
+  // plus a beat of air; without the pad, that beat of air is cut off and the
+  // film ends the instant the narrator stops, mid sign-off.
   run(['-i', silent, '-i', voice,
-    '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11,aformat=channel_layouts=stereo:sample_rates=48000',
+    '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11,'
+      + 'aformat=channel_layouts=stereo:sample_rates=48000,apad',
     '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k',
     '-shortest', '-movflags', '+faststart', OUT]);
 } else {

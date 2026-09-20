@@ -13,7 +13,11 @@
  * and the MP4 comes out silent with the captions burned in. Dropping the
  * clips in and running this again is the only step between the two.
  *
- *   node docs/demo/capture/stitch.mjs [--out FILE] [--height 1080]
+ * The manifest names its scenes, its frames directory and its output, so a
+ * second scene-based film is a second manifest rather than a second copy of
+ * this script.
+ *
+ *   node docs/demo/capture/stitch.mjs [manifest.json] [--out FILE] [--height 1080]
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -49,7 +53,12 @@ const flag = (name, fallback) => {
   const i = args.indexOf(name);
   return i === -1 ? fallback : args[i + 1];
 };
-const OUT = resolve(flag('--out', resolve(DEMO, 'detent-engage-demo.mp4')));
+/** The manifest: the first bare argument, or the C-suite walkthrough. */
+const MANIFEST = args.find((a) => a.endsWith('.json')) ?? 'scenes.json';
+const film = JSON.parse(readFileSync(resolve(DEMO, MANIFEST), 'utf8'));
+/** Named in the manifest so two films cannot overwrite each other's frames. */
+const FRAMES = resolve(DEMO, film.frames ?? 'frames');
+const OUT = resolve(flag('--out', resolve(DEMO, film.out ?? 'detent-engage-demo.mp4')));
 const H = Number(flag('--height', '1080'));
 const W = Math.round(H * 16 / 9 / 2) * 2;
 /** The window the recording plays in, between the title bar and the caption. */
@@ -80,7 +89,7 @@ function duration(file) {
   return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
 }
 
-const scenes = JSON.parse(readFileSync(resolve(DEMO, 'scenes.json'), 'utf8')).scenes;
+const scenes = film.scenes;
 const pad2 = (n) => String(n).padStart(2, '0');
 
 /**
@@ -107,8 +116,8 @@ for (const s of scenes) {
   // A beat at each end, so a cut never lands on the first or last syllable.
   const target = Math.max(6, spoken + 1.4);
 
-  const slide = resolve(DEMO, `frames/slide-${n}.png`);
-  const overlay = resolve(DEMO, `frames/overlay-${n}.png`);
+  const slide = resolve(FRAMES, `slide-${n}.png`);
+  const overlay = resolve(FRAMES, `overlay-${n}.png`);
   const clip = s.clip ? resolve(DEMO, s.clip) : '';
   const segment = resolve(WORK, `seg-${n}.mp4`);
 
@@ -131,7 +140,7 @@ for (const s of scenes) {
       '-profile:v', 'high', '-level', '4.1', segment,
     ]);
   } else {
-    const still = existsSync(slide) ? slide : resolve(DEMO, 'frames/card-open.png');
+    const still = existsSync(slide) ? slide : resolve(FRAMES, 'card-open.png');
     run([
       '-loop', '1', '-i', still, '-t', target.toFixed(2),
       '-vf', `scale=${W}:${H},fps=25,format=yuv420p`,
@@ -147,7 +156,9 @@ for (const s of scenes) {
 /** Opening and closing cards, which carry no narration of their own. */
 const card = (name, seconds) => {
   const file = resolve(WORK, `card-${name}.mp4`);
-  run(['-loop', '1', '-i', resolve(DEMO, `frames/card-${name}.png`), '-t', String(seconds),
+  // FRAMES, not a hard-coded `frames/`: a second film with its own manifest
+  // was silently opening and closing on the first film's cards.
+  run(['-loop', '1', '-i', resolve(FRAMES, `card-${name}.png`), '-t', String(seconds),
     '-vf', `scale=${W}:${H},fps=25,format=yuv420p`, '-an',
     '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
     '-profile:v', 'high', '-level', '4.1', file]);
@@ -197,8 +208,19 @@ if (haveAudio === 0) {
   const join = filters.length > 1
     ? `${filters.map((_, i) => `[a${i}]`).join('')}amix=inputs=${filters.length}:normalize=0[raw]`
     : `[a0]anull[raw]`;
+  /**
+   * `apad` at the end, and it is not cosmetic.
+   *
+   * The mixed narration ends on the last word of the last scene, and
+   * `-shortest` then cuts the video there. That silently truncated the
+   * closing card to about a second: the film ended mid-card, on whichever
+   * frame the last syllable happened to land on. Padding the audio past the
+   * end of the video lets `-shortest` cut on the video instead, which is the
+   * length the film was laid out to be.
+   */
   const mixed = `${filters.join(';')};${join};` +
-    `[raw]loudnorm=I=-16:TP=-1.5:LRA=11,aformat=channel_layouts=stereo:sample_rates=48000[mix]`;
+    `[raw]loudnorm=I=-16:TP=-1.5:LRA=11,` +
+    `aformat=channel_layouts=stereo:sample_rates=48000,apad[mix]`;
   run(['-i', silentVideo, ...inputs, '-filter_complex', mixed,
     '-map', '0:v', '-map', '[mix]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
     '-shortest', '-movflags', '+faststart', OUT]);

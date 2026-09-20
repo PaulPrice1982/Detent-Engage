@@ -72,14 +72,27 @@ Chrome or Edge. The clips are VP8 in WebM, which is what the bundled encoder
 produces; Safari plays them from version 14 on macOS, and the player falls
 back to the screenshots if a browser refuses one.
 
-## The four cuts
+## The cuts
 
 | Cut | Audience | Length | Built by |
 |---|---|---|---|
-| `detent-engage-demo.mp4` | CRO, CFO, COO and CIO, in one room | 8 min 48 | `capture/stitch.mjs` from `scenes.json` |
+| `detent-engage-builders.mp4` | Tony and Tom: what it is, what is built, what they do | 15 min | `capture/stitch.mjs builders.json` |
+| `detent-engage-demo.mp4` | CRO, CFO, COO and CIO, in one room | 8 min 48 | `capture/stitch.mjs scenes.json` |
 | `detent-engage-promo.mp4` | A CRO or founder who already has a chat agent | 58 sec | `capture/promo.mjs promo.json` |
 | `detent-engage-reseller.mp4` | A web agency that builds and hosts client sites | 2 min 12 | `capture/promo.mjs reseller.json` |
 | `detent-engage-voice.mp4` | Anyone who asks whether it really speaks | 2 min 15 | `capture/voice-film.mjs` |
+
+Two assemblers, and which one a film uses is decided by its narration. A
+film with **one continuous read** and the pictures cut to it is `promo.mjs`
+and a beats manifest. A film where **each scene has its own narration** and
+lasts as long as that narration is `stitch.mjs` and a scenes manifest. Both
+take the manifest as their argument, and the manifest names its own frames
+directory and output, so a new film is a new manifest rather than a copy of
+a script.
+
+`capture/frames.cjs` renders the scene overlays and slides for a scenes
+manifest; `capture/cards.cjs` renders the cards and lower thirds for a beats
+manifest. Both take the manifest too.
 
 The walkthrough gives every scene its own narration and lets the scene last
 as long as the narration. The other two have one continuous read and cut the
@@ -115,4 +128,22 @@ the container cannot supply and the capture script does:
   from the same recordings the panel fetched and played.
 
 `capture/voice.cjs` films it and `capture/voice-film.mjs` cuts it.
+
+## The builders' cut
+
+`builders.json` is the film for the two people who have to build and run it,
+and it is the companion to `docs/RUNBOOK.md` rather than a version of the
+C-suite walkthrough. Twelve scenes: what the product is, what it is not, how
+it charges, what is built, what is not built and which gap is the pilot
+blocker, how to run it and the six things that will bite you, the customer's
+four implementation steps, what the assistant does with all of it, voice and
+the two things not to touch, and a first week with a definition of done for
+each day.
+
+It is candid on purpose. It names the in-memory Platform core as the largest
+risk on the board, it says the assistant's wording in the recordings came
+from a script rather than a model, and it states the charging model in full
+rather than repeating the line about outcomes. Where the film and the
+runbook disagree, the runbook is newer and the runbook wins, and the film
+says so in its first thirty seconds.
 

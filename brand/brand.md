@@ -30,6 +30,30 @@ survives the host page's Content Security Policy.
 - The `AI` badge on the launcher is never amber. Article 50 disclosure is not
   decoration and must not read as a brand flourish.
 
+## The Engage lockup
+
+`detent-engage-logo.png` is the supplied Detent Engage artwork: the amber
+chevron, "Detent" in white, "Engage" in amber, over ink, with the line "The
+website assistant that sells." beneath it.
+
+| File | What it is |
+|---|---|
+| `detent-logo.jpg` | The Detent master mark. Dot, chevron, wordmark. |
+| `detent-engage-logo.png` | The Engage lockup as supplied, with the tagline. |
+| `detent-engage-wordmark.png` | The same, cropped to the lockup. |
+| `detent-engage-wordmark-alpha.png` | The cropped lockup with its ground keyed out. |
+
+Its amber is `#EFA13C` and its ground `#0B1420`, which is the palette above
+to the digit. It is the same identity as the master mark with the module
+name added, not a second one.
+
+**The keyed version exists for one reason.** The films' ground is `#0B1622`
+and the artwork's is `#0B1420`. Those look identical in isolation and do not
+look identical when one is a rectangle sitting on the other: the logo read
+as a faint box on every end frame. Keying the ground to transparency is what
+fixed it, and it is why the films use the alpha file rather than the
+supplied one.
+
 ## Two marks, and which one wins
 
 There are two Detent identities in circulation and they are not variants of
@@ -54,14 +78,12 @@ because no Engage artwork existed to work from.
 **The decision.** The shipped chevron mark remains authoritative and the
 canvas is superseded: nothing in the product is to be rebuilt from it.
 
-**The one exception**, taken deliberately: the films sign off with the
-canvas's Engage mark, drawn inline in `docs/demo/capture/cards.cjs` and
-`docs/demo/capture/frames.cjs`. It was chosen over the Recover lockup
-because these are Engage films and Recover is a separate offering, and over
-the chevron because the sign-off is where the sub-brand reads.
+**Resolved.** For one build the films signed off with the canvas's proposed
+blue ball-and-vector Engage mark, and that was wrong. The real Engage
+artwork was then supplied: the amber chevron lockup above, which is the
+master identity with the module name added. The films use it, the product
+uses the master mark, and the two now agree. There is no seam left to
+report.
 
-**The consequence, stated rather than discovered.** A viewer who watches a
-film and then opens the website sees two different symbols. That is a real
-inconsistency and it is not resolved by either file: somebody has to decide
-which identity Detent actually has, and until they do, this is where the
-seam is.
+The canvas stays superseded. Its Recover mark, its gold, its ink and its
+typeface are not this identity, and nothing should be rebuilt from it.

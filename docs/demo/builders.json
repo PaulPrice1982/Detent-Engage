@@ -1,0 +1,225 @@
+{
+  "title": "Detent Engage: the build",
+  "subtitle": "For Tony and Tom",
+  "frames": "frames/builders",
+  "out": "detent-engage-builders.mp4",
+  "reader": "The two people who have to build it, run it, deploy it and answer for it on a customer call.",
+  "note": "The companion to docs/RUNBOOK.md. Where the two disagree, the runbook is newer and wins.",
+  "chrome": {
+    "open": {
+      "title": "The build,<br>end to end",
+      "for": "For Tony and Tom. What it is, what is built, what you do, and what the customer does.",
+      "fine": "Everything here is checked against the code. Where the film and docs/RUNBOOK.md disagree, the runbook is newer."
+    },
+    "close": {
+      "title": "Before you ship<br>anything",
+      "leftLabel": "Yours, no permission needed",
+      "left": [
+        "Anything behind a test you can run",
+        "The Platform core onto the Postgres adapters",
+        "The console user-management screen",
+        "Deployment, secrets and the boot banner",
+        "The realtime voice channel, if a phone product is wanted"
+      ],
+      "rightLabel": "Stop and talk to Paul",
+      "right": [
+        "Anything that could move money",
+        "Anything that could expose one tenant's data to another",
+        "Anything that weakens a control, including a test"
+      ]
+    }
+  },
+  "scenes": [
+    {
+      "n": 1,
+      "title": "What this is, and who it is for",
+      "seat": "Start here",
+      "audio": "audio/b01-what.mp3",
+      "caption": "The public site. The product is what sits behind it.",
+      "clip": "clips/01-marketing.webm",
+      "text": "This film is for the two people who have to build this, run it, deploy it, and answer for it when a customer's technical team asks a hard question. It is the companion to the runbook in docs. Where the two disagree, the runbook is newer and the runbook wins.\n\nHere is the shape of it. A visitor lands on a customer's website. A panel offers to help. They ask a question. An assistant answers it, qualifies them, and either books a meeting, hands them to a person, or decides they are not a fit.\n\nThe thing you are building is not the assistant. Assistants are a commodity and you can buy one this afternoon. What you are building is everything around it, and that is the part that is sellable."
+    },
+    {
+      "n": 2,
+      "title": "The product, in one page",
+      "seat": "Product",
+      "audio": "audio/b02-product.mp3",
+      "caption": "Five rules. Each one is enforced in code, not in a prompt.",
+      "pointsLabel": "What it will not do",
+      "points": [
+        "Hide that it is AI. It discloses on every session, before the first question, spoken or written.",
+        "Identify a visitor before they say yes. Not degraded, not deferred. Refused.",
+        "Invent a price, a date or a capability. It answers only from the customer's approved knowledge.",
+        "Call a tool the platform has not permitted. The model proposes; the platform disposes.",
+        "Do any of it off the record. Everything lands in a hash-chained audit log, per tenant."
+      ],
+      "points2Label": "Why that is the product",
+      "points2": [
+        "A chatbot that says anything cannot be put on a regulated company's website.",
+        "Every one of those five is a question a buyer's compliance function will ask.",
+        "They are enforced in three separate places, not written into a prompt and hoped for.",
+        "When somebody asks what Detent Engage is, that is the answer.",
+        "The assistant is the demo. The governance is the product."
+      ],
+      "text": "Five rules, and they are the whole argument.\n\nIt discloses that it is AI, on every single session, before the first question, spoken or written. It cannot identify a visitor until they say yes: not degraded, not deferred, refused. It answers only from the customer's own uploaded and approved knowledge, so it cannot invent a price, a date or a capability. Every tool it wants to call goes through a gate that decides whether the platform permits it: the model proposes, the platform disposes. And everything it does lands in a hash-chained audit log, per tenant.\n\nWhy that matters commercially: a chatbot that will say anything cannot go on a regulated company's website, and every one of those five is a question their compliance function will ask you. They are enforced in three separate places in code, not written into a prompt and hoped for.\n\nWhen somebody asks you what Detent Engage is, that is the answer. The assistant is the demo. The governance is the product."
+    },
+    {
+      "n": 3,
+      "title": "What it is not, and how it charges",
+      "seat": "Commercial",
+      "audio": "audio/b03-not.mp3",
+      "caption": "Two things you will be asked on a call, and one of them is easy to get wrong.",
+      "pointsLabel": "Engage is not Recover",
+      "points": [
+        "Recover is a separate offering: contract monetisation, excess-use recovery, notice windows.",
+        "Do not mix them in a conversation, a deck or a demo.",
+        "If a prospect asks about recovering revenue from contract data, that is Paul's conversation."
+      ],
+      "points2Label": "How Detent charges",
+      "points2": [
+        "A monthly or annual subscription, which includes a credit balance.",
+        "Replies, voice minutes, conversations and enrichment draw against that balance.",
+        "Most plans add a fee per confirmed outcome: Starter six pounds, Growth five, Command four.",
+        "Answers, the self-serve plan, charges 50p a reply instead, capped at six a conversation.",
+        "A reply it could not answer from approved knowledge is not charged at all."
+      ],
+      "text": "Two things you will be asked, and one of them is easy to get wrong because somebody already has.\n\nFirst: Detent Engage is not Detent Recover. Recover is a separate offering. Contract monetisation, excess-use recovery, renewal and notice windows. Do not mix them in a conversation, a deck or a demo. If a prospect starts asking about recovering revenue out of their contract data, that is a Recover conversation and it is Paul's.\n\nSecond: how this charges. The customer buys a monthly or annual subscription that includes a credit balance, and their replies, voice minutes, conversations and enrichment draw against it. On top of that, most plans carry a fee per confirmed outcome: six pounds on Starter, five on Growth, four on Command. The self-serve plan, Answers, has no CRM to confirm an outcome in, so it charges fifty pence per assistant reply instead, capped at six billable replies in a conversation, which means a conversation cannot cost more than three pounds however long somebody talks. And a reply the assistant could not answer from approved knowledge is not charged at all.\n\nYou will hear the line we charge for the outcome, not for messages. It is a good line and it is not the whole model. The subscription is the base. Plans dot ts is the truth."
+    },
+    {
+      "n": 4,
+      "title": "What is built",
+      "seat": "Build",
+      "audio": "audio/b04-built.mp3",
+      "caption": "Take this from the runbook, not from the marketing site.",
+      "pointsLabel": "Built, tested and demonstrated",
+      "points": [
+        "The visitor panel, typed and spoken, with disclosure and the consent gate.",
+        "Grounded answers, the tool gate and the nine outcome types.",
+        "The outcome ledger with replayable evidence, and per-tenant hash-chained audit.",
+        "Row-level security: one tenant per row, enforced in Postgres.",
+        "The back office, the customer area, and the reseller portal with commission."
+      ],
+      "points2Label": "Built but not connected",
+      "points2": [
+        "The realtime half of packages/voice: GovernedVoiceSession and the OpenAI Realtime adapter.",
+        "They are for a live bidirectional session. This server holds no sockets open.",
+        "The turn-shaped surface beside them is what is wired and what the panel uses.",
+        "Connect it only if a phone channel is wanted, and leave the guard exactly where it is."
+      ],
+      "text": "What is built. Take this from the runbook rather than from the marketing site, because they are written by different people for different reasons.\n\nBuilt, tested and demonstrated: the visitor panel, typed and spoken. Disclosure on every session. The consent gate before identity resolution. Grounded answers from the tenant's own knowledge. The tool gate and the nine outcome types. The outcome ledger with replayable evidence. Per-tenant hash-chained audit. Row-level security, one tenant per row, enforced by Postgres rather than by the application. The back office, the customer area, and the reseller portal with its commission model.\n\nBuilt but not connected: the realtime half of the voice package. GovernedVoiceSession and the OpenAI Realtime adapter are shaped for a live bidirectional session, which is telephony, and this server holds no sockets open. What is wired is a turn-shaped surface beside them, and that is what the panel uses. If a phone product is wanted, that is the piece to connect, and the guard inside it stays exactly where it is."
+    },
+    {
+      "n": 5,
+      "title": "What is not built",
+      "seat": "Risk",
+      "audio": "audio/b05-gaps.mp3",
+      "caption": "An audience that is told the gaps believes the rest.",
+      "pointsLabel": "Not built",
+      "points": [
+        "No screen for managing console users. Roles are set against the database.",
+        "API keys are held in memory and are lost on restart.",
+        "The OIDC sign-in buttons render and dead-end.",
+        "No penetration test. No accessibility audit."
+      ],
+      "points2Label": "The one that matters",
+      "points2": [
+        "The Platform core still runs in memory even with DATABASE_URL set.",
+        "The audit chain, consent events and spend counters are lost on restart.",
+        "Sessions and the back office are durable. That core is not.",
+        "This is the last thing to fix before a pilot and the largest risk on the board."
+      ],
+      "text": "Now the gaps, because an audience that is told the gaps believes the rest.\n\nThere is no screen for managing console users: roles are set by an administrator against the database, and the access handover document explains how. API keys are held in memory and are lost on restart. The OIDC sign-in buttons render and dead-end. There has been no penetration test and no accessibility audit.\n\nAnd then the one that actually matters. The Platform core still runs in memory even when DATABASE_URL is set. The audit chain, the consent events and the spend counters are all lost on restart. Sessions and the back office are durable; that core is not. The boot banner says so in plain words every time it starts, which is deliberate.\n\nThat is the last thing to fix before a pilot and it is the single largest risk on the board. If you do one piece of engineering out of this film, do that one."
+    },
+    {
+      "n": 6,
+      "title": "Getting it running, and what will bite you",
+      "seat": "Build",
+      "audio": "audio/b06-running.mp3",
+      "caption": "Six things, and each one cost a day to learn.",
+      "pointsLabel": "On your machine",
+      "points": [
+        "pnpm install, pnpm typecheck, pnpm test, pnpm serve.",
+        "1,254 tests pass, 3 skip. The three want a PostgreSQL and a Redis.",
+        "The suite runs under three runners and all three must agree.",
+        "On Replit, read REPLIT-PROMPT.md first. The Shell is free; the Agent is not."
+      ],
+      "points2Label": "These are not opinions",
+      "points2": [
+        "Never pnpm install --no-optional. It breaks esbuild's binary and looks like a broken repo.",
+        "The server binds 0.0.0.0. A loopback bind is healthy and unreachable.",
+        "SET LOCAL app.tenant_id, never a plain SET. A plain SET leaks into the next request.",
+        "The platform never holds a card number. PSP token references only.",
+        "One test file per CI gate. A test changes only when the test is wrong.",
+        "Curl cannot see a Content Security Policy. When you change a page, open it in a browser."
+      ],
+      "text": "Getting it running is four commands: install, typecheck, test, serve. Twelve hundred and fifty-four tests pass and three skip, and the three that skip want a PostgreSQL and a Redis and skip themselves without one. That is correct, not a failure. The suite runs under three separate runners and all three have to agree, so if you change a test, run all three.\n\nOn Replit, read the Replit prompt in the repository root before you paste anything into the Agent. It is written to cost as few Agent requests as possible, because the Shell is free and the Agent is not.\n\nThen six things that will bite you. These are not opinions; each one cost a day.\n\nNever install with no-optional: it breaks esbuild's platform binary, tsx stops working, and the failure looks like a broken repository. The server binds all interfaces, not loopback, because a loopback bind leaves a perfectly healthy process that a preview proxy reports as not ready. Use SET LOCAL for the tenant id, never a plain SET, because a plain SET survives the transaction back into the pooled connection and becomes the next request's tenant context, which is a cross-tenant data leak. The platform never holds a card number, only a provider's token reference, and there is an assertion that throws if you try. One test file per CI gate, and a test is changed only when the test is wrong and you say why in the commit.\n\nAnd the last one. Curl cannot see a Content Security Policy. Every server-rendered page in this product shipped unstyled in every browser for weeks, because the test suite asserted on the HTML and the HTML was perfect. When you change a page, open it in a browser and look at it."
+    },
+    {
+      "n": 7,
+      "title": "The customer, step one: the account",
+      "seat": "Implementation",
+      "audio": "audio/b07-account.mp3",
+      "caption": "One form, in real time and not sped up.",
+      "clip": "clips/02-signin-and-setup.webm",
+      "text": "Now the part you will be asked about on every call: what the customer actually has to do. It is four steps and the longest one is a form.\n\nStep one, the account. Detent creates it in the back office. Organisation name, tenant id, billing email, the plan, and then the entitlement: seats, conversations, voice minutes. Those three numbers are what the assistant is allowed to consume on that customer's behalf, and the platform meters against them from the first conversation.\n\nOne form, and the customer and their subscription are created together. That is deliberate. An account can never sit in this system without commercial terms attached to it.\n\nWhat you are watching is real time and not sped up. There is no implementation project, no data migration and no professional services line."
+    },
+    {
+      "n": 8,
+      "title": "Step two: one script tag",
+      "seat": "Implementation",
+      "audio": "audio/b08-install.mp3",
+      "caption": "Their own snippet, with their own key already in it.",
+      "clip": "clips/05-install.webm",
+      "text": "Step two. The customer signs in to their own area and goes to Install, where the page shows their snippet with their key already in it. One script tag, before the closing body tag, on every page they want the assistant on. That is the whole integration.\n\nTwo questions come back every time, so answer them before they are asked.\n\nIs that key safe in our page? Yes, by design. It identifies the tenant and it can only open a conversation. It cannot read their CRM, their knowledge or their billing. The private keys are never in a web page.\n\nWill it break our site's CSS? No. It injects a Web Component with its own Shadow DOM, so it can neither inherit their styles nor disturb them, and the conversation bundle only loads when somebody actually opens the panel.\n\nBranding is attributes on the same tag. The assistant carries their brand, not ours."
+    },
+    {
+      "n": 9,
+      "title": "Steps three and four: the knowledge, then watch it",
+      "seat": "Implementation",
+      "audio": "audio/b09-knowledge.mp3",
+      "caption": "The customer's own area: plan, usage, credit, status.",
+      "clip": "clips/11-customer.webm",
+      "text": "Step three is the knowledge, and it is the step that decides whether the assistant is any good. The customer uploads their documentation. The platform extracts candidate answers and puts them in awaiting your review. Nothing is published until the customer approves it, and the assistant answers only from what is published.\n\nSay this early and say it plainly: a customer who uploads nothing gets an assistant that can only escalate. The governance that stops it inventing an answer is the same governance that leaves it with nothing to say if they give it nothing.\n\nStep four is watching it. Overview shows the plan, the usage and the credit. Status shows whether the service is healthy. There is an API for the ones who want to pull outcomes into their own systems.\n\nTypical elapsed time: the account in minutes, the tag in an afternoon once it is through their change process, and the knowledge in about a week of somebody's part-time attention."
+    },
+    {
+      "n": 10,
+      "title": "What it does with all that",
+      "seat": "Product",
+      "audio": "audio/b10-conversation.mp3",
+      "caption": "The real panel, driven end to end. Disclosure first, every session.",
+      "clip": "clips/06-conversation.webm",
+      "text": "And this is what all of that buys. A visitor arrives with a real problem. The assistant discloses what it is before anything else happens. It qualifies rather than answering and dropping a calendar link. It quotes the published band and refuses a bespoke figure, because it has no authority to give one. It finds the constraint the buyer had not thought to mention, in this case a notice period rather than a contract end date. It asks before it tries to work out who they are. It books with a named person, and it tells them what will and will not be sent to them afterwards.\n\nOne thing to be precise about, because you will be asked. The wording in this recording came from a deterministic script rather than from a model, because this build was recorded without a model key. The governance path is the real one, every gate in it ran. The phrasing is fixed text."
+    },
+    {
+      "n": 11,
+      "title": "Voice, and the two things not to touch",
+      "seat": "Build",
+      "audio": "audio/b11-voice.mp3",
+      "caption": "The microphone is armed only after the spoken disclosure has finished.",
+      "clip": "clips/12-voice.webm",
+      "text": "Voice is wired, and this section of the runbook used to say the opposite, so you may have been told otherwise.\n\nA visitor presses the microphone. The panel switches the session into voice modality, which changes the disclosure to its spoken wording, and plays it. The microphone is armed only after that audio has finished, not alongside it, because somebody who has just put their microphone on has stopped reading the screen. Then the transcript goes through the same governed pipeline as a typed message, the reply comes back as text and as audio, and the voice minute is metered from the duration that actually played.\n\nTwo things not to touch. The first is a function called assertApprovedForSpeech, and the platform method that calls it. Together they are the entire safety argument: the synthesiser is handed text that has already been through the pipeline, and it is given no history, no question and no tools. There is a parameter on it called approved that looks redundant. It is not. Leave it.\n\nThe second is that capture uses the browser's own speech recogniser rather than streaming audio to us. That means the visitor's voice stays on their machine, what crosses the network is a transcript, and there is no microphone audio for us to hold. It also means Chrome. Firefox and Safari do not implement it, and the panel hides the microphone there rather than offering one that would do nothing."
+    },
+    {
+      "n": 12,
+      "title": "Your first week",
+      "seat": "Start here",
+      "audio": "audio/b12-week.mp3",
+      "caption": "Five days, each with a definition of done.",
+      "pointsLabel": "Day by day",
+      "points": [
+        "Day 1. Get it running locally. Done when the suite is green under all three runners and you have signed in to both consoles.",
+        "Day 2. Deploy to Replit from the prompt. Done when the sign-in page renders dark navy with a white card, in a browser.",
+        "Day 3. Walk the customer path as a customer. Done when you have installed the tag on a scratch page and talked to your own assistant.",
+        "Day 4. Read the architecture and operations documents. Done when you can say which package owns the consent gate without looking.",
+        "Day 5. Wire the Platform core onto the Postgres adapters. Done when the boot banner stops printing the in-memory notice."
+      ],
+      "points2Label": "Then",
+      "points2": [
+        "The console user-management screen.",
+        "The realtime voice channel, if a phone product is wanted.",
+        "And read the escalation rule on the next slide before you ship any of it."
+      ],
+      "text": "Your first week, with a definition of done for each day rather than a list of intentions.\n\nDay one, get it running locally and read the first three sections of the runbook. Done when the suite is green under all three runners, the server boots, and you have signed in to both the back office and the customer area.\n\nDay two, deploy to Replit from the prompt. Done when the sign-in page renders dark navy with a white card in an actual browser. Not in curl. Curl will tell you it is perfect.\n\nDay three, walk the customer path exactly as a customer would. Done when you have installed the tag on a scratch page and had a conversation with your own assistant.\n\nDay four, read the architecture and operations documents. Done when you can say which package owns the consent gate without looking it up.\n\nDay five, wire the Platform core onto the Postgres adapters. Done when the boot banner stops printing the in-memory notice. That is the pilot blocker and it is the most valuable thing either of you can do this month.\n\nAfter that: the console user-management screen, and the realtime voice channel if a phone product is wanted.\n\nOne last thing, and it is the only rule in this film that is not negotiable. Anything that could move money, expose one tenant's data to another, or weaken a control, including a test: stop, and talk to Paul before you ship it. Everything else is yours."
+    }
+  ]
+}
