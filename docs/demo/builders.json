@@ -3,6 +3,7 @@
   "subtitle": "For Tony and Tom",
   "frames": "frames/builders",
   "out": "detent-engage-builders.mp4",
+  "crf": 26,
   "reader": "The two people who have to build it, run it, deploy it and answer for it on a customer call.",
   "note": "The companion to docs/RUNBOOK.md. Where the two disagree, the runbook is newer and wins.",
   "chrome": {

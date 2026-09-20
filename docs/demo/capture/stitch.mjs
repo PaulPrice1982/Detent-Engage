@@ -59,6 +59,17 @@ const film = JSON.parse(readFileSync(resolve(DEMO, MANIFEST), 'utf8'));
 /** Named in the manifest so two films cannot overwrite each other's frames. */
 const FRAMES = resolve(DEMO, film.frames ?? 'frames');
 const OUT = resolve(flag('--out', resolve(DEMO, film.out ?? 'detent-engage-demo.mp4')));
+/**
+ * Constant rate factor, from the manifest.
+ *
+ * 21 is the default and is right for an eight-minute film. A fifteen-minute
+ * one at the same setting came out at 32 MB, which is over the limit of
+ * every channel this gets sent through, and the content is mostly flat
+ * slides and a screen recording: exactly what a higher CRF costs nothing on.
+ * Named in the manifest rather than guessed here, so the number that
+ * produced a file is recorded beside the film that needed it.
+ */
+const CRF = String(film.crf ?? 21);
 const H = Number(flag('--height', '1080'));
 const W = Math.round(H * 16 / 9 / 2) * 2;
 /** The window the recording plays in, between the title bar and the caption. */
@@ -136,7 +147,7 @@ for (const s of scenes) {
       `[1:v]scale=${W}:${H}[o];[v][o]overlay=0:0,trim=duration=${target.toFixed(2)},` +
       `fps=25,format=yuv420p[out]`,
       '-map', '[out]', '-an',
-      '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
+      '-c:v', 'libx264', '-preset', 'medium', '-crf', CRF,
       '-profile:v', 'high', '-level', '4.1', segment,
     ]);
   } else {
@@ -144,7 +155,7 @@ for (const s of scenes) {
     run([
       '-loop', '1', '-i', still, '-t', target.toFixed(2),
       '-vf', `scale=${W}:${H},fps=25,format=yuv420p`,
-      '-an', '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
+      '-an', '-c:v', 'libx264', '-preset', 'medium', '-crf', CRF,
       '-profile:v', 'high', '-level', '4.1', segment,
     ]);
   }
@@ -160,7 +171,7 @@ const card = (name, seconds) => {
   // was silently opening and closing on the first film's cards.
   run(['-loop', '1', '-i', resolve(FRAMES, `card-${name}.png`), '-t', String(seconds),
     '-vf', `scale=${W}:${H},fps=25,format=yuv420p`, '-an',
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '21',
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', CRF,
     '-profile:v', 'high', '-level', '4.1', file]);
   return { file, audio: '', target: seconds };
 };
