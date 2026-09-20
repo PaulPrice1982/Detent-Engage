@@ -1,14 +1,34 @@
-# Replit prompt: production-readiness build
+# Replit prompt: the back office renders
 
 **Copy everything in the fenced block below into the Replit Agent, once.**
 
 The repository is finished, typechecked and tested. The Agent is there to run
 it, not to write it.
 
-What this build changes, in one line: **the websites are now served.** The
-previous build mounted the API and nothing else, so `/console/signin`,
-`/app/signin`, `/reseller/signin` and every password-reset page returned 404 in
-every deployment. They answer now, and there is a staff account to sign in with.
+What this build changes, in one line: **every page the server renders was
+arriving in the browser with its own stylesheet refused, and now is not.**
+
+The content security policy for a request was chosen from the file extension in
+its path. Every page this server renders is served from a path with no
+extension, so the whole back office, the whole customer area, the reseller
+portal and every sign-in page were given the API policy, `default-src 'none'`,
+which blocks the page's own CSS. Nothing failed: no status was wrong, no handler
+threw, and curl, which enforces no policy, returned perfect HTML. The only
+symptom was that every screen rendered in a real browser as an unstyled
+document, and curl could not see it.
+
+Two more things travel with it. `form-action` moves from `'none'` to `'self'`,
+because it does not inherit from `default-src` and with `'none'` nobody can
+submit a form once the page policy applies. And the Approve and Reject buttons
+in the back office posted to `/v1/console/approvals/...`, which is the API's
+reserved space and authenticates a bearer key rather than a browser session, so
+every press answered POLICY_DENIED and no action held for a second person could
+ever be released by one.
+
+**This one is verified by eye, not only by a test.** The check that matters is
+opening `/console/signin` in the preview and seeing a styled page. A test suite
+cannot see a stylesheet that the browser declined to apply, which is exactly why
+this shipped.
 
 **Budget: 2 Agent requests.** If the first does not produce a green run, drop to
 the Shell and follow "If the Agent stalls" at the bottom. The Shell is free; the
@@ -17,10 +37,10 @@ Agent is not.
 ---
 
 ```
-This repository is COMPLETE. It typechecks clean and all 1,215 tests pass. Do
-NOT write, refactor, reformat or "improve" any source, test, dependency or
-migration. Your only job is to update it, run it, and report what the commands
-printed.
+This repository is COMPLETE. It typechecks clean and all 1,233 tests pass under
+each of its three runners. Do NOT write, refactor, reformat or "improve" any
+source, test, dependency, stylesheet or migration. Your only job is to update
+it, run it, look at one page, and report what you saw.
 
 STEP 1, update the checkout.
 
@@ -38,16 +58,18 @@ directories FIRST, then extract:
     pnpm install
 
 The deletion is not optional. Extracting a zip over a project adds and
-overwrites files and never removes one, so anything renamed in this build
-leaves its old copy behind. This build renumbered two migrations, and a
-workspace that kept the old names ends up with two files sharing a version
-prefix, which the migration runner and `tests/migrations.test.ts` both refuse
-outright. That refusal is correct: the order two migrations with the same
-prefix run in is whatever the filenames happen to sort to, which is not a
-decision anybody made.
+overwrites files and never removes one, and this build MOVED code out of files
+rather than only changing it: fourteen CSS blocks left the TypeScript
+renderers and became two files in packages/server/public. Merging this build
+into an old tree leaves the old inline copies in place, and you get a page that
+loads the new stylesheet and the stale inline one on top of it.
 
 The command above removes only directories the zip restores in full. It leaves
 node_modules, .git, .replit and the Secrets pane untouched.
+
+The zip is about 21 MB in this build. Most of that is docs/demo, which is the
+recorded product demonstration and is not needed to run anything. If space is
+short you may delete docs/demo after extracting. Delete nothing else.
 
 NOTE: never run `pnpm install --no-optional`. It breaks esbuild's platform
 binary, which tsx needs, and the failure looks like a broken repository.
@@ -66,11 +88,11 @@ Expected final lines. There are two shapes, because the suite runs under vitest
 where the registry installed it and under the built-in runner where it did not.
 Both run the same files and both must report the same counts:
 
-    Test Files  68 passed | 2 skipped (70)          <- vitest
-         Tests  1215 passed | 3 skipped (1218)
+    Test Files  70 passed | 2 skipped (72)          <- vitest
+         Tests  1233 passed | 3 skipped (1236)
 
-    Test files  70                                   <- built-in runner
-    Tests       1215 passed, 3 skipped
+    Test files  72                                   <- built-in runner
+    Tests       1233 passed, 3 skipped
 
 Either is a pass. The 3 skipped tests need a PostgreSQL and a Redis and skip
 themselves without one, which is correct on Replit and is not a failure.
@@ -110,44 +132,66 @@ Expected on stdout:
 
       NOTE: this process is running on the in-memory stores. ...
 
-Every line of that is expected and correct:
+Every line of that is expected and correct, and none of it changed in this
+build. "model scripted" means no ANTHROPIC_API_KEY is set. "sessions lost on
+restart" is the truth without a database, not a fault. The NOTE says the audit
+chain does not survive a restart, which is the honest state of an in-memory run.
 
-  - "model scripted" means no ANTHROPIC_API_KEY is set, so the deterministic
-    provider is answering. The governance tests rely on it.
-  - "hosts (path prefixes)" means no DETENT_*_HOST is set, so the sites are
-    reached by path rather than by hostname. Correct on a preview.
-  - "sessions lost on restart (no DATABASE_URL)" is the truth, not a fault: the
-    session records are in memory without a database, so a restart signs
-    everybody out. It names every reason it found, so if you skipped
-    DETENT_SESSION_SECRET in STEP 3 it says that too.
-  - The NOTE says the audit chain and consent events do not survive a restart.
-    That is the honest state of an in-memory run and is not an error.
+The server binds 0.0.0.0. A loopback bind is unreachable from the Replit
+preview proxy and shows as "running, but the preview isn't ready". Do not
+change it.
 
-The server binds 0.0.0.0. A loopback bind is unreachable from the Replit preview
-proxy and shows as "running, but the preview isn't ready". Do not change it.
+STEP 4, the check this build exists for. LOOK at the page.
 
-STEP 4, check the surfaces and report, then STOP.
+Open the preview at:
 
-Open the preview and confirm each of these returns a page:
+    /console/signin
 
-    /                     the marketing home
-    /console/signin       the staff sign-in page        <- new in this build
-    /app/signin           the customer sign-in page     <- new in this build
-    /reseller/signin      the partner sign-in page      <- new in this build
-    /console.html         the five-step approval console
-    /trust.html           the public trust page
-    /widget/panel.html    the conversation panel
+Expected: a DARK NAVY page, with a white card in the middle of it holding the
+email and password fields and a dark "Sign in" button.
 
-Then sign in at /console/signin with:
+If you see a white page with a serif font and blue underlined links, the
+stylesheet was refused and this build did not take. Report that and STOP.
+Do not try to fix it.
+
+Then sign in with:
 
     email     operator@detent.local
     password  the DETENT_CONSOLE_PASSWORD you set in STEP 3
 
-Expected: it redirects to /console and shows the accounts screen.
+Expected: it redirects to /console and shows the accounts screen with a DARK
+HEADER BAR across the top carrying the Detent mark, a "BACK OFFICE" tag, and
+the links Accounts, Approvals, Audit and Service. Underneath, on a pale grey
+ground, cards with rounded corners.
 
-Then, in the Shell, run the runtime check. It makes the session request from
-Node rather than from a shell, so there is nothing to quote and nothing to
-mangle:
+Again: serif text on white with blue links means the stylesheet was refused.
+
+STEP 5, confirm it in the Shell as well, then STOP.
+
+Two free checks. Replace $URL with your preview origin, or use
+http://localhost:8787 from the Shell.
+
+    curl -s -o /dev/null -w "%{http_code} %{content_type}\n" $URL/backoffice.css
+
+Expected exactly:
+
+    200 text/css; charset=utf-8
+
+A 404 here means the stylesheet is not being served and the pages above cannot
+have rendered. Report it.
+
+    curl -sI $URL/console/signin | grep -i content-security-policy
+
+Expected: one line, beginning
+
+    content-security-policy: default-src 'self'; base-uri 'none'; form-action 'self'; ...
+
+The two words that matter are `'self'` after `default-src` and `'self'` after
+`form-action`. If you see `default-src 'none'` on this path, the build did not
+take: that is the API policy, and it is what broke every page.
+
+Then the runtime check, which makes the session request from Node rather than
+from a shell, so there is nothing to quote and nothing to mangle:
 
     pnpm smoke
 
@@ -180,34 +224,41 @@ Expected, with the widget key taken from the boot output:
 failure. It reports what is actually wired rather than what the deployment
 claims about itself.
 
-Without `--key` it checks the pages and reports the session check as SKIP,
-which is a pass for the pages and not a failure.
-
-How to read anything else:
-
-  - `FAIL ... 403` means the key or the origin was refused. The message names
-    the origin it sent; it must be one of AWA_ORIGINS, and the key must be the
-    `awa_pub_` one rather than either `awa_sk_` key. That refusal is the
-    control working, not a bug.
-  - `FAIL ... MALFORMED_REQUEST` from `pnpm smoke` would mean something between
-    this command and the server is rewriting the request, because the script
-    builds it itself. It has never been seen.
-
-Do not verify this with a hand-typed curl. Two releases were reported broken on
-a mangled command rather than on the server: once when line continuations were
-lost, and once when a pasted key carried a line break into a header, which the
-HTTP parser refuses with HPE_LF_EXPECTED. `pnpm smoke` exists because of both.
+Do not verify any of this with a hand-typed curl against /v1/sessions. Two
+releases were reported broken on a mangled command rather than on the server:
+once when line continuations were lost, and once when a pasted key carried a
+line break into a header, which the HTTP parser refuses with HPE_LF_EXPECTED.
+`pnpm smoke` exists because of both.
 
 If the server does not start at all, read the first line it prints. A port
-already held by an earlier instance now says so in one line, names the port,
-and exits: it does not print a stack trace. Stop the older process, or set PORT.
+already held by an earlier instance says so in one line, names the port, and
+exits: it does not print a stack trace. Stop the older process, or set PORT.
 
-Report the output of STEP 2, STEP 3 and STEP 4 and STOP. Do not commit, do not
-open a pull request, do not modify configuration, and do not continue to any
-further step.
+Report what you saw in STEP 4 in your own words, and the output of STEP 2 and
+STEP 5, and STOP. Do not commit, do not open a pull request, do not modify
+configuration, and do not continue to any further step.
 ```
 
 ---
+
+## If the Agent stalls
+
+Everything above except looking at the page is a Shell command, and the Shell
+is free. In order:
+
+```sh
+git pull && pnpm install
+pnpm typecheck
+pnpm test
+pnpm serve            # in a second Shell tab
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8787/backoffice.css
+curl -sI http://localhost:8787/console/signin | grep -i content-security
+pnpm smoke
+```
+
+Then open `/console/signin` in the preview yourself. Dark navy with a white
+card is a pass. White with serif type and blue links is a fail, and the fail
+is worth reporting rather than working around.
 
 ## What changed in this build
 
@@ -216,121 +267,21 @@ Agent.
 
 | Area | Change |
 |---|---|
-| **The websites** | `main.ts` never passed the site routers to the HTTP server, so every sign-in page, the console, the customer area and the reseller portal answered 404 in every deployment. They are mounted now, resolved by hostname and then by path, and an unrecognised hostname is served no content at all. |
-| **The build** | Nine packages (auth, cms, console, ingestion, payments, persistence, reseller, support, voice) were imported by the server and the tests and were in no dependency list and no tsconfig. The repository did not compile and 22 test files never loaded, so their tests were never counted: the real total is 1,182, not 484. |
-| **Migrations** | No longer open their own transaction, are safe to run twice, and apply on a managed PostgreSQL that will not create a role. Two files shared the `0002_` prefix; renumbered. |
-| **Boot** | A deployment now checks the database, keys, model id and origins before constructing anything, and serves the reasons rather than crash-looping if any is missing. Durability is measured from the stores, not declared. |
-| **Metering** | The Postgres usage store now increments in one atomic statement. It also clamped the concurrency delta rather than the result, so every release of a voice slot was discarded. |
-| **Isolation** | Five tenant-scoped tables added by an earlier migration (`auth_user`, `account`, `subscription`, `invoice`, `support_request`) had no row-level security at all. They do now. |
-| **MFA** | `mfaEnrolled` could never become true, which made nine money capabilities unreachable, and a hard-coded `true` in the console bypassed the gate entirely. TOTP enrolment exists, verified against the RFC 6238 test vectors. |
-| **Console authorisation** | Capability checks decided which buttons to draw and nothing checked them on the way to acting. Every console write is now refused server-side without the capability. |
-| **Rate limits** | The counter interface was synchronous, so no shared store could implement it. A Redis adapter now enforces one budget across every instance. |
-| **CI** | There was none. Four jobs, including the suite against a real PostgreSQL under a role that cannot bypass row-level security. |
+| **The page policy** | Chosen from the request path's file extension. Every page this server renders has no extension, so the console, the customer area, the reseller portal and every sign-in page were served `default-src 'none'`, which refuses the page's own stylesheet. The policy is now chosen by who answers the path. |
+| **`form-action`** | `'none'` to `'self'`. It does not inherit from `default-src`, so the line above does not fix it, and every page here that does anything does it with a form posting back to itself. With `'none'` nobody can sign in. |
+| **The stylesheets** | Fourteen inline `<style>` blocks across the renderers, all of them dropped by the browser. They are now `packages/server/public/backoffice.css` and `marketing.css`, and `tests/page-security-policy.test.ts` fails if one reappears. |
+| **Dual control** | Approve and Reject posted to `/v1/console/approvals/...`, which the API owns and which authenticates a bearer key, not a session cookie. Every press answered POLICY_DENIED, so the control the console's design rests on could not be exercised by anybody. They now post to the console's own path, with its CSRF token, and approving a credit also carries it out. |
+| **The demonstration** | `docs/demo` holds a fourteen-scene walkthrough for a CRO, CFO, COO and CIO: eleven recordings of the product being used, the script, the API evidence, and the scripts that rebuild all of it. Not needed to run the server; delete it if space is short. |
+| **Demo fixtures** | `AWA_DEMO_SEED=1` seeds an approval queue and a scripted qualification, in process, for filming. Refused in a deployment. |
 
-The finding-by-finding record is `docs/AUDIT-RESPONSE.md`. Who can sign in and
-how to restore access is `docs/ACCESS-HANDOVER.md`.
+## Verification on this machine, before it was sent
 
-## Configuration
-
-Nothing here is needed to run the preview. Everything here is needed before
-Deploy, and a deployment missing any of it serves a page naming what is missing
-rather than crash-looping.
-
-| Variable | Effect |
+| Check | Result |
 |---|---|
-| `DETENT_CONSOLE_EMAIL` | The one staff account's address. Defaults to `operator@detent.local`, which no reset email can reach, so set it. |
-| `DETENT_CONSOLE_PASSWORD` | Its password. Read at every boot, so changing it and restarting is the documented way back in. Without it no staff account is created and the sign-in page says so. |
-| `DETENT_SESSION_SECRET` | Signs session cookies, 32 characters or more. Generated per boot if unset, which signs everybody out on every restart. |
-| `DATABASE_URL` | PostgreSQL. Without it every store is in memory. |
-| `AWA_ROOT_KEY` | Encrypts CRM credentials at rest. Generated per boot if unset, so a restart cannot read the previous run's credentials. |
-| `AWA_CHECKPOINT_KEY` | Signs the audit checkpoints. |
-| `ANTHROPIC_API_KEY` | Uses the real model provider instead of the scripted one. |
-| `AWA_MODEL` | Model id, validated at boot against an allow-list. **No default**: a hard-coded id fails as a 404 with nothing pointing at the cause. |
-| `AWA_ORIGINS` | Comma-separated origins allowed to embed the widget. |
-| `DETENT_EMAIL_PROVIDER`, `DETENT_EMAIL_API_KEY`, `DETENT_EMAIL_FROM` | Sends password-reset links. Without these they are written to the log instead. |
-| `DETENT_MARKETING_HOST`, `DETENT_APP_HOST`, `DETENT_CONSOLE_HOST`, `DETENT_RESELLER_HOST` | Hostname per site. The console may not share a hostname with the others; a deployment refuses to start if it does. |
-| `AWA_DEV_PRINT_KEYS` | Prints the three API keys at boot. Ignored in a deployment. |
-| `AWA_HSTS`, `AWA_TRUST_PROXY`, `AWA_ALLOW_PAGE_PROBE` | Off by default; each a deliberate opt-in. |
-
-## The deployment security scan
-
-A deployment scan reads the production dependency tree, and this build ships
-nothing that only tests or builds. `vitest` used to sit in
-`optionalDependencies`, which is a production section whose contents are
-merely permitted to be absent, so a test runner was in the shipped tree and a
-critical advisory in it blocked a release. It is a dev dependency now, and on
-a version the advisory does not cover.
-
-`@anthropic-ai/sdk` moved the other way, into `dependencies`. It is imported
-statically and reached at boot, so an install allowed to skip it would succeed
-and the server would then fail to start on a missing module.
-
-`pnpm install --prod` therefore installs no vitest, no tsx and no typescript,
-and the server still boots: `pnpm serve` falls back to Node's own TypeScript
-transform when tsx is absent. CI runs that tree and the full runtime check
-against it on every push.
-
-## Deploying, as opposed to previewing
-
-A Replit deployment sets `REPLIT_DEPLOYMENT`, which puts this build into
-deployment mode. In that mode it refuses to serve the product until
-`DATABASE_URL`, `AWA_ROOT_KEY`, `AWA_CHECKPOINT_KEY`, `ANTHROPIC_API_KEY`,
-`AWA_ORIGINS` and `AWA_MODEL` are all set and the database answers.
-
-It does not crash. It serves a page listing every missing item at once, and
-answers the platform's health probe with 200 so the container stays routable.
-If you press Deploy before setting the secrets, that page is what you will see,
-and it is the build working as intended.
-
-`[deployment]` runs `node tools/migrate.mjs` before serving, so the schema is
-applied as a step of its own rather than by several containers racing at boot.
-
-### A database an earlier release already migrated
-
-Nothing to do. The first deploy of this build repairs the version ledger by
-itself and says so in the log:
-
-    Migration ledger does not match the files: 0002_audit_findings.sql sorts
-    before 0004_durable.sql, which is already applied. Every migration here
-    only declares schema and does so idempotently, so the whole sequence is
-    being replayed in order, which ends where a fresh install ends. Nothing is
-    lost and no data is touched.
-
-Two things put a database in that state, and a deployment can have both. Two
-migrations were renumbered to remove a duplicate prefix, so the ledger records
-names that no longer exist: a renamed migration is recognised by its checksum
-and the row is renamed. And an earlier release's migration files carried their
-own COMMIT, which ended the runner's transaction early, so the schema was
-committed and the row recording it was not.
-
-The runner cannot tell that apart from a migration merged behind another
-branch's, and it does not have to. When every migration only declares schema
-and does so idempotently, replaying the sequence in order ends where a fresh
-install ends whichever caused it, so the question is whether replay is safe,
-and that is answerable by reading the files. Verified: a database recovered
-this way matches a freshly migrated one exactly, 32 tables, 16 policies and
-253 columns.
-
-When replay would not be safe, because a migration carries data or can only
-run once, it still refuses and names the file and the reason. `--repair`
-remains for running the same thing by hand.
-
-## If the Agent stalls
-
-Stop it and use the Shell. Every step above is a shell command, and the Shell
-costs nothing:
-
-```bash
-git pull && pnpm install
-pnpm typecheck
-pnpm test
-pnpm serve
-```
-
-If `pnpm` itself is missing, the whole product also runs on Node alone with an
-empty `node_modules`:
-
-```bash
-pnpm test:fallback   # the built-in runner under Node's TypeScript transform
-pnpm serve:node      # the same server, no dependencies
-```
+| `pnpm typecheck` | clean |
+| `pnpm test` (vitest) | 1,233 passed, 3 skipped |
+| built-in runner under tsx | 1,233 passed, 3 skipped |
+| built-in runner on Node alone | 1,233 passed, 3 skipped |
+| `node tools/secret-lint.mjs` | clean |
+| Every console and customer page, in Chromium | renders styled |
+| A second person approving a held credit, through the UI | queue 2 to 1, credit lands |
