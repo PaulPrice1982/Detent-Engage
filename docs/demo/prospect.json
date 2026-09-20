@@ -20,7 +20,7 @@
       "lower": "It prices from your own published rates. It cannot invent one." },
     { "clip": "clips/06-conversation.webm", "seconds": 7, "from": 21,
       "lower": "It finds the constraint the buyer had not mentioned." },
-    { "clip": "clips/06-conversation.webm", "seconds": 7, "from": 45,
+    { "clip": "clips/06-conversation.webm", "seconds": 7, "from": 29,
       "lower": "Then it books the meeting, with a named person." },
     { "card": "trust", "seconds": 9,
       "big": "It cannot say<br>what you have not approved.",
