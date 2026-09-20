@@ -118,15 +118,25 @@ run(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', silent]);
 
 const OUT = resolve(DEMO, promo.out ?? 'detent-engage-promo.mp4');
 if (hasVoice) {
-  // `apad` before `-shortest`, so the cut lands on the end of the video and
-  // not on the last word of the read. The beats are laid out to the voice
-  // plus a beat of air; without the pad, that beat of air is cut off and the
-  // film ends the instant the narrator stops, mid sign-off.
+  /**
+   * Padded to the video, and bounded by `-t` rather than by `-shortest`.
+   *
+   * Two faults, one after the other. Without a pad, the read ends before
+   * the pictures do and `-shortest` cuts the film on the last word, losing
+   * the beat of air the beats were laid out with. With a bare `apad`, the
+   * audio never ends, and `-shortest` does not reliably terminate against a
+   * filtered stream that has no end: the encode ran for two hours on a
+   * fifty-eight second film before it was killed.
+   *
+   * So: pad, and state the length. `-t` is the one instruction ffmpeg
+   * cannot misread.
+   */
+  const silentSeconds = duration(silent);
   run(['-i', silent, '-i', voice,
     '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11,'
       + 'aformat=channel_layouts=stereo:sample_rates=48000,apad',
     '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k',
-    '-shortest', '-movflags', '+faststart', OUT]);
+    '-t', silentSeconds.toFixed(2), '-movflags', '+faststart', OUT]);
 } else {
   run(['-i', silent, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo', '-shortest',
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', OUT]);

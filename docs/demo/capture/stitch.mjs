@@ -220,7 +220,7 @@ if (haveAudio === 0) {
     ? `${filters.map((_, i) => `[a${i}]`).join('')}amix=inputs=${filters.length}:normalize=0[raw]`
     : `[a0]anull[raw]`;
   /**
-   * `apad` at the end, and it is not cosmetic.
+   * `apad` at the end, and the output bounded by `-t`.
    *
    * The mixed narration ends on the last word of the last scene, and
    * `-shortest` then cuts the video there. That silently truncated the
@@ -232,9 +232,13 @@ if (haveAudio === 0) {
   const mixed = `${filters.join(';')};${join};` +
     `[raw]loudnorm=I=-16:TP=-1.5:LRA=11,` +
     `aformat=channel_layouts=stereo:sample_rates=48000,apad[mix]`;
+  // Bounded by `-t`, not by `-shortest`: `apad` makes the audio endless and
+  // `-shortest` does not reliably stop against a filtered stream with no
+  // end. The video's own length is the answer and it is already known.
+  const videoSeconds = duration(silentVideo);
   run(['-i', silentVideo, ...inputs, '-filter_complex', mixed,
     '-map', '0:v', '-map', '[mix]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
-    '-shortest', '-movflags', '+faststart', OUT]);
+    '-t', videoSeconds.toFixed(2), '-movflags', '+faststart', OUT]);
   console.log(`\n${OUT}`);
   console.log(`  ${duration(OUT).toFixed(0)}s, ${haveAudio} of ${scenes.length} scenes voiced.`);
 }
