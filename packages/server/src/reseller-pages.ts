@@ -22,24 +22,6 @@ const NAV = (current: string) => [
   { href: '/reseller/statements', label: 'Statements', current: current === 'statements' },
 ];
 
-const STYLES = `<style>
-  .figures{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;
-   margin:0 0 22px}
-  .figure{border:1px solid #E3E8EF;border-radius:11px;padding:16px 18px;background:#fff}
-  .figure .n{font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .figure .l{color:#5B6B7F;font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;
-   margin-bottom:6px}
-  .figure .h{color:#5B6B7F;font-size:12.5px;margin-top:6px}
-  table{width:100%;border-collapse:collapse;font-size:14.5px}
-  th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.07em;
-   color:#5B6B7F;padding:0 10px 8px 0;font-weight:600}
-  td{padding:10px 10px 10px 0;border-top:1px solid #EEF2F6;font-variant-numeric:tabular-nums}
-  td.n,th.n{text-align:right}
-  .pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:20px;
-   text-transform:uppercase;letter-spacing:.05em}
-  .pill.earned{background:#E7F3EC;color:#1E6C3B}
-  .pill.pending{background:#FDF3E3;color:#8A5A12}
-</style>`;
 
 function figure(label: string, value: string, hint?: string): string {
   return `<div class="figure"><div class="l">${escape(label)}</div>
@@ -64,8 +46,7 @@ export function resellerOverviewPage(input: ResellerOverviewInput): string {
   const latest = input.statements[0];
   return page(
     { title: 'Overview', site: 'app', nav: NAV('overview'), user: input.user.email },
-    `${STYLES}
-<h1>${escape(input.reseller.name)}</h1>
+    `<h1>${escape(input.reseller.name)}</h1>
 ${(() => {
     const band = input.statements[0]?.band;
     if (!band) {
@@ -144,8 +125,7 @@ export function resellerStatementsPage(input: {
 }): string {
   return page(
     { title: 'Statements', site: 'app', nav: NAV('statements'), user: input.user.email },
-    `${STYLES}
-<h1>Statements</h1>
+    `<h1>Statements</h1>
 <p class="sub">One per month, newest first.</p>
 ${input.statements.length === 0
   ? `<div class="card"><p class="sub" style="margin:0">No statements yet.</p></div>`
@@ -168,8 +148,7 @@ export function resellerCustomersPage(input: {
 }): string {
   return page(
     { title: 'Customers', site: 'app', nav: NAV('customers'), user: input.user.email },
-    `${STYLES}
-<h1>Your customers</h1>
+    `<h1>Your customers</h1>
 <p class="sub">What each has spent and what it has earned you. You cannot see inside a
 customer's account: their conversations, knowledge and visitors are theirs.</p>
 ${input.customers.length === 0

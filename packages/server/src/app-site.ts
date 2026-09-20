@@ -92,15 +92,7 @@ ${usage && subscription ? `<h2>This period</h2>
   <a class="card" href="/app/billing"><b>Billing</b>
     <span>Invoices, credits and payment method.</span></a>
 </div>
-<style>
-  .bar { height:6px; background:#E3E8EF; border-radius:999px; margin-top:9px; overflow:hidden }
-  .bar span { display:block; height:100%; border-radius:999px }
-  .bar span.ok { background:#3FBF7F } .bar span.warn { background:#EFA13C } .bar span.bad { background:#E05252 }
-  a.card { display:block; text-decoration:none; color:inherit }
-  a.card:hover { border-color:#5B6B7F }
-  a.card b { display:block; margin-bottom:3px }
-  a.card span { color:#5B6B7F; font-size:13px }
-</style>`,
+`,
   );
 }
 

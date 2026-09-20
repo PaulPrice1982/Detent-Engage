@@ -28,37 +28,6 @@ const NAV = (current: string) => [
   { href: '/app/support', label: 'Support', current: current === 'support' },
 ];
 
-const STYLES = `<style>
-  .ask{display:flex;gap:10px;margin:0 0 8px}
-  .ask input{flex:1;padding:12px 14px;font-size:15px;border:1px solid #E3E8EF;
-   border-radius:9px;font-family:inherit}
-  .ask input:focus{outline:2px solid #1F3D5C;outline-offset:1px}
-  .said{background:#F6F8FB;border-left:3px solid #1F3D5C;padding:14px 16px;
-   border-radius:0 9px 9px 0;margin:0 0 18px}
-  .said p{margin:0;font-size:15px}
-  .steps{counter-reset:s;list-style:none;padding:0;margin:14px 0 0}
-  .steps li{counter-increment:s;position:relative;padding:0 0 14px 40px;font-size:15px;
-   line-height:1.55}
-  .steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:26px;
-   height:26px;border-radius:50%;background:#1F3D5C;color:#fff;font-size:13px;
-   font-weight:600;display:flex;align-items:center;justify-content:center}
-  .topic{margin:0 0 26px}
-  .topic h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#5B6B7F;
-   margin:0 0 10px;font-weight:600}
-  .qa{border:1px solid #E3E8EF;border-radius:10px;overflow:hidden}
-  .qa a{display:block;padding:12px 15px;border-bottom:1px solid #EEF2F6;color:#16202B;
-   text-decoration:none;font-size:14.5px}
-  .qa a:last-child{border-bottom:0}
-  .qa a:hover{background:#F6F8FB}
-  .qa .tag{float:right;font-size:11px;color:#5B6B7F;text-transform:uppercase;
-   letter-spacing:.06em;padding-top:2px}
-  .answer p{font-size:15.5px;line-height:1.65}
-  .more a{display:inline-block;margin:0 10px 8px 0;font-size:14px;color:#1F3D5C}
-  .req{border:1px solid #E3E8EF;border-radius:10px;padding:14px 16px;margin:0 0 10px}
-  .req .when{color:#5B6B7F;font-size:12.5px}
-  .demo-video{width:100%;border-radius:11px;border:1px solid #E3E8EF;background:#16202B;
-   display:block;aspect-ratio:1122/624}
-</style>`;
 
 /** Author copy: escaped, blank lines become paragraphs. */
 function paragraphs(text: string): string {
@@ -118,8 +87,7 @@ export function supportHomePage(input: SupportHomeInput): string {
       title: 'Support', site: 'app', nav: NAV('support'), user: input.user.email,
       banner: input.notice,
     },
-    `${STYLES}
-<h1>Support</h1>
+    `<h1>Support</h1>
 <p class="sub">Ask a question in your own words. Everything here is about running
 Detent: it is not the assistant your visitors talk to.</p>
 
@@ -181,8 +149,7 @@ export function supportArticlePage(input: {
 }): string {
   return page(
     { title: input.article.question, site: 'app', nav: NAV('support'), user: input.user.email },
-    `${STYLES}
-<p class="sub"><a href="/app/support">Support</a> , 
+    `<p class="sub"><a href="/app/support">Support</a> , 
 ${escape(TOPIC_LABELS[input.article.topic])}</p>
 <h1>${escape(input.article.question)}</h1>
 <div class="card">${articleBody(input.article)}</div>
@@ -204,8 +171,7 @@ export function supportRequestPage(input: {
 }): string {
   return page(
     { title: 'Raise a request', site: 'app', nav: NAV('support'), user: input.user.email },
-    `${STYLES}
-<p class="sub"><a href="/app/support">Support</a></p>
+    `<p class="sub"><a href="/app/support">Support</a></p>
 <h1>Raise a request</h1>
 <div class="card">
   ${input.error ? `<div class="said" style="border-left-color:#C2413B">

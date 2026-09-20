@@ -162,14 +162,7 @@ ${input.error ? `<div class="banner" style="background:#FCEBEB;border-color:#F3C
     <a class="btn" href="/console">Cancel</a>
   </div>
 </form>
-<style>
-  .field { width:100%; padding:9px 11px; font-size:14px; border:1px solid #E3E8EF;
-           border-radius:7px; font-family:inherit; color:#0F1B2A; background:#fff; }
-  .field:focus { outline:2px solid #1B5FA8; outline-offset:1px; }
-  label { display:block; font-size:11.5px; font-weight:600; color:#5B6B7F;
-          margin:0 0 4px; text-transform:uppercase; letter-spacing:.05em; }
-  .grid > div { margin-bottom:12px; }
-</style>`,
+`,
   );
 }
 

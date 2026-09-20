@@ -36,19 +36,7 @@ export function bundlesPage(input: {
       title: 'Credit bundles', site: 'console', nav: NAV('bundles'),
       user: input.userEmail, banner: input.notice,
     },
-    `<style>
-      table{width:100%;border-collapse:collapse;font-size:14.5px}
-      th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.07em;
-       color:#5B6B7F;padding:0 10px 8px 0;font-weight:600}
-      td{padding:10px 10px 10px 0;border-top:1px solid #EEF2F6;font-variant-numeric:tabular-nums}
-      td.n,th.n{text-align:right}
-      .field{width:100%;padding:9px 11px;font-size:14px;border:1px solid #E3E8EF;
-       border-radius:7px;font-family:inherit;margin:0 0 12px}
-      label{display:block;font-size:12.5px;color:#5B6B7F;margin:0 0 5px;font-weight:600}
-      .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
-      .warn{border-left:3px solid #C2413B;padding:12px 14px;background:#FBE9E8;
-       border-radius:0 8px 8px 0;margin:0 0 16px}
-    </style>
+    `
 <h1>Credit bundles</h1>
 <p class="sub">On the per-reply plan, credits are what replies are paid for out of. List price
 is ${LIST_PENCE_PER_REPLY}p a reply; a bundle is cheaper the larger it is.</p>

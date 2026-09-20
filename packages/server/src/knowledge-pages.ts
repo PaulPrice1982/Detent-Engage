@@ -146,27 +146,7 @@ ${input.published.length > 0 ? `<h2>Published (${input.published.length})</h2>
   <td>${escape(draft.reviewedBy ?? '')}</td>
 </tr>`).join('')}</tbody></table>` : ''}
 
-<style>
-  .field { width:100%; padding:9px 11px; font-size:14px; border:1px solid #E3E8EF;
-           border-radius:7px; font-family:inherit; color:#0F1B2A; background:#fff;
-           margin-bottom:12px; }
-  .field:focus { outline:2px solid #1B5FA8; outline-offset:1px; }
-  textarea.field { resize:vertical; line-height:1.5; }
-  label { display:block; font-size:11.5px; font-weight:600; color:#5B6B7F;
-          margin:0 0 4px; text-transform:uppercase; letter-spacing:.05em; }
-  .hint { color:#5B6B7F; font-size:12.5px; margin:-6px 0 14px; }
-  .meta { color:#5B6B7F; font-size:12px; }
-  .item { padding:14px 0; border-bottom:1px solid #E3E8EF; }
-  .item:last-child { border-bottom:0; padding-bottom:0; }
-  .excerpt { background:#F7F9FC; border:1px solid #E3E8EF; border-radius:7px;
-             padding:11px 13px; font-size:12.5px; white-space:pre-wrap;
-             font-family:ui-monospace,SFMono-Regular,Menlo,monospace; margin:9px 0;
-             max-height:160px; overflow:auto; }
-  .banner.bad { background:#FCEBEB; border-color:#F3C9C9; color:#A32A2A; }
-  .figure { display:inline-flex; align-items:center; gap:6px; margin:0 10px 8px 0;
-            font-size:13px; background:#FDF3E5; border:1px solid #F3DDBB;
-            border-radius:6px; padding:5px 9px; }
-</style>`,
+`,
   );
 }
 

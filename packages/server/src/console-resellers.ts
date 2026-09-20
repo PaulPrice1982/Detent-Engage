@@ -18,22 +18,6 @@ const NAV = (current: string) => [
   { href: '/console/website', label: 'Website', current: current === 'website' },
 ];
 
-const STYLES = `<style>
-  table{width:100%;border-collapse:collapse;font-size:14.5px}
-  th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.07em;
-   color:#5B6B7F;padding:0 10px 8px 0;font-weight:600}
-  td{padding:10px 10px 10px 0;border-top:1px solid #EEF2F6;font-variant-numeric:tabular-nums}
-  td.n,th.n{text-align:right}
-  .field{width:100%;padding:9px 11px;font-size:14px;border:1px solid #E3E8EF;
-   border-radius:7px;font-family:inherit;margin:0 0 12px}
-  label{display:block;font-size:12.5px;color:#5B6B7F;margin:0 0 5px;font-weight:600}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
-  .pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:20px;
-   text-transform:uppercase;letter-spacing:.05em;background:#EEF2F6;color:#42536B}
-  .pill.active{background:#E7F3EC;color:#1E6C3B}
-  .pill.terminated{background:#FBE9E8;color:#93302B}
-  .hint{color:#5B6B7F;font-size:12.5px;margin:-6px 0 14px}
-</style>`;
 
 export function resellerListPage(input: {
   readonly userEmail: string;
@@ -51,8 +35,7 @@ export function resellerListPage(input: {
       title: 'Resellers', site: 'console', nav: NAV('resellers'),
       user: input.userEmail, banner: input.notice,
     },
-    `${STYLES}
-<h1>Resellers</h1>
+    `<h1>Resellers</h1>
 <p class="sub">Who sells Detent on your behalf, on what margin, and what they are owed.</p>
 
 ${input.resellers.length === 0
@@ -114,8 +97,7 @@ export function resellerDetailPage(input: {
       title: input.reseller.name, site: 'console', nav: NAV('resellers'),
       user: input.userEmail, banner: input.notice,
     },
-    `${STYLES}
-<p class="sub"><a href="/console/resellers">Resellers</a></p>
+    `<p class="sub"><a href="/console/resellers">Resellers</a></p>
 <h1>${escape(input.reseller.name)}</h1>
 
 <div class="card">

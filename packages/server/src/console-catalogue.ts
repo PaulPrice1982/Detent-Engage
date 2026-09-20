@@ -48,25 +48,7 @@ ${drafts.map((draft) => draftCard(draft, input.impacts.get(`${draft.planCode}:${
 <h2>Live packages</h2>
 ${published.map((version) => planCard(version, input.csrf)).join('')}
 
-<style>
-  .plan { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
-  .plan .full { grid-column:1 / -1; }
-  .field { width:100%; padding:8px 10px; font-size:14px; border:1px solid #E3E8EF;
-           border-radius:7px; font-family:inherit; color:#0F1B2A; background:#fff;
-           margin-bottom:11px; }
-  .field:focus { outline:2px solid #1B5FA8; outline-offset:1px; }
-  label { display:block; font-size:11px; font-weight:600; color:#5B6B7F;
-          margin:0 0 3px; text-transform:uppercase; letter-spacing:.05em; }
-  .row { display:flex; gap:14px; align-items:baseline; }
-  .row > div { flex:1; }
-  .banner.bad { background:#FCEBEB; border-color:#F3C9C9; color:#A32A2A; }
-  .impact { background:#FDF3E5; border:1px solid #F3DDBB; border-radius:8px;
-            padding:12px 15px; margin:12px 0; font-size:13.5px; }
-  .impact b { display:block; margin-bottom:5px; }
-  .impact ul { margin:6px 0 0; padding-left:19px; }
-  .up { color:#1B7A4C; font-weight:600 } .down { color:#A32A2A; font-weight:600 }
-  .version { color:#5B6B7F; font-size:12px; font-variant-numeric:tabular-nums }
-</style>`,
+`,
   );
 }
 

@@ -86,8 +86,7 @@ ${input.pages.length === 0
   <input class="field" id="description" name="description" required
          placeholder="What a buyer reads under the title in a search result.">
   <div class="actions"><button class="btn primary" type="submit">Create as a draft</button></div>
-</form>
-${FIELD_STYLES}`,
+</form>`,
   );
 }
 
@@ -155,21 +154,7 @@ ${page.sections.length === 0
     </form>`).join('')}
   </div>
 </div>
-${FIELD_STYLES}
-<style>
-  .kinds{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
-  .kind{width:100%;text-align:left;padding:13px 15px;border:1px solid #E3E8EF;border-radius:9px;
-        background:#fff;cursor:pointer;font-family:inherit;color:#0F1B2A}
-  .kind:hover{border-color:#EFA13C;background:#FFFDF9}
-  .kind b{display:block;font-size:14.5px;margin-bottom:3px}
-  .kind span{color:#5B6B7F;font-size:12.5px;line-height:1.45}
-  .section-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
-  .section-head .order{display:flex;gap:5px;margin-left:auto}
-  .section-head .order button{border:1px solid #E3E8EF;background:#fff;border-radius:6px;
-        width:30px;height:28px;cursor:pointer;color:#5B6B7F}
-  .section-head .order button:hover{border-color:#5B6B7F;color:#0F1B2A}
-  .items{border-left:2px solid #E3E8EF;padding-left:15px;margin:14px 0}
-</style>`,
+`,
   );
 }
 
@@ -283,17 +268,5 @@ function sectionEditor(
 </form>`;
 }
 
-const FIELD_STYLES = `<style>
-  .field{width:100%;padding:9px 11px;font-size:14px;border:1px solid #E3E8EF;border-radius:7px;
-         font-family:inherit;color:#0F1B2A;background:#fff;margin-bottom:12px}
-  .field:focus{outline:2px solid #1B5FA8;outline-offset:1px}
-  textarea.field{resize:vertical;line-height:1.5}
-  label{display:block;font-size:11.5px;font-weight:600;color:#5B6B7F;margin:0 0 4px;
-        text-transform:uppercase;letter-spacing:.05em}
-  .hint{color:#5B6B7F;font-size:12.5px;margin:-8px 0 12px}
-  .meta{color:#5B6B7F;font-size:12px}
-  .banner.bad{background:#FCEBEB;border-color:#F3C9C9;color:#A32A2A}
-  code{background:#F7F9FC;border:1px solid #E3E8EF;border-radius:4px;padding:1px 5px}
-</style>`;
 
 export { SECTION_KINDS, NAV as websiteNav };

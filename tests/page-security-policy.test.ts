@@ -19,6 +19,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { type AddressInfo } from 'node:net';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createHttpServer, type Api, type ApiRequest, type ApiResponse } from '@detent/awa-server';
 import { page } from '@detent/awa-server';
 
@@ -50,6 +51,11 @@ async function headersFor(path: string): Promise<Record<string, string>> {
   } finally {
     await new Promise<void>((done) => server.close(() => done()));
   }
+}
+
+/** Source with its comments removed, so a comment about <style> is not one. */
+function withoutComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 }
 
 function directives(policy: string): Map<string, string> {
@@ -108,7 +114,23 @@ describe('the visitor panel', () => {
   });
 });
 
-describe('the page renderer', () => {
+describe('the renderers', () => {
+  it('inline no stylesheet anywhere, because the policy drops it', () => {
+    // Thirteen more <style> blocks lived in the individual page renderers
+    // beside the one in the shared shell, and every one of them was dropped
+    // by the browser. A page can look almost right while the half of its CSS
+    // that came from its own renderer is missing, which is how this survived
+    // the first fix. The styles are files on the origin; this keeps them so.
+    const dir = new URL('../packages/server/src/', import.meta.url);
+    const offenders = readdirSync(dir)
+      .filter((name) => name.endsWith('.ts'))
+      // not-configured serves its own pages from a server that has no static
+      // mount to load a file from, and sets its own policy to match.
+      .filter((name) => name !== 'not-configured.ts' && name !== 'not-configured-server.ts')
+      .filter((name) => withoutComments(readFileSync(new URL(name, dir), 'utf8')).includes('<style>'));
+    expect(offenders).toEqual([]);
+  });
+
   it('links its stylesheet rather than inlining it', async () => {
     // An inline <style> is dropped under `style-src 'self'`. The header and
     // the markup have to agree, and asserting only one of them is how this

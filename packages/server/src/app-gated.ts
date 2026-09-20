@@ -165,12 +165,7 @@ img-src data:;</pre>
   extra host in your policy, which is why we recommend one.</p>
 </div>
 
-<style>
-  .snippet { background:#0F1B2A; color:#CFE0F0; border-radius:8px; padding:14px 16px;
-             font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
-             line-height:1.6; overflow-x:auto; margin:0; white-space:pre; }
-  td code { background:#F7F9FC; border:1px solid #E3E8EF; border-radius:4px; padding:1px 5px; }
-</style>`,
+`,
   );
 }
 
@@ -220,10 +215,7 @@ ${route('POST', '/v1/webhooks/{connector}', 'CRM callbacks', 'signature')}
   key; the widget key is in your <a class="link" href="/app/install">install snippet</a>.</p>
 </div>
 
-<style>
-  .method { color:#C2410C; font-weight:600; }
-  code { background:#F7F9FC; border:1px solid #E3E8EF; border-radius:4px; padding:1px 5px; }
-</style>`,
+`,
   );
 }
 
@@ -259,12 +251,7 @@ URL: whether your service is up is your information, not everyone's.</p>
   <pre class="snippet">curl -s ${escape(input.apiBaseUrl)}/v1/admin/health \\
   -H "authorization: Bearer YOUR_ADMIN_KEY"</pre>
 </div>
-<style>
-  .snippet { background:#0F1B2A; color:#CFE0F0; border-radius:8px; padding:14px 16px;
-             font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
-             overflow-x:auto; margin:0; white-space:pre; }
-  code { background:#F7F9FC; border:1px solid #E3E8EF; border-radius:4px; padding:1px 5px; }
-</style>`,
+`,
   );
 }
 
