@@ -202,6 +202,16 @@ export interface DevSites {
   readonly sessionStoreDurable: boolean;
   readonly accounts: AccountService;
   readonly users: UserService;
+  /**
+   * The console's commercial operations, for a caller that builds the sites
+   * itself rather than going through HTTP.
+   *
+   * Exposed for the demonstration harness in `tools/demo-boot.mts`, which
+   * needs to put an action into the approval queue so the Approvals screen has
+   * something on it. The queue is in process memory, so an external script
+   * cannot reach it. Nothing in the serving path uses this.
+   */
+  readonly consoleService: ConsoleService;
   readonly operatorEmail: string;
   /**
    * Whether an operator account exists.
@@ -1585,7 +1595,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
   });
 
   return {
-    consoleRouter, appRouter, resellerRouter, accounts, users, operatorEmail, operatorConfigured,
+    consoleRouter, appRouter, resellerRouter, accounts, users, consoleService,
+    operatorEmail, operatorConfigured,
     emailSender, marketing, pages, copy,
     paymentProviderName: paymentProvider.name,
     sessionsPersist: !secretTooShort && Boolean(configuredSecret),

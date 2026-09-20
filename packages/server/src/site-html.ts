@@ -46,71 +46,6 @@ export interface PageOptions {
   readonly banner?: string;
 }
 
-const STYLES = `
-:root {
-  --ink:#0F1B2A; --ink-2:#1B2A3D; --ink-3:#24344A; --amber:#EFA13C;
-  --paper:#FFFFFF; --slate:#5B6B7F; --line:#E3E8EF; --mute:#A9B7C8;
-  --ok:#3FBF7F; --warn:#EFA13C; --bad:#E05252;
-}
-*{box-sizing:border-box}
-body{margin:0;background:#F7F9FC;color:var(--ink);
- font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
- -webkit-font-smoothing:antialiased}
-header{background:var(--ink);color:var(--paper);padding:0 24px;
- display:flex;align-items:center;gap:24px;height:56px}
-.brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:16px;
- color:var(--paper);text-decoration:none;border-radius:6px;padding:4px 8px;margin-left:-8px}
-.brand:hover{background:var(--ink-2)}
-.brand:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--amber)}
-.chev{color:var(--amber)}
-.tag{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);
- border:1px solid #33465e;border-radius:4px;padding:2px 7px;margin-left:2px}
-nav{display:flex;gap:2px;margin-left:auto;align-items:center}
-nav a{color:var(--mute);text-decoration:none;padding:7px 12px;border-radius:6px;font-size:13.5px}
-nav a:hover{color:var(--paper);background:var(--ink-2)}
-nav a.current{color:var(--ink);background:var(--paper);font-weight:600}
-.who{color:var(--mute);font-size:12.5px;margin-left:14px;padding-left:14px;border-left:1px solid #33465e}
-main{max-width:1120px;margin:0 auto;padding:28px 24px 80px}
-h1{font-size:23px;letter-spacing:-.01em;margin:0 0 4px;font-weight:650}
-.sub{color:var(--slate);margin:0 0 26px}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--slate);
- margin:30px 0 11px;font-weight:600}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:12px}
-.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
-.stat .label{color:var(--slate);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
-.stat .value{font-size:25px;font-weight:640;letter-spacing:-.02em;margin-top:5px;
- font-variant-numeric:tabular-nums}
-.stat .note{color:var(--slate);font-size:12.5px;margin-top:2px}
-table{width:100%;border-collapse:collapse;background:var(--paper);
- border:1px solid var(--line);border-radius:10px;overflow:hidden}
-th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);font-size:13.5px}
-th{background:#FAFBFD;color:var(--slate);font-weight:600;font-size:12px;
- text-transform:uppercase;letter-spacing:.05em}
-tr:last-child td{border-bottom:none}
-td.num{text-align:right;font-variant-numeric:tabular-nums}
-a.link{color:#1B5FA8;text-decoration:none}
-a.link:hover{text-decoration:underline}
-.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;
- border:1px solid var(--line);background:#FAFBFD;color:var(--slate)}
-.pill.ok{background:#E9F8F0;border-color:#BFE8D4;color:#1B7A4C}
-.pill.warn{background:#FDF3E5;border-color:#F3DDBB;color:#8A5A16}
-.pill.bad{background:#FCEBEB;border-color:#F3C9C9;color:#A32A2A}
-.btn{display:inline-block;border:1px solid var(--line);background:var(--paper);
- border-radius:7px;padding:7px 13px;font-size:13.5px;font-weight:550;cursor:pointer;
- color:var(--ink);text-decoration:none}
-.btn:hover{border-color:var(--slate)}
-.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-.btn.danger{background:#fff;border-color:#F3C9C9;color:#A32A2A}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.banner{background:#FDF3E5;border:1px solid #F3DDBB;color:#8A5A16;
- border-radius:8px;padding:11px 15px;margin-bottom:18px;font-size:13.5px}
-.empty{color:var(--slate);padding:26px;text-align:center;background:var(--paper);
- border:1px solid var(--line);border-radius:10px}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
-.dual{border-left:3px solid var(--amber);padding-left:13px}
-footer{color:var(--slate);font-size:12px;margin-top:44px;padding-top:16px;border-top:1px solid var(--line)}
-`;
 
 /**
  * The Detent mark: an amber dot, a chevron, and the word.
@@ -146,7 +81,7 @@ export function page(options: PageOptions, body: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <title>${escape(options.title)}, Detent</title>
-<style>${STYLES}</style>
+<link rel="stylesheet" href="/backoffice.css">
 </head>
 <body>
 <header>

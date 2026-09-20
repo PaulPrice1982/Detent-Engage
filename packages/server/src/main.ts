@@ -99,9 +99,14 @@ const DEVELOPMENT_MODEL = 'claude-sonnet-5';
 // pointing at a string in a source file as the reason.
 const model: ModelProvider = boot.modelKey
   ? new AnthropicModelProvider({ model: boot.model ?? DEVELOPMENT_MODEL })
-  : new ScriptedModelProvider([
-      { match: /.*/, output: { text: 'Thanks, what are you trying to solve?', confidence: 0.9 } },
-    ]);
+  // Without a key there is no model, and the reference provider answers
+  // everything with one sentence. For a demonstration that is indistinguishable
+  // from a broken assistant, so the demo flag also loads a scripted
+  // qualification. It is fixed text, never a model, and never reachable in a
+  // deployment, which cannot boot without a key in the first place.
+  : new ScriptedModelProvider(process.env['AWA_DEMO_SEED'] === '1' && !boot.deployed
+    ? (await import('./demo-seed.js')).DEMO_CONVERSATION
+    : [{ match: /.*/, output: { text: 'Thanks, what are you trying to solve?', confidence: 0.9 } }]);
 
 const crm = new SandboxConnector({ hasSeparateLeadObject: true });
 const platform = new Platform({
@@ -225,6 +230,28 @@ const sites = await buildDevSites({
   widgetKeyFor: () => widget.key,
 });
 
+/**
+ * Demonstration fixtures, off unless explicitly asked for and never deployed.
+ *
+ * The approval queue is in process memory, so the only place that can put an
+ * action on it is this process. Without this, a walkthrough of dual control
+ * has to be described rather than shown.
+ */
+const demoSeeded = process.env['AWA_DEMO_SEED'] === '1' && !boot.deployed
+  // A fixture must never be able to stop the server starting. It writes to the
+  // same services the console writes to, and those refuse things: the point of
+  // the refusal is lost if the refusal takes the process down.
+  ? await (await import('./demo-seed.js')).seedDemoActions({
+      consoleService: sites.consoleService,
+      users: sites.users,
+      accounts: sites.accounts,
+      deployed: boot.deployed,
+    }).catch((error: unknown) => {
+      console.error(`  demo seed failed: ${error instanceof Error ? error.message : String(error)}`);
+      return [];
+    })
+  : [];
+
 const siteMount = createSiteMount({
   sites,
   hosts,
@@ -288,6 +315,7 @@ server.listen(port, host, () => {
         sites.sessionStoreDurable ? undefined : 'no DATABASE_URL',
       ].filter(Boolean).join(', ')})`}`);
   console.log(`  payments         ${sites.paymentProviderName}`);
+  for (const action of demoSeeded) console.log(`  demo action      ${action.state.padEnd(16)} ${action.summary}`);
   if (boot.printKeys) {
     // Keys are stored as digests, so this is the only moment they exist in
     // readable form. Printed only when asked for, and never in production:

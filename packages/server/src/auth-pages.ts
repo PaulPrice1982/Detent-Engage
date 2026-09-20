@@ -12,47 +12,16 @@ import { escape, page } from './site-html.js';
  * which customers exist, how many, or what the tool does.
  */
 
-const FORM_STYLES = `
-<style>
-  body { background: #0F1B2A; }
-  main { max-width: 420px; padding-top: 8vh; }
-  .auth { background: #fff; border-radius: 12px; padding: 30px 30px 26px;
-          box-shadow: 0 20px 60px rgb(0 0 0 / .35); }
-  .auth h1 { font-size: 20px; margin: 0 0 6px; }
-  .auth p.sub { margin: 0 0 22px; font-size: 13.5px; }
-  label { display: block; font-size: 12.5px; font-weight: 600; color: #5B6B7F;
-          margin: 0 0 5px; text-transform: uppercase; letter-spacing: .05em; }
-  input[type=email], input[type=password], input[type=text] {
-    width: 100%; padding: 10px 12px; font-size: 15px; border: 1px solid #E3E8EF;
-    border-radius: 8px; margin-bottom: 15px; font-family: inherit; color: #0F1B2A;
-  }
-  input:focus { outline: 2px solid #1B5FA8; outline-offset: 1px; border-color: #1B5FA8; }
-  button.submit { width: 100%; padding: 11px; font-size: 15px; font-weight: 600;
-    border: 0; border-radius: 8px; background: #0F1B2A; color: #fff; cursor: pointer; }
-  button.submit:hover { background: #1B2A3D; }
-  .error { background: #FCEBEB; border: 1px solid #F3C9C9; color: #A32A2A;
-           border-radius: 8px; padding: 10px 13px; margin-bottom: 18px; font-size: 13.5px; }
-  .note { color: #5B6B7F; font-size: 12.5px; margin-top: 16px; text-align: center; }
-  .note a { color: #1B5FA8; }
-  .hint-box { margin-top: 18px; padding: 12px 14px; background: #FDF3E5;
-              border: 1px solid #F3DDBB; border-radius: 8px; color: #8A5A16;
-              font-size: 12.5px; line-height: 1.5; }
-  .hint-box b { display: block; margin-bottom: 4px; }
-  .hint-box code { background: #fff; border: 1px solid #F3DDBB; border-radius: 4px;
-                   padding: 1px 4px; font-size: 12px; }
-  .federated { margin-bottom: 4px; }
-  .fed { display: flex; align-items: center; justify-content: center; gap: 9px;
-         width: 100%; padding: 10px; margin-bottom: 9px; border-radius: 8px;
-         border: 1px solid #D5DBE4; background: #fff; color: #0F1B2A;
-         font-size: 14.5px; font-weight: 550; text-decoration: none; }
-  .fed:hover { background: #F7F9FC; border-color: #5B6B7F; }
-  .fed-apple { background: #000; border-color: #000; color: #fff; }
-  .fed-apple:hover { background: #1a1a1a; border-color: #1a1a1a; }
-  .divider { display: flex; align-items: center; gap: 12px; margin: 16px 0 14px;
-             color: #5B6B7F; font-size: 12px; }
-  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #E3E8EF; }
-  footer { color: #5B6B7F; text-align: center; border: 0; }
-</style>`;
+/**
+ * The sign-in pages' own styles, as a link rather than a `<style>` block.
+ *
+ * Every page here is served with `style-src 'self'`, which blocks an inline
+ * stylesheet. That is the policy working: the console and the customer area
+ * inlined their CSS and rendered as unstyled documents in every browser while
+ * looking perfectly correct to curl, which does not enforce a policy. Both
+ * stylesheets are now files on this origin.
+ */
+const FORM_STYLES = '<link rel="stylesheet" href="/signin.css">';
 
 export interface SignInPageOptions {
   readonly realm: Realm;

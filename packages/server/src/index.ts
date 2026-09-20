@@ -21,6 +21,7 @@ export * from './console-catalogue.js';
 export * from './console-cms.js';
 export * from './console-resellers.js';
 export * from './console-site.js';
+export * from './demo-seed.js';
 export * from './detent-knowledge.js';
 export * from './dev-sites.js';
 export * from './host-routing.js';

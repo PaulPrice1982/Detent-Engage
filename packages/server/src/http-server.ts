@@ -288,12 +288,21 @@ export function securityHeaders(options: {
     headers['content-security-policy'] = [
       "default-src 'self'",
       "base-uri 'none'",
-      "form-action 'none'",
+      // Same origin, not none. Every page this server renders that does
+      // anything, signing in, creating an account, approving a payment, does
+      // it with a form posting back here, and `'none'` blocks the submission
+      // itself. It still refuses a form that posts anywhere else, which is
+      // what the directive is for.
+      "form-action 'self'",
       "img-src 'self' data:",
       // No `'unsafe-inline'`: every style and script on our own pages is a
       // file on this origin, which is what makes the policy worth having
       // (audit SEC-7).
       "style-src 'self'",
+      // Attributes only. The renderers carry roughly a hundred `style="..."`
+      // attributes for one-off widths and margins; this permits those and
+      // still refuses an inline <style> block and any third-party stylesheet.
+      "style-src-attr 'unsafe-inline'",
       "script-src 'self'",
       "connect-src 'self'",
       "object-src 'none'",
@@ -323,14 +332,23 @@ async function handle(
     ? '*'
     : (origin && originMatches(origin, allowedOrigins) ? origin : '');
 
-  // The panel is designed to be framed by the tenant's own site; the console
-  // and the install page are ours and are framed by nobody; everything else is
-  // API JSON, which needs the strictest policy of the three.
+  /**
+   * The panel is designed to be framed by the tenant's own site; the console
+   * and the install page are ours and are framed by nobody; everything else is
+   * API JSON, which needs the strictest policy of the three.
+   *
+   * Decided by who answers the path, not by how the path is spelled. It used
+   * to be decided by file extension, and every page this server renders is
+   * served from an extensionless path: the whole back office, the whole
+   * customer area, the reseller portal and every sign-in page were given the
+   * API policy, `default-src 'none'`. Nothing 404ed and nothing errored. They
+   * simply arrived in the browser with their own stylesheet refused and
+   * rendered as unstyled documents, while curl, which enforces no policy,
+   * showed them as perfect.
+   */
   const kind = url.pathname.endsWith('/panel.html')
     ? 'panel' as const
-    : (/\.(html|css|js|svg|png|jpe?g|webp|ico|woff2|txt|map)$/.test(url.pathname) || url.pathname === '/'
-        ? 'page' as const
-        : 'api' as const);
+    : isApiPath(url.pathname) ? 'api' as const : 'page' as const;
   const headers: Record<string, string> = {
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
