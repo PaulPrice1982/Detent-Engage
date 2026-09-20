@@ -1,70 +1,69 @@
 {
   "title": "Detent Engage \u2014 promotional cut",
-  "reader": "A CRO or founder who has considered an AI assistant on their website and decided against it.",
-  "reaction": "Someone finally built the version I could put my name to.",
+  "reader": "A CRO or founder who already has, or has considered, a chat agent on their website.",
+  "reaction": "Ours gets paid whether it works or not. This one doesn't.",
+  "note": "Led by the commercial model rather than by a safety feature list. Being paid per booked meeting is the difference no other chat agent can copy without changing its own business, and the governance is framed as the consequence of that promise rather than as the headline. No code, no JSON, no configuration screens.",
   "audio": "audio/promo.mp3",
   "beats": [
     {
       "card": "hook",
-      "seconds": 7,
-      "big": "Your website's AI assistant<br>will say anything.",
-      "small": "That is why you have not got one."
-    },
-    {
-      "clip": "clips/06-conversation.webm",
-      "seconds": 9,
-      "from": 2,
-      "lower": "It will invent a price. Promise a date you cannot hit."
-    },
-    {
-      "card": "turn",
-      "seconds": 5,
-      "big": "So we built one<br>that is not allowed to.",
+      "seconds": 8,
+      "big": "Every other chat agent<br>gets paid whether<br>it works or not.",
       "small": ""
     },
     {
-      "shot": "shots/22-widget-turn-1.png",
-      "seconds": 7,
-      "lower": "Discloses that it is AI. Before the first question. Every session."
+      "card": "problem",
+      "seconds": 6,
+      "big": "Conversations.<br>Containment rates.<br>Deflection.",
+      "small": "None of that is pipeline."
     },
     {
-      "shot": "shots/22-widget-turn-5.png",
-      "seconds": 8,
-      "focus": "bottom",
-      "lower": "Cannot try to identify a visitor until they say yes. Not degraded. Refused."
+      "card": "turn",
+      "seconds": 7,
+      "big": "Detent Engage is paid<br>when it books the meeting.",
+      "small": ""
     },
     {
       "clip": "clips/06-conversation.webm",
       "seconds": 9,
-      "from": 24,
-      "lower": "Answers only from your own approved knowledge. It cannot make anything up."
+      "from": 4,
+      "lower": "So it cannot chat. It has to qualify."
     },
     {
-      "slide": "frames/slide-08.png",
-      "seconds": 8,
-      "lower": "Every act in a hash-chained record you can hand to an auditor."
+      "clip": "clips/06-conversation.webm",
+      "seconds": 9,
+      "from": 16,
+      "lower": "Scale. Requirement. Timing. Authority. In that order."
     },
     {
-      "shot": "shots/22-widget-turn-4.png",
-      "seconds": 8,
-      "lower": "It qualifies. It books."
-    },
-    {
-      "slide": "frames/slide-06.png",
+      "clip": "clips/06-conversation.webm",
       "seconds": 7,
-      "lower": "You are charged for the confirmed outcome. Not seats. Not messages."
+      "from": 2,
+      "lower": "It tells every visitor it is AI."
     },
     {
-      "clip": "clips/05-install.webm",
-      "seconds": 6,
-      "from": 3,
-      "lower": "One script tag."
+      "clip": "clips/06-conversation.webm",
+      "seconds": 8,
+      "from": 30,
+      "lower": "It will not try to identify anyone until they say yes."
+    },
+    {
+      "clip": "clips/06-conversation.webm",
+      "seconds": 8,
+      "from": 26,
+      "lower": "A booked meeting, with the conversation attached."
+    },
+    {
+      "card": "install",
+      "seconds": 5,
+      "big": "One script tag.",
+      "small": ""
     },
     {
       "card": "end",
-      "seconds": 8,
+      "seconds": 9,
       "big": "Detent Engage",
-      "small": "An assistant you can put your name to."
+      "small": "Paid on outcomes, not on conversations."
     }
   ]
 }

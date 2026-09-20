@@ -14,7 +14,15 @@ const path = require('path');
 const BASE = 'http://127.0.0.1:8901';
 const OUT = path.join(__dirname, 'clips');
 const CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const SIZE = { width: 1280, height: 800 };
+/**
+ * The recording size is the film's window size, exactly.
+ *
+ * Filmed at 1280x800 the product sat as a small island inside a 1920 frame,
+ * with a quarter of the width dead dark bar either side, and tall pages were
+ * cut at the viewport edge. Recording at the size the frame actually gives
+ * the picture means no scaling, no bars, and the most page that will fit.
+ */
+const SIZE = { width: 1920, height: 904 };
 
 const need = (name) => {
   const v = process.env[name];
@@ -295,7 +303,7 @@ async function record(browser, name, storageState, body, size = SIZE) {
     await hand.type(box, 'We run 40 vans out of two depots in the Midlands.', 30);
     await page.keyboard.press('Enter');
     await sleep(3000);
-  }, { width: 414, height: 860 });
+  }, { width: 430, height: 904 });
 
   // --- 09 a second person approving ----------------------------------------
   await record(browser, '09-dual-control', opsState, async (page, hand) => {

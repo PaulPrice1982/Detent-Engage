@@ -53,8 +53,8 @@ const OUT = resolve(flag('--out', resolve(DEMO, 'detent-engage-demo.mp4')));
 const H = Number(flag('--height', '1080'));
 const W = Math.round(H * 16 / 9 / 2) * 2;
 /** The window the recording plays in, between the title bar and the caption. */
-const BAR_TOP = Math.round(H * 104 / 1080);
-const BAR_BOTTOM = Math.round(H * 88 / 1080);
+const BAR_TOP = Math.round(H * 96 / 1080);
+const BAR_BOTTOM = Math.round(H * 80 / 1080);
 const WIN_H = H - BAR_TOP - BAR_BOTTOM;
 
 const run = (list) => execFileSync(FFMPEG, ['-hide_banner', '-loglevel', 'error', '-y', ...list],

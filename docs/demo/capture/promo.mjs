@@ -70,23 +70,29 @@ promo.beats.forEach((beat, i) => {
 
   if (beat.clip) {
     const clip = resolve(DEMO, beat.clip);
+    const have = duration(clip);
+    if ((beat.from ?? 0) >= have) {
+      throw new Error(
+        `Beat ${n} starts at ${beat.from}s of ${beat.clip}, which runs ${have.toFixed(1)}s. ` +
+        'A cue past the end yields an empty beat and the film ends before the narration does.',
+      );
+    }
     // `from` picks the moment worth showing; a promotional beat has no time
     // to wait for a page to settle.
     const filters =
-      `[0:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},` +
+      `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,` +
+      `pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=0x0B1622,` +
       `tpad=stop_mode=clone:stop_duration=${seconds},trim=duration=${seconds},fps=25[v]`;
     run(['-ss', String(beat.from ?? 0), '-i', clip, '-i', frame,
       '-filter_complex', `${filters};[1:v]scale=${W}:${H}[o];[v][o]overlay=0:0,format=yuv420p[out]`,
       '-map', '[out]', '-an', '-t', seconds,
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', out]);
   } else if (still) {
-    // A slow push on a still, so a static frame does not read as a freeze.
     const src = resolve(DEMO, still);
-    const zoom = `zoompan=z='min(zoom+0.0006,1.09)':d=${Math.round(Number(seconds) * 25)}:` +
-      `x='iw/2-(iw/zoom/2)':y='${beat.focus === 'bottom' ? 'ih-(ih/zoom)' : 'ih/2-(ih/zoom/2)'}':s=${W}x${H}:fps=25`;
     run(['-loop', '1', '-i', src, '-i', frame,
       '-filter_complex',
-      `[0:v]scale=${W * 1.06}:-2,crop=${W}:${H}:(iw-${W})/2:${beat.focus === 'bottom' ? `ih-${H}` : `(ih-${H})/2`},${zoom}[v];` +
+      `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,` +
+      `pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=0x0B1622,fps=25[v];` +
       `[1:v]scale=${W}:${H}[o];[v][o]overlay=0:0,format=yuv420p[out]`,
       '-map', '[out]', '-an', '-t', seconds,
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', out]);
