@@ -185,9 +185,20 @@ if (haveAudio === 0) {
     }
     at += s.target;
   }
-  const mixed = filters.length > 1
-    ? `${filters.join(';')};${filters.map((_, i) => `[a${i}]`).join('')}amix=inputs=${filters.length}:normalize=0[mix]`
-    : `${filters.join(';')};[a0]anull[mix]`;
+  /**
+   * Stereo and levelled, at the end of the chain.
+   *
+   * The narration arrives as mono files at whatever level the voice model
+   * produced, and amix preserves both. A mono track plays out of one side on
+   * some setups, and a film that needs the volume turned up is a film that
+   * gets talked over. loudnorm to broadcast-ish -16 LUFS with 1.5 dB of
+   * headroom, then two channels.
+   */
+  const join = filters.length > 1
+    ? `${filters.map((_, i) => `[a${i}]`).join('')}amix=inputs=${filters.length}:normalize=0[raw]`
+    : `[a0]anull[raw]`;
+  const mixed = `${filters.join(';')};${join};` +
+    `[raw]loudnorm=I=-16:TP=-1.5:LRA=11,aformat=channel_layouts=stereo:sample_rates=48000[mix]`;
   run(['-i', silentVideo, ...inputs, '-filter_complex', mixed,
     '-map', '0:v', '-map', '[mix]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
     '-shortest', '-movflags', '+faststart', OUT]);

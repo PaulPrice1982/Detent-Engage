@@ -1,15 +1,16 @@
-# Dropping the voiceover in
+# The voiceover
 
-The twenty-three clips are already generated and sitting on the ElevenLabs
-canvas:
+All twenty-four clips are here: fourteen scenes of narration and the ten
+spoken lines of the visitor conversation. They were generated on, and read
+back from, this flow:
 
 **https://elevenlabs.io/app/flows/3U5VbEweLStlvcZGC0fJ**
 
-They could not be downloaded automatically: this workspace's ElevenLabs
-connection has permission to *generate* speech but not to read generations
-back, so the files have to be fetched from that page once, by hand, and
-dropped in here. The player works without them, it just shows the script
-instead of speaking it.
+Two ElevenLabs connections are available to this project and they do not
+carry the same permissions. The first can generate speech and cannot read a
+generation back, which is what `flows` and `speech_history_read` scope buys;
+the second can do both. Reading a generation back needs the second. Worth
+knowing before anyone concludes the files are unreachable.
 
 ## Voices
 
