@@ -87,9 +87,24 @@
 
   <form id="composer">
     <label class="sr-only" for="message" id="message-label">Your message</label>
+    <!-- Hidden until the server says this deployment can speak, so a visitor
+         is never offered a microphone that would do nothing. Typing is never
+         taken away: the text route is the whole product and voice is an
+         addition to it, which is also what WCAG 2.2 requires of us. -->
+    <button type="button" class="mic" id="mic" hidden aria-pressed="false"
+            aria-label="Speak to the assistant">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z" fill="currentColor"/>
+        <path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
     <input type="text" id="message" name="message" autocomplete="off" placeholder="Type your message" required>
     <button type="submit" class="send" id="send">Send</button>
   </form>
+  <!-- One live region for the spoken state, announced rather than only drawn,
+       because a visitor using voice may not be looking at the panel. -->
+  <p class="voice-state" id="voice-state" role="status" aria-live="polite" hidden></p>
 
   <footer class="tools">
     <!-- UX-8. A persistent withdrawal control, not a one-off prompt. -->

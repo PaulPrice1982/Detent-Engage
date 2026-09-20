@@ -63,7 +63,17 @@ export type AuditEventType =
   // voice
   | 'voice_session_opened'
   | 'voice_session_closed'
-  | 'voice_provider_error';
+  | 'voice_provider_error'
+  /**
+   * One reply synthesised and played to a visitor.
+   *
+   * Separate from the three above, which belong to the realtime path. This
+   * one is the turn-shaped spoken assistant in the browser panel, where
+   * there is no long-lived session to open and close and the evidence that
+   * matters is per utterance: which vendor spoke, in which voice, for how
+   * long, and therefore what was billed.
+   */
+  | 'voice_reply_spoken';
 
 export interface AuditEntryInput {
   readonly tenantId: string;

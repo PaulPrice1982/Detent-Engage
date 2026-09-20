@@ -37,6 +37,7 @@
     "@detent/awa-reseller": "workspace:*",
     "@detent/awa-signals": "workspace:*",
     "@detent/awa-studio": "workspace:*",
-    "@detent/awa-support": "workspace:*"
+    "@detent/awa-support": "workspace:*",
+    "@detent/awa-voice": "workspace:*"
   }
 }

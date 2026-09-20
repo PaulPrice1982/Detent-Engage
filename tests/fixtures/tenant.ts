@@ -1,4 +1,7 @@
-import { FixedClock, type Logger, type TenantConfig } from '@detent/awa-core';
+import {
+  FixedClock, type FeatureFlags, type Logger, type TenantConfig,
+} from '@detent/awa-core';
+import type { SpeechSynthesiser } from '@detent/awa-voice';
 import { SandboxConnector } from '@detent/awa-connectors';
 import { ScriptedModelProvider, type ScriptedTurn } from '@detent/awa-agent';
 import { Platform, Api, ApiKeyService } from '@detent/awa-server';
@@ -31,6 +34,10 @@ export async function buildHarness(options: {
   reconciliationMaxAttempts?: number;
   /** Supplied by the log sweep, which asserts on everything written. */
   logger?: Logger;
+  /** The assistant's mouth. Absent means this deployment cannot speak. */
+  speech?: SpeechSynthesiser;
+  /** Overridden by the voice gate, which needs `spokenVoice` on. */
+  features?: FeatureFlags;
 } = {}): Promise<Harness> {
   const tenantId = options.tenantId ?? 't_acme';
   const clock = new FixedClock(new Date('2026-09-04T09:00:00.000Z'));
@@ -42,6 +49,8 @@ export async function buildHarness(options: {
     adapter: options.adapter,
     reconciliationMaxAttempts: options.reconciliationMaxAttempts,
     ...(options.logger ? { logger: options.logger } : {}),
+    ...(options.speech ? { speech: options.speech } : {}),
+    ...(options.features ? { features: options.features } : {}),
   });
 
   platform.tenants.create({

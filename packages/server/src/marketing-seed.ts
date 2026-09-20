@@ -26,6 +26,14 @@ import { newSection, type PageService, type SeedOutcome } from '@detent/awa-cms'
  *    connector is enabled, calendar booking is named as next rather than sold
  *    as present, voice is not sold at all until it is wired, and the upload
  *    list matches the extractors that exist.
+ *
+ * Voice is now wired: the panel captures, the governed pipeline answers and
+ * the reply is spoken, behind `AWA_FEATURE_SPOKEN_VOICE` and a configured
+ * synthesiser. Revision 5's rule has been met rather than repealed, so the
+ * copy may sell it, and the copy here still does not. That is a commercial
+ * decision to take deliberately rather than a line to slip in, and this note
+ * exists so the next person to read point 5 does not conclude the feature is
+ * still missing.
  */
 export const MARKETING_COPY_REVISION = 6;
 

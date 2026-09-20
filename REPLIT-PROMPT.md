@@ -66,16 +66,16 @@ pass. It cannot be this build: this build changed no code.
 
 ## What actually changed, for the record
 
-- `docs/demo/detent-engage-reseller.mp4` — a 1 minute 46 film for a web
+- `docs/demo/detent-engage-reseller.mp4`, a 1 minute 46 film for a web
   agency that already builds and hosts client websites, plus a 1080x1920
   version for a feed. Both are rebuilt from source and are not in the
   repository; `docs/demo/*.mp4` is in `.gitignore`.
-- `docs/demo/reseller.json` — the film as data: beats, cue points, captions.
-- `docs/demo/PARTNER-CUT.md` — who the film is for, its full narration, and
+- `docs/demo/reseller.json`, the film as data: beats, cue points, captions.
+- `docs/demo/PARTNER-CUT.md`, which says who the film is for, gives its full narration, and explains
   why it names no commission rate.
-- `docs/demo/capture/cards.cjs` — renders the cards and lower thirds. New to
+- `docs/demo/capture/cards.cjs`, which renders the cards and lower thirds. New to
   the repository; it had been living in a scratch directory.
-- `docs/demo/capture/promo.mjs` — now takes its manifest as an argument, so
+- `docs/demo/capture/promo.mjs`, which now takes its manifest as an argument, so
   the promotional cut and the partner cut are two manifests rather than two
   copies of a script. It also fits and pads the vertical version instead of
   centre-cropping it, which had been cutting the first and last word off
@@ -114,6 +114,6 @@ node promo.mjs reseller.json
 
 ## Report and STOP
 
-Reply with the output of `git diff --stat HEAD~1 -- packages tests tools db`
-— which should be empty — and, if you ran them, the last two lines of
+Reply with the output of `git diff --stat HEAD~1 -- packages tests tools db`,
+which should be empty, and, if you ran them, the last two lines of
 `pnpm test`. Then STOP. There is nothing else in this build to do.

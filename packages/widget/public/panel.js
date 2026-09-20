@@ -18,6 +18,8 @@ const params = new URLSearchParams(location.search);
   let consentWording = '';
   let streamingAvailable = false;
   let maxInputChars = 4000;
+  let voiceAvailable = false;
+  let speaking = false;
 
   // --- session persistence (UX-4) ------------------------------------------
   //
@@ -222,6 +224,12 @@ const params = new URLSearchParams(location.search);
     remember(sessionId);
     document.getElementById('disclosure').textContent = created.disclosure;
     streamingAvailable = created.streaming_available === true;
+    voiceAvailable = created.voice_available === true;
+    // Only offered where pressing it would do something. A microphone on a
+    // deployment that cannot speak is worse than no microphone: the visitor
+    // grants a permission and gets silence.
+    micButton.hidden = !voiceAvailable || !SpeechRecogniser;
+    labelMic();
     maxInputChars = created.max_input_chars ?? maxInputChars;
     input.maxLength = maxInputChars;
     applyBranding(created.branding);
@@ -268,6 +276,161 @@ const params = new URLSearchParams(location.search);
     composer.hidden = true;
   });
 
+  // --- the spoken assistant ------------------------------------------------
+  //
+  // Three rules, and the order of them is the design:
+  //
+  //   1. Nothing is captured until the visitor presses the microphone. There
+  //      is no always-on listening, no wake word and no permission asked on
+  //      page load. The browser's own permission prompt is the second gate
+  //      and the visitor's press is the first.
+  //   2. The voice disclosure is spoken, in full, before the microphone is
+  //      armed. Not alongside it, not after the first answer. A visitor who
+  //      has put their microphone on has stopped reading the screen, and a
+  //      disclosure they cannot hear is not one.
+  //   3. Typing never goes away. The composer stays live the whole time, so
+  //      the text route is an equal route and not a fallback for people the
+  //      speech recogniser cannot understand, which, for a great many
+  //      accents and speech differences, it cannot.
+  //
+  // Capture is the browser's own speech recogniser rather than audio streamed
+  // to us. It keeps the visitor's raw voice on their own machine: what
+  // crosses the network is the transcript, which is the same untrusted text
+  // a typed message is, goes through the same pipeline, and is covered by the
+  // same retention rule. It also means no microphone audio to store, which is
+  // the easiest personal data to be holding by accident.
+
+  const micButton = document.getElementById('mic');
+  const voiceState = document.getElementById('voice-state');
+  const SpeechRecogniser = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+  let recogniser = null;
+  let listening = false;
+  let player = null;
+
+  /** Labels that are not visible text still come from the bundle (UX-6). */
+  function labelMic() {
+    micButton.setAttribute('aria-label', strings.voiceSpeak ?? 'Speak to the assistant');
+  }
+
+  function sayState(text) {
+    voiceState.textContent = text ?? '';
+    voiceState.hidden = !text;
+  }
+
+  /**
+   * Play one utterance and resolve when it has finished.
+   *
+   * Resolves rather than rejects on a playback failure: the words are already
+   * on screen, and a browser that declines to autoplay must not leave the
+   * conversation stuck waiting for audio that will never arrive.
+   */
+  function play(base64, mediaType) {
+    return new Promise((resolve) => {
+      if (!base64) { resolve(); return; }
+      try {
+        const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes], { type: mediaType ?? 'audio/mpeg' }));
+        player?.pause();
+        player = new Audio(url);
+        const done = () => { URL.revokeObjectURL(url); speaking = false; resolve(); };
+        player.addEventListener('ended', done, { once: true });
+        player.addEventListener('error', done, { once: true });
+        speaking = true;
+        player.play().catch(done);
+      } catch { speaking = false; resolve(); }
+    });
+  }
+
+  /** Stop mid-sentence. The visitor speaking is always the more important. */
+  function stopSpeaking() {
+    if (player && !player.paused) player.pause();
+    speaking = false;
+  }
+
+  function startListening() {
+    if (!SpeechRecogniser || listening) return;
+    recogniser = new SpeechRecogniser();
+    recogniser.lang = strings.__locale ?? requestedLocale;
+    recogniser.interimResults = false;
+    recogniser.continuous = true;
+
+    recogniser.addEventListener('result', async (event) => {
+      const said = Array.from(event.results)
+        .slice(event.resultIndex)
+        .map((one) => one[0]?.transcript ?? '')
+        .join(' ')
+        .trim();
+      if (!said) return;
+      // Barge-in: the visitor talking over the assistant stops the assistant.
+      stopSpeaking();
+      sayState(strings.voiceThinking ?? 'Thinking…');
+      await submit(said);
+      sayState(listening ? (strings.voiceListening ?? 'Listening. Press the microphone to stop.') : '');
+    });
+
+    recogniser.addEventListener('error', (event) => {
+      // "not-allowed" is a refused permission and is the visitor's decision,
+      // so it is stated once and the microphone goes back off rather than
+      // being offered again on a loop.
+      stopListening();
+      sayState(event.error === 'not-allowed'
+        ? (strings.voiceRefused ?? 'The microphone is blocked. You can carry on by typing.')
+        : (strings.voiceUnavailable ?? 'Speech input stopped. You can carry on by typing.'));
+    });
+
+    recogniser.addEventListener('end', () => {
+      // Chrome ends a continuous session on its own after a silence. Restart
+      // it while the visitor still has the microphone on, or the button says
+      // it is listening when nothing is.
+      if (listening) { try { recogniser.start(); } catch { /* already going */ } }
+    });
+
+    try {
+      recogniser.start();
+      listening = true;
+      micButton.setAttribute('aria-pressed', 'true');
+      sayState(strings.voiceListening ?? 'Listening. Press the microphone to stop.');
+    } catch {
+      sayState(strings.voiceUnavailable ?? 'Speech input is not available in this browser. You can carry on by typing.');
+    }
+  }
+
+  function stopListening() {
+    listening = false;
+    micButton.setAttribute('aria-pressed', 'false');
+    try { recogniser?.stop(); } catch { /* already stopped */ }
+    recogniser = null;
+  }
+
+  micButton.addEventListener('click', async () => {
+    if (listening) {
+      stopListening();
+      stopSpeaking();
+      sayState('');
+      return;
+    }
+    if (!SpeechRecogniser) {
+      sayState(strings.voiceUnavailable ?? 'Speech input is not available in this browser. You can carry on by typing.');
+      return;
+    }
+    micButton.disabled = true;
+    try {
+      // Rule 2. The switch returns the voice disclosure and its audio, and
+      // the microphone is not armed until the audio has finished playing.
+      const switched = await call(`/v1/sessions/${sessionId}/modality`, { modality: 'voice' });
+      if (switched.disclosure) {
+        document.getElementById('disclosure').textContent = switched.disclosure;
+        sayState(strings.voiceDisclosing ?? 'Telling you what you are speaking to…');
+        await play(switched.audio, switched.audio_media_type);
+      }
+      startListening();
+    } catch {
+      sayState(strings.voiceUnavailable ?? 'The spoken assistant is not available. You can carry on by typing.');
+    } finally {
+      micButton.disabled = false;
+    }
+  });
+
   // --- sending -------------------------------------------------------------
 
   /** One turn. Returns true on success; leaves a retry control on failure. */
@@ -278,13 +441,21 @@ const params = new URLSearchParams(location.search);
     send.disabled = true;
 
     try {
-      if (streamingAvailable) {
+      // Streaming and speaking are exclusive, and speaking wins on a voice
+      // session. Sentence-at-a-time exists so a reader sees progress; a
+      // listener gets no such benefit from audio that arrives in fragments,
+      // and the synthesised reply comes with the whole-turn response.
+      if (streamingAvailable && !listening) {
         await streamTurn(text, typing);
       } else {
         const reply = await call(`/v1/sessions/${sessionId}/messages`, { text });
         clearTyping();
         append('assistant', reply.text);
         renderNextAction(reply.next_action);
+        // The text is on screen before the audio plays, and stays there if it
+        // never does. A reply that was spoken and not written would be
+        // unreadable to half the people this panel has to serve.
+        if (reply.audio) await play(reply.audio, reply.audio_media_type);
       }
       return true;
     } catch (error) {

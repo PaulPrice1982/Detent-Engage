@@ -39,6 +39,18 @@ export interface FeatureFlags {
   readonly selfServeTrial: boolean;
   /** Streaming responses over server-sent events. */
   readonly streaming: boolean;
+  /**
+   * The assistant speaks its replies aloud in the visitor panel.
+   *
+   * A flag rather than an inference from whether a synthesiser is configured,
+   * because those are two different questions and conflating them is how a
+   * deployment ends up speaking to visitors because somebody set a key. This
+   * one says the deployment offers a spoken assistant; the synthesiser says
+   * whether it can. Both must be true, and a deployment with the flag on and
+   * no synthesiser is a configuration problem reported at boot rather than a
+   * panel with a microphone that does nothing.
+   */
+  readonly spokenVoice: boolean;
 }
 
 /**
@@ -59,6 +71,7 @@ export const SPINE_FEATURES: FeatureFlags = {
   assurancePack: true,
   selfServeTrial: false,
   streaming: true,
+  spokenVoice: false,
 };
 
 /** Everything on. Used by the demo, the test suite and the studio. */
@@ -76,6 +89,7 @@ export const ALL_FEATURES: FeatureFlags = {
   assurancePack: true,
   selfServeTrial: true,
   streaming: true,
+  spokenVoice: true,
 };
 
 export function featuresFromEnv(

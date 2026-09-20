@@ -36,6 +36,20 @@ export interface BootEnvironment {
   readonly checkpointKey?: string;
   readonly modelKey?: string;
   readonly model?: string;
+  /**
+   * The speech vendor key, for the spoken assistant.
+   *
+   * Held here beside the model key and treated the same way: read from the
+   * environment, never printed, never written to an audit payload. It is
+   * optional because voice is optional; a deployment that does not set it
+   * serves the text assistant, which is the full product and not a degraded
+   * one.
+   */
+  readonly voiceKey?: string;
+  /** Which vendor voice speaks. Defaults to the English assistant voice. */
+  readonly voiceId?: string;
+  /** Whether this deployment offers a spoken assistant at all. */
+  readonly spokenVoice: boolean;
   readonly origins: readonly string[];
   readonly allowLocalKey: boolean;
   readonly printKeys: boolean;
@@ -56,6 +70,9 @@ export function bootEnvironmentFrom(
     checkpointKey: env['AWA_CHECKPOINT_KEY']?.trim() || undefined,
     modelKey: env['ANTHROPIC_API_KEY']?.trim() || undefined,
     model: env['AWA_MODEL']?.trim() || undefined,
+    voiceKey: env['DETENT_VOICE_API_KEY']?.trim() || undefined,
+    voiceId: env['DETENT_VOICE_ID']?.trim() || undefined,
+    spokenVoice: flag('AWA_FEATURE_SPOKEN_VOICE'),
     origins: (env['AWA_ORIGINS'] ?? '').split(',').map((one) => one.trim()).filter(Boolean),
     allowLocalKey: flag('AWA_ALLOW_LOCAL_KEY'),
     // Keys are stored as digests, so boot is the only moment they exist in
@@ -103,6 +120,13 @@ export function configurationProblems(boot: BootEnvironment): string[] {
     problems.push(
       'ANTHROPIC_API_KEY is not set. Without it the assistant cannot answer, and a '
       + 'deployment must not fall back to the scripted development provider.',
+    );
+  }
+  if (boot.spokenVoice && !boot.voiceKey) {
+    problems.push(
+      'AWA_FEATURE_SPOKEN_VOICE is on but DETENT_VOICE_API_KEY is not set, so the panel '
+      + 'would offer a microphone that produces no sound. Set the key, or turn the '
+      + 'feature off: the text assistant is the whole product and not a degraded one.',
     );
   }
   if (boot.origins.length === 0) {

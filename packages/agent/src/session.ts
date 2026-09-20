@@ -65,6 +65,18 @@ export interface Session {
   valueDelivered: boolean;
   consecutiveNegativeTurns: number;
   disclosureShown: boolean;
+  /**
+   * Synthesised speech played to this visitor, in milliseconds, not yet
+   * metered as a whole voice minute.
+   *
+   * Carried on the session rather than in a map beside it so that it is
+   * dropped when the session is, which is the difference between a counter
+   * and a leak. Metering a whole minute at a time is the same rule the
+   * realtime path uses: per utterance would write thousands of usage records
+   * an hour, and only at the end loses the spend on an abandoned session,
+   * which is exactly when a spend cap matters.
+   */
+  spokenMsUnmetered: number;
   writeSequence: number;
   readonly versions: { prompt: string; policy: string; model: string; config: number };
   readonly startedAt: string;
@@ -121,6 +133,7 @@ export class SessionManager {
       valueDelivered: false,
       consecutiveNegativeTurns: 0,
       disclosureShown: false,
+      spokenMsUnmetered: 0,
       writeSequence: 0,
       versions: {
         prompt: config.promptVersion,

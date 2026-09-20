@@ -55,7 +55,16 @@ export type LocaleKey =
   | 'emailPlaceholder'
   | 'detailsReceived'
   | 'you'
-  | 'assistant';
+  | 'assistant'
+  // The spoken assistant. These are read aloud by nothing: they are the
+  // panel's own status line. A visitor using voice is the least likely
+  // to be reading the screen, so they are announced rather than only drawn.
+  | 'voiceSpeak'
+  | 'voiceDisclosing'
+  | 'voiceListening'
+  | 'voiceThinking'
+  | 'voiceRefused'
+  | 'voiceUnavailable';
 
 const EN: Readonly<Record<LocaleKey, string>> = {
   title: 'Assistant',
@@ -92,6 +101,12 @@ const EN: Readonly<Record<LocaleKey, string>> = {
   detailsReceived: 'Thank you; the team has your details.',
   you: 'You',
   assistant: 'Assistant',
+  voiceSpeak: 'Speak to the assistant',
+  voiceDisclosing: 'Telling you what you are speaking to…',
+  voiceListening: 'Listening. Press the microphone to stop.',
+  voiceThinking: 'Thinking…',
+  voiceRefused: 'The microphone is blocked. You can carry on by typing.',
+  voiceUnavailable: 'Speech is not available here. You can carry on by typing.',
 };
 
 const FR: Readonly<Record<LocaleKey, string>> = {
@@ -129,6 +144,12 @@ const FR: Readonly<Record<LocaleKey, string>> = {
   detailsReceived: "Merci, l'équipe a vos coordonnées.",
   you: 'Vous',
   assistant: 'Assistant',
+  voiceSpeak: 'Parler à l’assistant',
+  voiceDisclosing: 'Nous vous indiquons à quoi vous parlez…',
+  voiceListening: 'À l’écoute. Appuyez sur le microphone pour arrêter.',
+  voiceThinking: 'Réflexion en cours…',
+  voiceRefused: 'Le microphone est bloqué. Vous pouvez continuer en écrivant.',
+  voiceUnavailable: 'La voix n’est pas disponible ici. Vous pouvez continuer en écrivant.',
 };
 
 const DE: Readonly<Record<LocaleKey, string>> = {
@@ -166,6 +187,12 @@ const DE: Readonly<Record<LocaleKey, string>> = {
   detailsReceived: 'Danke, das Team hat Ihre Kontaktdaten.',
   you: 'Sie',
   assistant: 'Assistent',
+  voiceSpeak: 'Mit dem Assistenten sprechen',
+  voiceDisclosing: 'Wir sagen Ihnen, womit Sie sprechen…',
+  voiceListening: 'Ich höre zu. Zum Beenden das Mikrofon drücken.',
+  voiceThinking: 'Einen Moment…',
+  voiceRefused: 'Das Mikrofon ist blockiert. Sie können weiter tippen.',
+  voiceUnavailable: 'Sprache ist hier nicht verfügbar. Sie können weiter tippen.',
 };
 
 const ES: Readonly<Record<LocaleKey, string>> = {
@@ -203,6 +230,12 @@ const ES: Readonly<Record<LocaleKey, string>> = {
   detailsReceived: 'Gracias, el equipo tiene sus datos.',
   you: 'Usted',
   assistant: 'Asistente',
+  voiceSpeak: 'Hablar con el asistente',
+  voiceDisclosing: 'Le indicamos con qué está hablando…',
+  voiceListening: 'Escuchando. Pulse el micrófono para detenerlo.',
+  voiceThinking: 'Un momento…',
+  voiceRefused: 'El micrófono está bloqueado. Puede continuar escribiendo.',
+  voiceUnavailable: 'La voz no está disponible aquí. Puede continuar escribiendo.',
 };
 
 const NL: Readonly<Record<LocaleKey, string>> = {
@@ -240,6 +273,12 @@ const NL: Readonly<Record<LocaleKey, string>> = {
   detailsReceived: 'Dank u, het team heeft uw gegevens.',
   you: 'U',
   assistant: 'Assistent',
+  voiceSpeak: 'Spreek met de assistent',
+  voiceDisclosing: 'We vertellen u waarmee u spreekt…',
+  voiceListening: 'Ik luister. Druk op de microfoon om te stoppen.',
+  voiceThinking: 'Even denken…',
+  voiceRefused: 'De microfoon is geblokkeerd. U kunt verder typen.',
+  voiceUnavailable: 'Spraak is hier niet beschikbaar. U kunt verder typen.',
 };
 
 const IT: Readonly<Record<LocaleKey, string>> = {
@@ -277,6 +316,12 @@ const IT: Readonly<Record<LocaleKey, string>> = {
   detailsReceived: 'Grazie, il team ha i tuoi contatti.',
   you: 'Tu',
   assistant: 'Assistente',
+  voiceSpeak: 'Parla con l’assistente',
+  voiceDisclosing: 'Ti diciamo con che cosa stai parlando…',
+  voiceListening: 'In ascolto. Premi il microfono per interrompere.',
+  voiceThinking: 'Un attimo…',
+  voiceRefused: 'Il microfono è bloccato. Puoi continuare scrivendo.',
+  voiceUnavailable: 'La voce non è disponibile qui. Puoi continuare scrivendo.',
 };
 
 const BUNDLES: Readonly<Record<string, Readonly<Record<LocaleKey, string>>>> = {

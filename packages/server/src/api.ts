@@ -6,7 +6,8 @@ import { allTime, type ReportWindow } from '@detent/awa-analytics';
 import { evaluatePublishGate } from '@detent/awa-studio';
 import { generateLiaTemplate } from '@detent/awa-followup';
 import { measureDetection } from '@detent/awa-knowledge';
-import type { TurnResult } from '@detent/awa-agent';
+import type { Session, TurnResult } from '@detent/awa-agent';
+import type { SpokenAudio } from '@detent/awa-voice';
 import { ApiKeyService, assertOriginAllowed, type Audience, type Principal } from './auth.js';
 import { ChangeEventProcessor, parseChangeEvent } from './webhooks.js';
 import { RequestRateLimiter, rateLimitError } from './rate-limit.js';
@@ -316,14 +317,38 @@ export class Api {
 
       const locale = negotiateLocale(body.locale ?? config.locales.default, config.locales.supported);
       const overrides = config.locales.overrides?.[locale];
+      const disclosure = session.modality === 'voice'
+        ? overrides?.voiceDisclosure ?? config.disclosure.voiceText
+        : overrides?.disclosure ?? config.disclosure.text;
+
+      /**
+       * On a voice session the disclosure is spoken, and it is spoken first.
+       *
+       * Article 50 disclosure that only appears as text above a spoken
+       * conversation is not disclosure to someone who is listening rather
+       * than reading, and on a phone there is no banner at all. So the audio
+       * is returned with the session, before any turn exists, and the panel
+       * plays it before it will let anyone speak. This is the same rule
+       * `GovernedVoiceSession.start` enforces on the realtime path.
+       *
+       * It goes through the same gate as every other spoken word: the
+       * disclosure is the tenant's approved configured wording, not something
+       * a model produced, which is what makes it approvable.
+       */
+      const spokenDisclosure = session.modality === 'voice'
+        ? await speakOrCarryOn(this.platform, this.logger,
+          { session, text: disclosure, reason: 'disclosure' })
+        : undefined;
 
       return json(201, {
         session_id: session.id,
         // The disclosure is returned at session open so the widget can render
         // it before the first message, in the surface itself.
-        disclosure: session.modality === 'voice'
-          ? overrides?.voiceDisclosure ?? config.disclosure.voiceText
-          : overrides?.disclosure ?? config.disclosure.text,
+        disclosure,
+        ...spokenPayload(spokenDisclosure),
+        // Whether this deployment can actually speak, so the panel shows a
+        // microphone only where pressing it would do something.
+        voice_available: this.platform.canSpeak,
         modality: session.modality,
         text_only_route_available: true,
         kill_switch: config.killSwitch,
@@ -418,7 +443,76 @@ export class Api {
       }
 
       const result = await this.platform.orchestrator.run(turnInput);
-      return json(200, turnPayload(result));
+      // Only on a voice session, and only after the orchestrator returned:
+      // `result.text` is validated text, which is the one thing that may be
+      // spoken. Nothing else in this file reaches the synthesiser.
+      const spoken = session.modality === 'voice'
+        ? await speakOrCarryOn(this.platform, this.logger,
+          { session, text: result.text, reason: 'reply' })
+        : undefined;
+      return json(200, { ...turnPayload(result), ...spokenPayload(spoken) });
+    }
+
+    /**
+     * Switch a session between typing and speaking.
+     *
+     * Modality is a property of the session and not of the request, because
+     * three things hang off it: which disclosure wording applies, whether a
+     * reply is synthesised, and what the visitor is billed for. A panel that
+     * sent `speak: true` on individual turns would be deciding governance a
+     * message at a time.
+     *
+     * Switching *into* voice re-discloses, in the voice wording, and speaks
+     * it. That is not belt and braces. The text disclosure a visitor read on
+     * the first screen said they were typing to an AI assistant; the voice
+     * wording is the tenant's separate, configured sentence, and someone who
+     * has just put their microphone on is about to stop reading the screen.
+     * `session.disclosureShown` is set here for the same reason it is set on
+     * the realtime path: the pipeline must not later decide that disclosure
+     * is still outstanding and say it a third time.
+     */
+    if (request.method === 'POST' && rest[1] === 'modality') {
+      const body = (request.body ?? {}) as { modality?: string };
+      if (body.modality !== 'text' && body.modality !== 'voice') {
+        return json(400, {
+          error: 'SCHEMA_INVALID',
+          message: 'modality must be "text" or "voice".',
+        });
+      }
+      if (body.modality === 'voice' && !this.platform.canSpeak) {
+        return json(409, {
+          error: 'NOT_FOUND',
+          message: 'This deployment serves the text assistant only.',
+        });
+      }
+
+      const already = session.modality === body.modality;
+      session.modality = body.modality;
+      if (body.modality === 'text' || already) {
+        return json(200, { modality: session.modality, voice_available: this.platform.canSpeak });
+      }
+
+      const locale = negotiateLocale(config.locales.default, config.locales.supported);
+      const wording = config.locales.overrides?.[locale]?.voiceDisclosure
+        ?? config.disclosure.voiceText;
+      session.disclosureShown = true;
+      await this.platform.audit.write({
+        tenantId: session.tenantId,
+        type: 'disclosure_shown',
+        correlationId: session.correlationId,
+        sessionId: session.id,
+        actor: 'system',
+        payload: { modality: 'voice', wording },
+        versions: session.versions,
+      });
+      const spoken = await speakOrCarryOn(this.platform, this.logger,
+        { session, text: wording, reason: 'disclosure' });
+      return json(200, {
+        modality: session.modality,
+        voice_available: true,
+        disclosure: wording,
+        ...spokenPayload(spoken),
+      });
     }
 
     if (request.method === 'POST' && rest[1] === 'consent') {
@@ -464,6 +558,10 @@ export class Api {
         correlationId: session.correlationId, sessionId: session.id, actor: 'visitor',
         payload: { scope: 'session_transcript', requestedInConversation: true },
       });
+      // The part-minute of speech this session has not been charged for is
+      // settled before the session goes, or it goes with it. Erasure removes
+      // the transcript, not the bill.
+      await this.platform.settleSpokenMinutes(session);
       this.platform.sessions.end(session.id);
       await this.limiter.forgetSession(session.id);
       return json(200, { forgotten: true });
@@ -969,6 +1067,49 @@ function turnPayload(result: TurnResult): Record<string, unknown> {
     next_action: result.nextAction,
     degraded: result.degraded,
   };
+}
+
+/**
+ * The spoken half of a payload, or nothing.
+ *
+ * Base64 in the JSON rather than a second request for an audio URL. A URL
+ * would have to be guessable or signed, would live long enough to be shared,
+ * and would put a visitor's spoken conversation behind a cacheable GET. The
+ * audio is a few tens of kilobytes and it belongs to exactly one response.
+ */
+function spokenPayload(spoken: SpokenAudio | undefined): Record<string, unknown> {
+  if (!spoken) return {};
+  return {
+    audio: Buffer.from(spoken.audio).toString('base64'),
+    audio_media_type: spoken.mediaType,
+    audio_duration_ms: spoken.durationMs,
+  };
+}
+
+/**
+ * Speak a reply without letting a vendor outage silence the conversation.
+ *
+ * A failed synthesis is not a failed turn. The words were produced, governed
+ * and are on screen; losing the audio is a degradation of one modality and
+ * the text route is always available. Throwing here would turn a vendor's
+ * bad afternoon into a visitor seeing nothing at all.
+ */
+async function speakOrCarryOn(
+  platform: Platform,
+  logger: Logger,
+  input: { session: Session; text: string; reason: 'disclosure' | 'reply' },
+): Promise<SpokenAudio | undefined> {
+  if (!platform.canSpeak) return undefined;
+  try {
+    return await platform.speakApproved({ ...input, approved: true });
+  } catch (cause) {
+    logger.warn('the reply could not be spoken; the text stands', {
+      sessionId: input.session.id,
+      reason: input.reason,
+      error: cause instanceof Error ? cause.message : String(cause),
+    });
+    return undefined;
+  }
 }
 
 /** Audit actors are a narrower set than key audiences; a widget key that

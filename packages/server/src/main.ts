@@ -27,6 +27,9 @@ import { ALL_FEATURES, JsonLogger, LocalKeyProvider, MetricsRegistry, featuresFr
 import { Api, ApiKeyService, Platform, RequestRateLimiter, createHttpServer, listenFailureMessage } from './index.js';
 import { bootEnvironmentFrom, configurationProblems, databaseProblem } from './boot-config.js';
 import { createNotConfiguredServer } from './not-configured-server.js';
+import {
+  ElevenLabsSpeech, VoiceNotConfigured, type SpeechSynthesiser,
+} from '@detent/awa-voice';
 import { buildDevSites } from './dev-sites.js';
 import { createSiteMount } from './site-mount.js';
 import { baseUrlFor, checkHosts, hostConfigFrom, recognisedHosts } from './host-routing.js';
@@ -108,9 +111,22 @@ const model: ModelProvider = boot.modelKey
     ? (await import('./demo-seed.js')).DEMO_CONVERSATION
     : [{ match: /.*/, output: { text: 'Thanks, what are you trying to solve?', confidence: 0.9 } }]);
 
+/**
+ * The assistant's mouth, or one that refuses and says why.
+ *
+ * Constructed here rather than inside the platform so that the vendor key
+ * never leaves this file's scope, and so a deployment that does not want a
+ * spoken assistant simply does not set it. The text assistant is the full
+ * product; voice is an addition to it and never a prerequisite.
+ */
+const speech: SpeechSynthesiser = boot.voiceKey
+  ? new ElevenLabsSpeech({ apiKey: boot.voiceKey, voiceId: boot.voiceId })
+  : new VoiceNotConfigured();
+
 const crm = new SandboxConnector({ hasSeparateLeadObject: true });
 const platform = new Platform({
   model,
+  speech,
   connectors: [crm],
   logger,
   metrics,
@@ -315,6 +331,14 @@ server.listen(port, host, () => {
         sites.sessionStoreDurable ? undefined : 'no DATABASE_URL',
       ].filter(Boolean).join(', ')})`}`);
   console.log(`  payments         ${sites.paymentProviderName}`);
+  // Both halves, because the two failures look identical from the outside and
+  // need different fixes: a flag that is off is a decision, and a flag that is
+  // on with nothing behind it is a microphone that does nothing.
+  console.log(`  voice            ${platform.canSpeak
+    ? `${platform.speech.name}, speaking`
+    : platform.features.spokenVoice
+      ? 'OFFERED BUT SILENT; set DETENT_VOICE_API_KEY'
+      : 'text only (AWA_FEATURE_SPOKEN_VOICE=1 to offer it)'}`);
   for (const action of demoSeeded) console.log(`  demo action      ${action.state.padEnd(16)} ${action.summary}`);
   if (boot.printKeys) {
     // Keys are stored as digests, so this is the only moment they exist in

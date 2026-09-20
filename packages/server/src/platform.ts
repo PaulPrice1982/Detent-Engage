@@ -15,6 +15,10 @@ import {
   InMemoryWriteReceiptStore, RateLimiter, ReconciliationWorker, WriteReceiptService,
   type ConnectionStore, type CrmConnector, type Credential, type ParkedWriteStore,
 } from '@detent/awa-connectors';
+import {
+  VoiceNotConfigured, assertApprovedForSpeech,
+  type SpeechSynthesiser, type SpokenAudio,
+} from '@detent/awa-voice';
 import { IdentityResolutionService } from '@detent/awa-identity';
 import { KnowledgeCorpus, RetrievalService } from '@detent/awa-knowledge';
 import {
@@ -100,6 +104,14 @@ export interface PlatformOptions {
   /** Fetches a tenant page to confirm the widget snippet is installed. */
   readonly pageProbe?: (url: string) => Promise<string>;
   readonly accessibilityStatement?: AccessibilityStatement;
+  /**
+   * The assistant's mouth. Defaults to one that refuses and says why.
+   *
+   * Injected rather than constructed here for the same reason the model
+   * provider is: the vendor key belongs to the deployment, and a test must be
+   * able to run the whole spoken path without one.
+   */
+  readonly speech?: SpeechSynthesiser;
   /**
    * Deliberately absent: durability is measured, not declared.
    *
@@ -223,6 +235,7 @@ export class Platform {
   readonly keyring: Keyring;
   readonly rollups: DailyRollupCache;
   readonly accessibilityStatement: AccessibilityStatement;
+  readonly speech: SpeechSynthesiser;
   /** True only when every store passed in is backed by durable storage. */
   readonly durable: boolean;
   /** Regions this deployment can serve, by residency. Empty means no claim. */
@@ -250,6 +263,7 @@ export class Platform {
       options.usageStore, options.consentStore,
     ].every((store) => (store as { durable?: boolean } | undefined)?.durable === true);
     this.accessibilityStatement = options.accessibilityStatement ?? DEFAULT_ACCESSIBILITY;
+    this.speech = options.speech ?? new VoiceNotConfigured();
     this.residencyRegions = options.residencyRegions ?? {};
 
     this.audit = new AuditLog(
@@ -514,5 +528,80 @@ export class Platform {
       versions: session.versions,
     });
     return session;
+  }
+
+  /** Whether this deployment both offers a spoken assistant and can speak. */
+  get canSpeak(): boolean {
+    return this.features.spokenVoice && this.speech.available;
+  }
+
+  /**
+   * Turn approved text into audio. The only route from this system to an ear.
+   *
+   * `approved` is a parameter and not an assumption. The single caller that
+   * may pass true is holding a completed orchestrator result, which is the
+   * one place in this codebase where text has been through disclosure,
+   * consent, injection suppression, grounding, output validation and the
+   * permitted-behaviours gate. Anything else gets an exception rather than a
+   * voice, and that is the whole safety argument for a spoken assistant:
+   * every word spoken has been through the same pipeline as every word typed.
+   *
+   * Returns undefined rather than throwing when this deployment simply does
+   * not do voice. A missing voice is a text conversation, which is the full
+   * product; a *failed* voice is an error, and is thrown.
+   */
+  async speakApproved(input: {
+    readonly session: Session;
+    readonly text: string;
+    readonly approved: boolean;
+    readonly reason: 'disclosure' | 'reply';
+  }): Promise<SpokenAudio | undefined> {
+    if (!this.canSpeak) return undefined;
+    assertApprovedForSpeech(input.approved, input.reason);
+
+    const spoken = await this.speech.speak(input.text);
+
+    // Metered a whole minute at a time, from the duration the vendor reported
+    // rather than from a byte count. The remainder rides on the session and
+    // is charged when the session closes.
+    input.session.spokenMsUnmetered += spoken.durationMs;
+    while (input.session.spokenMsUnmetered >= 60_000) {
+      input.session.spokenMsUnmetered -= 60_000;
+      await this.metering.record(input.session.tenantId, 'voice_minute', 1);
+    }
+
+    await this.audit.write({
+      tenantId: input.session.tenantId,
+      type: 'voice_reply_spoken',
+      correlationId: input.session.correlationId,
+      sessionId: input.session.id,
+      actor: 'system',
+      // The vendor, the voice and how long it played. Never the key, and
+      // never the audio: the words are already in the transcript and a second
+      // copy of a visitor's conversation in the audit payload is a second
+      // place to have to delete it from.
+      payload: {
+        provider: this.speech.name,
+        voice: spoken.voice,
+        reason: input.reason,
+        durationMs: spoken.durationMs,
+        characters: input.text.length,
+      },
+      versions: input.session.versions,
+    });
+    return spoken;
+  }
+
+  /**
+   * Charge the part-minute left at the end of a spoken session.
+   *
+   * The telephony convention, and what the vendor charges us: a part minute
+   * is a whole minute. Called when a session ends rather than on a timer,
+   * because a timer that fires after the process restarts charges nobody.
+   */
+  async settleSpokenMinutes(session: Session): Promise<void> {
+    if (session.spokenMsUnmetered <= 0) return;
+    session.spokenMsUnmetered = 0;
+    await this.metering.record(session.tenantId, 'voice_minute', 1);
   }
 }

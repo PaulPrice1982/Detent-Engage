@@ -94,6 +94,9 @@
     },
     {
       "path": "../support"
+    },
+    {
+      "path": "../voice"
     }
   ]
 }
