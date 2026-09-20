@@ -1,0 +1,384 @@
+{
+    "entries": [
+        {
+            "tenantId": "t_northwind",
+            "type": "policy_allowed",
+            "correlationId": "dpa_1789892144222",
+            "actor": "tenant_admin",
+            "payload": {
+                "change": "dpa_recorded",
+                "reference": "DPA-DEV"
+            },
+            "id": "aud_01M2YY5B2Y9QHBJRAMMJ2BQSFT",
+            "sequence": 1,
+            "recordedAt": "2026-09-20T08:15:44.222Z",
+            "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "hash": "46e1baa57718045b38d0750d22431d3c348f9c9c1e1f67138a556408c4fc4ee9"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "policy_allowed",
+            "correlationId": "lifecycle_1789892144223",
+            "actor": "tenant_admin",
+            "payload": {
+                "change": "state",
+                "from": "REGISTERED",
+                "to": "DPA_SIGNED"
+            },
+            "id": "aud_01M2YY5B2Z3PNWRXVVPHR8HCCD",
+            "sequence": 2,
+            "recordedAt": "2026-09-20T08:15:44.223Z",
+            "previousHash": "46e1baa57718045b38d0750d22431d3c348f9c9c1e1f67138a556408c4fc4ee9",
+            "hash": "762d36893401db114a9b4d40ec6cef5b30ba7dacca5486d20d1586be70456a37"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "policy_allowed",
+            "correlationId": "lifecycle_1789892144224",
+            "actor": "tenant_admin",
+            "payload": {
+                "change": "state",
+                "from": "DPA_SIGNED",
+                "to": "CRM_CONNECTED"
+            },
+            "id": "aud_01M2YY5B30C2PGXMXMN9BV5GDT",
+            "sequence": 3,
+            "recordedAt": "2026-09-20T08:15:44.224Z",
+            "previousHash": "762d36893401db114a9b4d40ec6cef5b30ba7dacca5486d20d1586be70456a37",
+            "hash": "191306c456cf558576057fcc3bec287f3c2af35492c8c1c563f5fbb54fe6ddaf"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "policy_allowed",
+            "correlationId": "lifecycle_1789892144224",
+            "actor": "tenant_admin",
+            "payload": {
+                "change": "state",
+                "from": "CRM_CONNECTED",
+                "to": "MAPPED"
+            },
+            "id": "aud_01M2YY5B30Q4F5C29AWMC4CTXA",
+            "sequence": 4,
+            "recordedAt": "2026-09-20T08:15:44.224Z",
+            "previousHash": "191306c456cf558576057fcc3bec287f3c2af35492c8c1c563f5fbb54fe6ddaf",
+            "hash": "b50cdda9a24b95e3b38fb27ddf4b2cd1819dde6e1bd88bb42d4af2e1284daa38"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "policy_allowed",
+            "correlationId": "lifecycle_1789892144224",
+            "actor": "tenant_admin",
+            "payload": {
+                "change": "state",
+                "from": "MAPPED",
+                "to": "TEST_MODE"
+            },
+            "id": "aud_01M2YY5B308FDY5KVSPYMGA0G2",
+            "sequence": 5,
+            "recordedAt": "2026-09-20T08:15:44.224Z",
+            "previousHash": "b50cdda9a24b95e3b38fb27ddf4b2cd1819dde6e1bd88bb42d4af2e1284daa38",
+            "hash": "101ca1fb16a7bb1d9f30469371eb14810328d71404dfb09d699ada2108c3b925"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "policy_allowed",
+            "correlationId": "lifecycle_1789892144224",
+            "actor": "tenant_admin",
+            "payload": {
+                "change": "state",
+                "from": "TEST_MODE",
+                "to": "LIVE"
+            },
+            "id": "aud_01M2YY5B30TFQSF9BGK2J32ZJ1",
+            "sequence": 6,
+            "recordedAt": "2026-09-20T08:15:44.224Z",
+            "previousHash": "101ca1fb16a7bb1d9f30469371eb14810328d71404dfb09d699ada2108c3b925",
+            "hash": "a7444a6a6d6daab691c53c043a81c29cef5375569cdd9159bd6cc25880da159a"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "operator_action_requested",
+            "actor": "platform_admin",
+            "correlationId": "demo_credit_t_northwind",
+            "payload": {
+                "capability": "credit.grant",
+                "summary": "Grant \u00a32,500.00 of promotional credit",
+                "amount": "\u00a32,500.00",
+                "reason": "Agreed at the Q3 business review as the migration incentive.",
+                "requestedBy": "usr_Pr5ZFqloZAP3",
+                "requiresSecondPerson": true,
+                "fingerprint": "5f8bc157"
+            },
+            "id": "aud_01M2YY5B5NN19Q3F6XNP03ZKQ6",
+            "sequence": 7,
+            "recordedAt": "2026-09-20T08:15:44.309Z",
+            "previousHash": "a7444a6a6d6daab691c53c043a81c29cef5375569cdd9159bd6cc25880da159a",
+            "hash": "df7cc69e0efdeab21737a0066d2627cb1c0ed80aacc4a8ad71bb762647671fb7"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "session_opened",
+            "correlationId": "corr_01M2YY69QCJKRTF3K0QEP1KJKC",
+            "sessionId": "sess_01M2YY69QCC0FSEEQSHZDXTNB8",
+            "actor": "system",
+            "payload": {
+                "modality": "text",
+                "jurisdiction": "UK",
+                "state": "LIVE"
+            },
+            "versions": {
+                "prompt": "prompt-2026.09.1",
+                "policy": "policy-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY69QCMYE6ZTH5KKW4G38Y",
+            "sequence": 8,
+            "recordedAt": "2026-09-20T08:16:15.596Z",
+            "previousHash": "df7cc69e0efdeab21737a0066d2627cb1c0ed80aacc4a8ad71bb762647671fb7",
+            "hash": "26ef6815633460914cfeb257b9008514a491d4fb0f6bf21c87ce159c50cd0b32"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "session_opened",
+            "correlationId": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+            "sessionId": "sess_01M2YY6BWXT68C5K2B9DBX67ET",
+            "actor": "system",
+            "payload": {
+                "modality": "text",
+                "jurisdiction": "UK",
+                "state": "LIVE"
+            },
+            "versions": {
+                "prompt": "prompt-2026.09.1",
+                "policy": "policy-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY6BWXXJHWVHSQZK9ATDCZ",
+            "sequence": 9,
+            "recordedAt": "2026-09-20T08:16:17.821Z",
+            "previousHash": "26ef6815633460914cfeb257b9008514a491d4fb0f6bf21c87ce159c50cd0b32",
+            "hash": "ce59f1de7395163de59edd7a021b86e64af0197c81c85e1798c7fa72f9c0be7f"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "disclosure_shown",
+            "correlationId": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+            "sessionId": "sess_01M2YY6BWXT68C5K2B9DBX67ET",
+            "actor": "system",
+            "payload": {
+                "modality": "text",
+                "wording": "You are chatting with an AI assistant, not a person. It can answer questions and arrange a call with the team."
+            },
+            "versions": {
+                "prompt": "prompt-2026.09.1",
+                "policy": "policy-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY6E1V1M6M725JFHY7BWCA",
+            "sequence": 10,
+            "recordedAt": "2026-09-20T08:16:20.027Z",
+            "previousHash": "ce59f1de7395163de59edd7a021b86e64af0197c81c85e1798c7fa72f9c0be7f",
+            "hash": "fa0ab59e2a57b6beaaf751d5d04602136bed601844f97c7f31167535fab7ddb7"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "policy_allowed",
+            "correlationId": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+            "sessionId": "sess_01M2YY6BWXT68C5K2B9DBX67ET",
+            "actor": "policy",
+            "subjectRef": "pers_01M2YY6BWXVD33929FP7T3WH8X",
+            "payload": {
+                "tool": "record_outcome",
+                "reasons": [
+                    "all gates passed"
+                ],
+                "obligations": {}
+            },
+            "versions": {
+                "policy": "policy-2026.09.1",
+                "prompt": "prompt-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY6QBCX8J2S6P474TS1VCX",
+            "sequence": 11,
+            "recordedAt": "2026-09-20T08:16:29.548Z",
+            "previousHash": "fa0ab59e2a57b6beaaf751d5d04602136bed601844f97c7f31167535fab7ddb7",
+            "hash": "c2f104dfe401aaf64ef0a4b307c1aef78f3619262ca94497c034aaad4c41b614"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "tool_call_requested",
+            "correlationId": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+            "sessionId": "sess_01M2YY6BWXT68C5K2B9DBX67ET",
+            "actor": "assistant",
+            "payload": {
+                "tool": "record_outcome"
+            },
+            "versions": {
+                "prompt": "prompt-2026.09.1",
+                "policy": "policy-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY6QBDXNF6A4FFW10Y845N",
+            "sequence": 12,
+            "recordedAt": "2026-09-20T08:16:29.549Z",
+            "previousHash": "c2f104dfe401aaf64ef0a4b307c1aef78f3619262ca94497c034aaad4c41b614",
+            "hash": "5d5331e782c1e30af0493fae1bfcfcb909f864d378eeaa1c36e79768689a8b4c"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "tool_call_executed",
+            "correlationId": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+            "actor": "system",
+            "payload": {
+                "change": "outcome_recorded",
+                "outcome": "book_meeting",
+                "billable": true,
+                "state": "CONFIRMED"
+            },
+            "id": "aud_01M2YY6QBDKEVF7RAQK531CBAG",
+            "sequence": 13,
+            "recordedAt": "2026-09-20T08:16:29.549Z",
+            "previousHash": "5d5331e782c1e30af0493fae1bfcfcb909f864d378eeaa1c36e79768689a8b4c",
+            "hash": "0a5350ab5f9dcdaa60542b33fea1e6e48a5380a59fa7a3e35fc0a057ce110312"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "tool_call_executed",
+            "correlationId": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+            "sessionId": "sess_01M2YY6BWXT68C5K2B9DBX67ET",
+            "actor": "system",
+            "payload": {
+                "tool": "record_outcome",
+                "parked": false
+            },
+            "versions": {
+                "prompt": "prompt-2026.09.1",
+                "policy": "policy-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY6QBDX1T8T25B6Z4SJWX1",
+            "sequence": 14,
+            "recordedAt": "2026-09-20T08:16:29.549Z",
+            "previousHash": "0a5350ab5f9dcdaa60542b33fea1e6e48a5380a59fa7a3e35fc0a057ce110312",
+            "hash": "83acda191e504db24a4c98865cce1a6e95c1c1d9d050f7ea85a83b366533aa97"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "session_opened",
+            "correlationId": "corr_01M2YY6SP2TB3NJ9N8NX6DSM8W",
+            "sessionId": "sess_01M2YY6SP2RCEYWZ6JB1TJGB45",
+            "actor": "system",
+            "payload": {
+                "modality": "text",
+                "jurisdiction": "UK",
+                "state": "LIVE"
+            },
+            "versions": {
+                "prompt": "prompt-2026.09.1",
+                "policy": "policy-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY6SP2MCJQN7BZNXPDC2ZJ",
+            "sequence": 15,
+            "recordedAt": "2026-09-20T08:16:31.938Z",
+            "previousHash": "83acda191e504db24a4c98865cce1a6e95c1c1d9d050f7ea85a83b366533aa97",
+            "hash": "4969ba22a809228ab37f9f243ec9c2a686ead2bb5017b5eacc53bcc716e27c71"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "disclosure_shown",
+            "correlationId": "corr_01M2YY6SP2TB3NJ9N8NX6DSM8W",
+            "sessionId": "sess_01M2YY6SP2RCEYWZ6JB1TJGB45",
+            "actor": "system",
+            "payload": {
+                "modality": "text",
+                "wording": "You are chatting with an AI assistant, not a person. It can answer questions and arrange a call with the team."
+            },
+            "versions": {
+                "prompt": "prompt-2026.09.1",
+                "policy": "policy-2026.09.1",
+                "model": "model-pinned-2026.09",
+                "config": 8
+            },
+            "id": "aud_01M2YY6VD3T9Q96N9JZEWKPKXW",
+            "sequence": 16,
+            "recordedAt": "2026-09-20T08:16:33.700Z",
+            "previousHash": "4969ba22a809228ab37f9f243ec9c2a686ead2bb5017b5eacc53bcc716e27c71",
+            "hash": "95c6db79250cca112f3123282c38a5b6e1c4520687073d58f9a954026645440c"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "operator_action_approved",
+            "actor": "platform_admin",
+            "correlationId": "demo_credit_t_northwind",
+            "payload": {
+                "capability": "credit.grant",
+                "approvedBy": "usr_2cXV8L7o3mwd",
+                "requestedBy": "usr_Pr5ZFqloZAP3",
+                "fingerprint": "5f8bc157"
+            },
+            "id": "aud_01M2YY7DYR03B8NYXE3E963M6V",
+            "sequence": 17,
+            "recordedAt": "2026-09-20T08:16:52.696Z",
+            "previousHash": "95c6db79250cca112f3123282c38a5b6e1c4520687073d58f9a954026645440c",
+            "hash": "51876d2bdadaac12be8b548de37d07992677374f5f4910dda7a5e33e4c3df3cc"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "operator_action_executed",
+            "actor": "platform_admin",
+            "correlationId": "demo_credit_t_northwind",
+            "payload": {
+                "capability": "credit.grant",
+                "requestedBy": "usr_Pr5ZFqloZAP3",
+                "approvedBy": "usr_2cXV8L7o3mwd",
+                "fingerprint": "5f8bc157",
+                "amount": "\u00a32,500.00"
+            },
+            "id": "aud_01M2YY7DYRXTDQ4SAWN9F6C2XB",
+            "sequence": 18,
+            "recordedAt": "2026-09-20T08:16:52.696Z",
+            "previousHash": "51876d2bdadaac12be8b548de37d07992677374f5f4910dda7a5e33e4c3df3cc",
+            "hash": "dbb664e6de6c0086514d4627b1c517d983e794de1d544ee57a812f76765ed0f9"
+        },
+        {
+            "tenantId": "t_northwind",
+            "type": "credit_granted",
+            "actor": "platform_admin",
+            "correlationId": "demo_credit_t_northwind",
+            "payload": {
+                "accountId": "acc_F8YkxNCwVSA",
+                "amount": 250000,
+                "currency": "GBP",
+                "kind": "grant_promotional",
+                "reason": "Agreed at the Q3 business review as the migration incentive.",
+                "requestedBy": "usr_Pr5ZFqloZAP3",
+                "approvedBy": "usr_2cXV8L7o3mwd",
+                "executedBy": "usr_2cXV8L7o3mwd"
+            },
+            "id": "aud_01M2YY7DYVS3ARQ1FHW2SGPQFQ",
+            "sequence": 19,
+            "recordedAt": "2026-09-20T08:16:52.699Z",
+            "previousHash": "dbb664e6de6c0086514d4627b1c517d983e794de1d544ee57a812f76765ed0f9",
+            "hash": "aeee5e2b76ac735cbf9e2a1c6be208c34aa572adb76ea5cf2014dc603281771a"
+        }
+    ],
+    "verification": {
+        "valid": true,
+        "checked": 19
+    },
+    "page": {
+        "fromSequence": 1,
+        "toSequence": 19,
+        "returned": 19,
+        "total": 19
+    }
+}

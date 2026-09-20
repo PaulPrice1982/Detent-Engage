@@ -1,0 +1,177 @@
+{
+    "tenantId": "t_northwind",
+    "tenantName": "Northwind Logistics Group",
+    "generatedAt": "2026-09-20T08:17:21.508Z",
+    "window": {
+        "from": "0000-01-01T00:00:00.000Z",
+        "to": "9999-12-31T23:59:59.999Z"
+    },
+    "deterministicBoundaries": [
+        {
+            "deterministic": "Whether identity resolution may begin (the consent gate)",
+            "delegatedToModel": "Understanding the visitor's intent",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Whether marketing enrolment is permitted",
+            "delegatedToModel": "Tone, register and brand voice",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "What price may be stated",
+            "delegatedToModel": "Framing an approved price in context",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Whether any CRM data may be disclosed",
+            "delegatedToModel": "Asking a non-disclosing disambiguation question",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Which CRM record is written to, and which fields",
+            "delegatedToModel": "Drafting the note or summary content",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Whether an identity match is confident enough to act on",
+            "delegatedToModel": "Explaining why a human will follow up",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Whether to escalate to a human",
+            "delegatedToModel": "Recognising the sentiment or risk signal",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Whether a tenant is within quota",
+            "delegatedToModel": "Objection framing within approved boundaries",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Retention, redaction and residency policy application",
+            "delegatedToModel": "Summarisation and qualification field extraction",
+            "source": "v1.0 \u00a78.3"
+        },
+        {
+            "deterministic": "Whether a generated claim or price is approved and therefore quotable",
+            "delegatedToModel": "Extracting a candidate claim or price from a page",
+            "source": "v1.1 \u00a748.2"
+        },
+        {
+            "deterministic": "Which sending lane a message may use",
+            "delegatedToModel": "Drafting the message content within that lane",
+            "source": "v1.1 \u00a748.2"
+        },
+        {
+            "deterministic": "Whether an outcome is billable",
+            "delegatedToModel": "Recognising which outcome the conversation reached",
+            "source": "v1.1 \u00a748.2"
+        },
+        {
+            "deterministic": "Whether proactive engagement may fire, and at what identity level",
+            "delegatedToModel": "Composing the proactive greeting",
+            "source": "v1.1 \u00a748.2"
+        },
+        {
+            "deterministic": "Whether a playbook change may publish",
+            "delegatedToModel": "Interpreting the tenant's natural-language authoring",
+            "source": "v1.1 \u00a748.2"
+        },
+        {
+            "deterministic": "Whether enrichment may run and at what cost",
+            "delegatedToModel": "Nothing. Enrichment is not model-mediated",
+            "source": "v1.1 \u00a748.2"
+        },
+        {
+            "deterministic": "Which conversational mode applies",
+            "delegatedToModel": "Speaking naturally within that mode",
+            "source": "v1.2 \u00a760.2"
+        },
+        {
+            "deterministic": "Whether selling is permitted in this conversation",
+            "delegatedToModel": "Framing a service answer warmly",
+            "source": "v1.2 \u00a760.2"
+        },
+        {
+            "deterministic": "What verification level has been reached",
+            "delegatedToModel": "Asking for the verification code",
+            "source": "v1.2 \u00a760.2"
+        },
+        {
+            "deterministic": "Whether entitlement information may be stated, and at what granularity",
+            "delegatedToModel": "Explaining an in-scope answer",
+            "source": "v1.2 \u00a760.2"
+        },
+        {
+            "deterministic": "Whether excess use or arrears exist",
+            "delegatedToModel": "Nothing. The model is never told",
+            "source": "v1.2 \u00a760.2"
+        },
+        {
+            "deterministic": "Which partner or entity receives the routing",
+            "delegatedToModel": "Explaining that a specialist will follow up",
+            "source": "v1.2 \u00a760.2"
+        },
+        {
+            "deterministic": "What a machine visitor may be told",
+            "delegatedToModel": "Nothing. The machine surface is not model-mediated",
+            "source": "v1.2 \u00a760.2"
+        }
+    ],
+    "compliance": {
+        "tenantId": "t_northwind",
+        "window": {
+            "from": "0000-01-01T00:00:00.000Z",
+            "to": "9999-12-31T23:59:59.999Z"
+        },
+        "generatedAt": "2026-09-20T08:17:21.508Z",
+        "consentEvents": [],
+        "identityResolutionsBlockedForConsent": 0,
+        "identityResolutionsPerformed": 0,
+        "marketingEnrolmentsBlocked": 0,
+        "crmDisclosureDenials": 0,
+        "sessionsOpened": 3,
+        "sessionsWithDisclosure": 2,
+        "aiDisclosureCoveragePct": 66.7,
+        "recordingConsent": {
+            "granted": 0,
+            "refused": 0,
+            "notOffered": 0
+        },
+        "erasureRequests": {
+            "received": 0,
+            "completed": 0
+        },
+        "injectionAttemptsRefused": 0,
+        "crossTenantDenials": 0,
+        "outputsBlocked": 0,
+        "evidence": {
+            "auditEntriesExamined": 19,
+            "chainVerified": true
+        }
+    },
+    "accessibility": {
+        "standard": "WCAG 2.2 AA",
+        "conformance": "partial",
+        "knownLimitations": [
+            "No independent accessibility audit has been carried out. The conformance claim is self-assessed.",
+            "Voice modality has not been assessed for assistive-technology compatibility."
+        ],
+        "statement": "The visitor surface targets WCAG 2.2 AA. The conversation panel is keyboard operable throughout, traps no focus, announces state changes, and can be closed from the keyboard and from a visible control. The assessment is our own and has not been independently audited."
+    },
+    "caveats": [
+        "The deterministic boundary table describes controls enforced in code, not aspirations. Each row is testable and is tested.",
+        "The compliance figures are derived from the tenant hash-chained audit log, and the chain verification is included. A pack whose chain does not verify is not evidence.",
+        "No simulation run is included in this pack. Run one before relying on it for assurance.",
+        "The accessibility statement reflects the audit named in it and no wider claim.",
+        "Regulatory scope and dates require confirmation against current sources before any external claim."
+    ],
+    "injectionDetection": {
+        "hostileCaught": 20,
+        "hostileTotal": 20,
+        "detectionRatePct": 100,
+        "benignFlagged": 0,
+        "benignTotal": 10,
+        "falsePositiveRatePct": 0
+    }
+}

@@ -1,0 +1,72 @@
+{
+    "headline": {
+        "meetings_held": 1,
+        "qualified_leads": 1,
+        "deflection_rate_pct": 100,
+        "implied_hours_saved": 0.6,
+        "outside_business_hours_sessions": 0
+    },
+    "tenantId": "t_northwind",
+    "window": {
+        "from": "0000-01-01T00:00:00.000Z",
+        "to": "9999-12-31T23:59:59.999Z"
+    },
+    "generatedAt": "2026-09-20T08:17:21.480Z",
+    "funnel": {
+        "sessions": 3,
+        "engaged": 1,
+        "qualified": 1,
+        "outcomes": 1,
+        "heldMeetings": 1,
+        "engagementRatePct": 33.3,
+        "qualificationRatePct": 100
+    },
+    "outcomeBreakdown": [
+        {
+            "outcome": "book_meeting",
+            "volume": 1,
+            "ratePct": 100,
+            "billable": true,
+            "confirmed": 1,
+            "awaitingConfirmation": 0,
+            "failed": 0,
+            "correlationIds": [
+                "corr_01M2YY6BWX6YSK0P572Z4AANAS"
+            ]
+        }
+    ],
+    "cost": {
+        "conversations": 3,
+        "spendPence": 7.872,
+        "costPerConversationPence": 2.624,
+        "costPerQualifiedLeadPence": 7.87,
+        "costPerBookedMeetingPence": 7.87
+    },
+    "contentPerformance": [],
+    "deflection": {
+        "resolvedWithoutHuman": 3,
+        "escalatedToHuman": 0,
+        "deflectionRatePct": 100,
+        "impliedHoursSaved": 0.6
+    },
+    "attribution": [
+        {
+            "source": "direct",
+            "outcomes": 1,
+            "billableOutcomes": 1
+        }
+    ],
+    "coverage": {
+        "byHourUtc": [
+            {
+                "hour": 8,
+                "sessions": 3
+            }
+        ],
+        "outsideBusinessHoursSessions": 0,
+        "businessHoursUtc": {
+            "from": 8,
+            "to": 18
+        }
+    }
+}

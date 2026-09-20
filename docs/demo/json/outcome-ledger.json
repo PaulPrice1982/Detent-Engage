@@ -1,0 +1,18 @@
+{
+    "window": {
+        "from": "0000-01-01T00:00:00.000Z",
+        "to": "9999-12-31T23:59:59.999Z"
+    },
+    "billable": 1,
+    "rows": [
+        {
+            "correlation_id": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+            "outcome": "book_meeting",
+            "state": "CONFIRMED",
+            "billable": true,
+            "recorded_at": "2026-09-20T08:16:29.549Z",
+            "confirmed_at": "2026-09-20T08:16:29.549Z",
+            "evidence_url": "/v1/admin/tenants/t_northwind/replay?correlation_id=corr_01M2YY6BWX6YSK0P572Z4AANAS"
+        }
+    ]
+}

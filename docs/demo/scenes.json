@@ -1,0 +1,299 @@
+{
+  "title": "Detent Engage",
+  "subtitle": "End-to-end demonstration for the CRO, CFO, COO and CIO",
+  "voices": {
+    "narrator": "Jim Executive (ElevenLabs) \u2014 the narrator, not the product",
+    "assistant": "Eryn (ElevenLabs) \u2014 standing in for the OpenAI Realtime voice being wired into the production build",
+    "visitor": "Ali (ElevenLabs) \u2014 Dan Harper, fleet manager at Northwind Logistics"
+  },
+  "scenes": [
+    {
+      "n": 1,
+      "title": "The claim",
+      "seat": "All",
+      "audio": "audio/01-claim.mp3",
+      "shots": [
+        "shots/01-marketing-home.png"
+      ],
+      "caption": "The public site. Nothing behind it yet.",
+      "text": "Every company in this room has a website that takes enquiries, and a CRM that takes records, and between them a gap that nobody owns. A visitor arrives at two in the morning with a real problem and a real budget, types it into a box, and what happens next is a form submission, a queue, and a reply eleven hours later to someone who has already spoken to your competitor.\n\nThe usual answer is a chatbot. The reason you have not bought one is that a chatbot will say anything. It will invent a price, promise a delivery date, and enrol the visitor in a marketing sequence they never agreed to, and the first you hear of it is from your data protection officer.\n\nDetent Engage is the other thing. It is an assistant that is not allowed to lie, cannot act without consent, and writes down everything it does.",
+      "clip": "clips/01-marketing.webm"
+    },
+    {
+      "n": 2,
+      "title": "Setting up an account",
+      "seat": "COO, CFO",
+      "audio": "audio/02-setup.mp3",
+      "shots": [
+        "shots/08-console-new-account.png"
+      ],
+      "caption": "One form. Term, notice period, uplift, spend cap, limits.",
+      "text": "This is how a customer is set up. One form.\n\nLook at what it asks for, because this is the part every other revenue tool leaves out. Term: thirty-six months. Start date. Notice period: one hundred and eighty days. Renewal uplift: four and a half per cent. Monthly credits. A spend cap. Seats, conversations, voice minutes.\n\nMost systems capture the price and throw the contract away. The contract goes into a PDF, the PDF goes into a folder, and eighteen months later nobody can tell you when the notice window closes. Detent captures the commercial terms at the moment the account is created, because everything downstream, renewal, uplift, entitlement, the right to charge for overuse, is derived from them.\n\nOne form, and the customer exists with their contract attached.",
+      "clip": "clips/02-signin-and-setup.webm"
+    },
+    {
+      "n": 3,
+      "title": "What that gives you",
+      "seat": "CFO, CRO",
+      "audio": "audio/03-contract.mp3",
+      "shots": [
+        "shots/13-console-account-contract.png"
+      ],
+      "caption": "Notice deadline 2028-07-05, derived from the contract. Not typed in by anybody.",
+      "text": "Here is Northwind Logistics a moment later. Term, thirty-six months. Renews on the first of January 2029. Notice deadline: the fifth of July 2028, open.\n\nThat date is not in the contract. It is derived from the contract: renewal date, minus one hundred and eighty days. It is the date on which this revenue becomes at risk, and it is calculated, dated and shown without anybody remembering to work it out.\n\nRenewal uplift, four and a half per cent, sitting next to it. Spend cap, fifteen thousand pounds. Limits per period, with voice minutes and conversations metered against them.\n\nCFO: this is the answer to \"what are we entitled to charge, and when do we lose the right to ask\". Not a report you commission. A field on a screen.",
+      "clip": "clips/03-contract.webm"
+    },
+    {
+      "n": 4,
+      "title": "Pricing that does not break the base",
+      "seat": "CFO",
+      "audio": "audio/04-pricing.mp3",
+      "shots": [
+        "shots/26-support-forbidden.png"
+      ],
+      "caption": "Every subscription is pinned to the version it was sold on.",
+      "text": "Packaging, in the back office rather than in a deploy.\n\nRead the line at the top: changing a price here never changes what an existing customer pays. Every subscription is pinned to the version it was sold on and the fee it was contracted at. A customer moves only by a deliberate plan change, or at renewal with an agreed uplift.\n\nAnyone who has repriced a software base knows why that sentence matters. Editing a price list and silently repricing four hundred live contracts is a way to lose a year.\n\nNote also what the plan charges for: not seats, not messages, but a confirmed outcome. A booked meeting, or a qualified handover.",
+      "clip": "clips/04-pricing.webm"
+    },
+    {
+      "n": 5,
+      "title": "Installation",
+      "seat": "COO, CIO",
+      "audio": "audio/05-install.mp3",
+      "shots": [
+        "shots/24-install-guide.png"
+      ],
+      "caption": "One script tag. No tag manager project, no data layer.",
+      "text": "Installation is one script tag. That is the whole integration for the visitor-facing assistant. No tag manager project, no customer data platform, no data layer. The tenant's own knowledge is uploaded separately, and the assistant answers only from it.\n\nCOO: the question you are asking is how long before this is doing something. The answer is that setting up the account is the long part, and it is a form.",
+      "clip": "clips/05-install.webm"
+    },
+    {
+      "n": 6,
+      "title": "A visitor arrives",
+      "seat": "CRO",
+      "audio": "audio/06-conversation.mp3",
+      "shots": [
+        "shots/22-widget-turn-1.png",
+        "shots/22-widget-turn-2.png",
+        "shots/22-widget-turn-3.png",
+        "shots/22-widget-turn-4.png",
+        "shots/22-widget-turn-5.png",
+        "shots/21-widget-open.png"
+      ],
+      "caption": "The real panel, driven end to end. Disclosure first, every session.",
+      "conversation": [
+        {
+          "who": "assistant",
+          "audio": "audio/conv-00-disclosure.mp3",
+          "text": "Just so you know, you are speaking with an AI assistant, not a person. I can answer questions and arrange a call with the team."
+        },
+        {
+          "who": "visitor",
+          "audio": "audio/conv-01-visitor.mp3",
+          "text": "We run forty vans out of two depots in the Midlands. Our telematics contract ends in March and I'm looking at replacing it."
+        },
+        {
+          "who": "assistant",
+          "audio": "audio/conv-02-assistant.mp3",
+          "text": "Replacing a telematics contract at renewal is the easiest time to change, so your timing is good. Two depots and vans suggests you care about utilisation as much as location. How many vehicles are in scope?"
+        },
+        {
+          "who": "visitor",
+          "audio": "audio/conv-03-visitor.mp3",
+          "text": "Forty vehicles, and we'd want driver behaviour scoring as well as tracking."
+        },
+        {
+          "who": "assistant",
+          "audio": "audio/conv-04-assistant.mp3",
+          "text": "Forty vehicles with driver behaviour scoring puts you in the mid-fleet configuration rather than the enterprise one. I can give you the published band for that, but not a bespoke figure. Is the March date a hard stop, or is there a notice period that has to be served before it?"
+        },
+        {
+          "who": "visitor",
+          "audio": "audio/conv-05-visitor.mp3",
+          "text": "There's a ninety day notice period before March, so it's tighter than it looks."
+        },
+        {
+          "who": "assistant",
+          "audio": "audio/conv-06-assistant.mp3",
+          "text": "Then the decision has to be made before the notice window closes, not before the contract ends. That is usually the date that catches people out. Are you the person who signs this off, or does it go to a board?"
+        },
+        {
+          "who": "visitor",
+          "audio": "audio/conv-07-visitor.mp3",
+          "text": "It's my call. I run the fleet."
+        },
+        {
+          "who": "assistant",
+          "audio": "audio/conv-08-assistant.mp3",
+          "text": "Useful, thank you. On what you have told me, this is a fit and worth twenty minutes with the fleet team. They can walk through the behaviour scoring and what the migration from your current provider involves. What is the best work email for the invitation?"
+        },
+        {
+          "who": "visitor",
+          "audio": "",
+          "text": "d.harper@northwind.example"
+        },
+        {
+          "who": "assistant",
+          "audio": "audio/conv-09-assistant.mp3",
+          "text": "Booked. You will get a confirmation to that address with the slot, and a short note on what they will cover. Nothing else will be sent to you, and you have not been added to any marketing list."
+        }
+      ],
+      "text": "A visitor opens the panel. Before a single question, a disclosure: you are chatting with an AI assistant, not a person. Every session. Not a footnote, not a tooltip.\n\nHe says he runs forty vans out of two Midlands depots, and his telematics contract ends in March. Watch the assistant qualify. Scale. Requirement. Then this: \"Then the decision has to be made before the notice window closes, not before the contract ends. That is usually the date that catches people out.\"\n\nThat is not small talk. That is the single most valuable sentence in the conversation, and it is the same insight the back office calculates for your own contracts, pointed at the prospect's.\n\nThen authority. Then, and only then, the email address, because it asks for contact details after it has given something worth having. And at the end: nothing else will be sent to you, and you have not been added to any marketing list.",
+      "clip": "clips/06-conversation.webm"
+    },
+    {
+      "n": 7,
+      "title": "Consent, not capture",
+      "seat": "CIO",
+      "audio": "audio/07-consent.mp3",
+      "shots": [
+        "shots/22-widget-turn-5.png",
+        "shots/23-widget-mobile-conversation.png",
+        "shots/20-widget-open-mobile.png"
+      ],
+      "caption": "Identity resolution does not begin until the visitor answers. Not degraded. Refused.",
+      "text": "Underneath the conversation, the thing your CIO is looking for.\n\n\"May we check whether we already know you, so we can put you through to the right person?\" With a \"what does this mean\" explanation, a yes, a no, and a \"forget me\".\n\nIdentity resolution does not begin until that is answered. Not degraded, not deferred: refused. The assistant is told what it may do with a record; it is never given the record. And on a phone, it is the same panel and the same gate.",
+      "clip": "clips/07-mobile.webm"
+    },
+    {
+      "n": 8,
+      "title": "The outcome",
+      "seat": "CRO",
+      "audio": "audio/08-outcome.mp3",
+      "json": [
+        "json/outcome-ledger.json",
+        "json/analytics.json"
+      ],
+      "caption": "One outcome, confirmed and billable, with a link that replays the conversation that produced it.",
+      "text": "The conversation produced one thing that matters: an outcome. book_meeting, state CONFIRMED, billable true, with an evidence URL. That link replays the exact conversation that produced it.\n\nCRO: this is the difference between \"the chatbot had four hundred conversations\" and \"here is the meeting, here is why it qualified, here is the transcript\". The funnel underneath counts sessions, engaged, qualified, outcomes, meetings held, and how many arrived outside business hours.\n\nThat last number is the honest one. It is the pipeline you were not going to get."
+    },
+    {
+      "n": 9,
+      "title": "Nobody moves money alone",
+      "seat": "CFO",
+      "audio": "audio/09-dual-control.mp3",
+      "shots": [
+        "shots/12-console-approvals.png",
+        "shots/28-approvals-after-approval.png",
+        "shots/29-account-after-approval.png"
+      ],
+      "caption": "Two held. A second person approves one. The queue drops, and the credit lands.",
+      "text": "Two actions waiting. Two thousand five hundred pounds of promotional credit, and a spend cap going from five and a half to nine thousand. Each with the person who asked, the amount, and the reason in their own words.\n\nNeither has happened. Above a threshold no single person acts, whatever their role. An administrator is not a superuser here: they are the person most worth compromising.\n\nA second person approves. The queue drops to one, and the credit appears on the account.\n\nCFO: you cannot approve your own request, and you cannot approve an action you would not be permitted to take yourself. The threshold is five hundred pounds for a credit, two hundred and fifty for a refund, five thousand for a spend cap, and a plan override always needs two people whatever it is worth.",
+      "clip": "clips/09-dual-control.webm"
+    },
+    {
+      "n": 10,
+      "title": "Who can do what",
+      "seat": "CIO, CFO",
+      "audio": "audio/10-roles.mp3",
+      "shots": [
+        "shots/25-support-cannot-move-money.png",
+        "shots/27-viewer-console.png"
+      ],
+      "caption": "The same account, seen by support. Every money action greyed, with the reason on it.",
+      "text": "The same account, seen by the support team. They can see everything: the contract, the balance, what is overdue. Every money action is greyed. Hold dunning is not, because pausing a chase only ever helps a customer.\n\nAnd the pending approval shows \"Needs credit.grant\" instead of an Approve button, with the reason on it, because an operator who cannot see a control assumes the system is broken and asks a colleague to do it for them, which is exactly the behaviour dual control exists to prevent.\n\nTwo more things a CIO will ask. First: the greyed button is not the control. The endpoint behind it refuses the same request. Second: no role can move money at all until that person has enrolled a second factor. Not the billing team, not the administrator, not the owner. A password is one phishing email away from a refund to somebody else's card.\n\nAnd the owner role, which manages people, deliberately cannot move money, because whoever can add a user must not also be able to pay themselves.",
+      "clip": "clips/10-roles.webm"
+    },
+    {
+      "n": 11,
+      "title": "Voice: what is real, what is a stand-in",
+      "seat": "CIO, COO",
+      "audio": "audio/11-voice.mp3",
+      "json": [
+        "json/session-text.json",
+        "json/session-voice.json"
+      ],
+      "caption": "Same product, two modalities. The disclosure changes; the governance does not.",
+      "text": "A word on the voice you just heard, and I am going to be precise about this.\n\nOpen a session in voice modality and the disclosure changes, in spoken form: \"just so you know, you are speaking with an AI assistant\". Voice minutes are metered against the contract. Concurrent calls are capped. And there is always a text-only route out of the voice channel. All of that is live today.\n\nThe words the assistant spoke are not a performance. They are the words the governed pipeline actually produced in the conversation you have just watched. The voice carrying them is an ElevenLabs voice, standing in for the OpenAI Realtime voice being wired into the production build.\n\nAnd inside the voice component there is a guard that refuses to open a session in which the speech provider is allowed to answer on its own, because every spoken word has to come through the same governed pipeline as every typed one.\n\nThe controls came first. The microphone is being connected now."
+    },
+    {
+      "n": 12,
+      "title": "The record",
+      "seat": "CIO, CFO",
+      "audio": "audio/12-audit.mp3",
+      "json": [
+        "json/audit.json",
+        "json/compliance.json"
+      ],
+      "caption": "Nineteen entries, each carrying the hash of the one before it.",
+      "text": "Everything you have just seen, in one chain. Session opened. Disclosure shown. Tool executed. Outcome recorded. Credit requested. Approved, by a named second person. Executed. Granted.\n\nEach entry carries the hash of the one before it. Remove an entry, change an amount, and every hash after it stops matching. This is not a log file that somebody could edit. It is a chain that tells you whether it has been edited.\n\nAnd the compliance view: AI disclosure coverage, one hundred per cent. Identity resolutions blocked for consent. Marketing enrolments blocked. CRM disclosure denials. Those are not aspirations. They are counters.\n\nCIO: when your regulator, your insurer, or your largest customer's procurement team asks what your AI did, this is the answer, and it is generated, not written."
+    },
+    {
+      "n": 13,
+      "title": "Who touches it",
+      "seat": "All",
+      "audio": "audio/13-personas.mp3",
+      "personas": true,
+      "shots": [
+        "shots/15-app-overview.png",
+        "shots/11-console-resellers.png"
+      ],
+      "caption": "Seven surfaces. Each person sees only their own.",
+      "text": "Seven people interact with this, and each sees only their own surface. The separations are the point: the person who opens a supplier account is not the person who pays it, and that principle is wired into the roles rather than written in a policy nobody reads.",
+      "clip": "clips/11-customer.webm"
+    },
+    {
+      "n": 14,
+      "title": "What is true, and what is next",
+      "seat": "All",
+      "audio": "audio/14-close.mp3",
+      "shots": [
+        "shots/03-trust.png",
+        "shots/04-assurance.png"
+      ],
+      "caption": "The trust and assurance pages, generated from the platform rather than written by marketing.",
+      "text": "I will end where a demonstration usually does not, which is with the gaps.\n\nLive and verified: the governance pipeline, consent, disclosure, the outcome ledger, contract terms and notice calculation, dual control, role and multi-factor gating, the hash-chained audit, one tenant per row enforced by the database rather than by the application, and no card number anywhere in the platform.\n\nNot yet: the speech channel is being connected in the production build. The platform's own audit chain and spend counters run in memory until the durable adapters are wired, which is the last piece before a pilot. There is no screen for managing console users, so roles are set by an administrator. And the assistant's wording in this recording came from a deterministic script rather than from a model, because this build was recorded without a model key. The governance you saw is real; the phrasing is fixed.\n\nEverything on that second list is scheduled. Everything on the first list, you have just watched happen.",
+      "clip": "clips/14-assurance.webm"
+    }
+  ],
+  "personas": [
+    {
+      "who": "Visitor",
+      "surface": "The panel on the customer's site",
+      "can": "Ask, consent or refuse, book, be forgotten",
+      "cannot": "Be identified before they consent; be enrolled in marketing"
+    },
+    {
+      "who": "Customer owner \u2014 Dan Harper, Northwind",
+      "surface": "Detent Manage",
+      "can": "Plan, usage, renewal, notice, credit; install; upload knowledge",
+      "cannot": "See another tenant; see Detent's back office"
+    },
+    {
+      "who": "Customer member \u2014 Joy Okafor",
+      "surface": "Detent Manage",
+      "can": "Day-to-day use within the tenant",
+      "cannot": "Billing and contract changes"
+    },
+    {
+      "who": "Detent support \u2014 Saada Ibrahim",
+      "surface": "Back office",
+      "can": "See any account, pause a chase",
+      "cannot": "Move money; approve"
+    },
+    {
+      "who": "Detent billing \u2014 Marcus Whitlock",
+      "surface": "Back office",
+      "can": "Credits, invoices, payments, refunds, onboard a customer",
+      "cannot": "Change a spend cap, override a plan, manage users"
+    },
+    {
+      "who": "Detent commercial \u2014 Grace Aldridge",
+      "surface": "Back office",
+      "can": "Plan overrides, spend caps, write-offs, approvals",
+      "cannot": "Manage users"
+    },
+    {
+      "who": "Detent owner \u2014 operations",
+      "surface": "Back office",
+      "can": "Manage people and roles, approve",
+      "cannot": "Move money \u2014 deliberately"
+    },
+    {
+      "who": "Reseller",
+      "surface": "Partner portal",
+      "can": "Their own book, their own commission",
+      "cannot": "Any customer that is not theirs"
+    }
+  ]
+}

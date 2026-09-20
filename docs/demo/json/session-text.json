@@ -1,0 +1,13 @@
+{
+    "session_id": "sess_01M2YYRMCR0GDWAPBWSABE5ZK5",
+    "disclosure": "You are chatting with an AI assistant, not a person. It can answer questions and arrange a call with the team.",
+    "modality": "text",
+    "text_only_route_available": true,
+    "kill_switch": "OFF",
+    "locale": "en-GB",
+    "branding": {
+        "launcherPosition": "bottom-right"
+    },
+    "streaming_available": true,
+    "max_input_chars": 4000
+}
