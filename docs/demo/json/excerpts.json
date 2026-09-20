@@ -1,116 +1,77 @@
 {
  "audit": {
-  "entries_total": 16,
+  "entries_total": 13,
   "shown": [
-   {
-    "sequence": 1,
-    "type": "policy_allowed",
-    "actor": "tenant_admin",
-    "recordedAt": "2026-09-20T08:54:03.401Z",
-    "payload": {
-     "change": "dpa_recorded",
-     "reference": "DPA-DEV"
-    },
-    "previousHash": "000000000000000000000000\u2026",
-    "hash": "9f36f96560ace9d615d43878\u2026"
-   },
    {
     "sequence": 8,
     "type": "session_opened",
     "actor": "system",
-    "recordedAt": "2026-09-20T08:54:14.904Z",
     "payload": {
      "modality": "text",
      "jurisdiction": "UK",
      "state": "LIVE"
     },
-    "previousHash": "a4330f389a000f3d4d617e60\u2026",
-    "hash": "14f997038ed5835b1e23f7d4\u2026"
+    "previousHash": "5cde8d53342cf688098a1e\u2026",
+    "hash": "5504116c329eb89e62afaf\u2026"
    },
    {
     "sequence": 9,
     "type": "disclosure_shown",
     "actor": "system",
-    "recordedAt": "2026-09-20T08:54:14.941Z",
     "payload": {
      "modality": "text",
      "wording": "You are chatting with an AI assistant, not a person. It can answer questions and arrange a call with the team."
     },
-    "previousHash": "14f997038ed5835b1e23f7d4\u2026",
-    "hash": "661f06794e559c4bdba34052\u2026"
+    "previousHash": "5504116c329eb89e62afaf\u2026",
+    "hash": "482dfa8d0d610ab6c2beb5\u2026"
+   },
+   {
+    "sequence": 10,
+    "type": "policy_allowed",
+    "actor": "policy",
+    "payload": {
+     "tool": "record_outcome",
+     "reasons": [
+      "all gates passed"
+     ],
+     "obligations": {}
+    },
+    "previousHash": "482dfa8d0d610ab6c2beb5\u2026",
+    "hash": "4f5cca00e3030ae0fe3452\u2026"
+   },
+   {
+    "sequence": 11,
+    "type": "tool_call_requested",
+    "actor": "assistant",
+    "payload": {
+     "tool": "record_outcome"
+    },
+    "previousHash": "4f5cca00e3030ae0fe3452\u2026",
+    "hash": "883e728dd21745e6ba233d\u2026"
    },
    {
     "sequence": 12,
     "type": "tool_call_executed",
     "actor": "system",
-    "recordedAt": "2026-09-20T08:54:15.043Z",
     "payload": {
      "change": "outcome_recorded",
      "outcome": "book_meeting",
      "billable": true,
      "state": "CONFIRMED"
     },
-    "previousHash": "787a732b64938d6b4edddaa9\u2026",
-    "hash": "f6fc6b7e4ad2ba9b0d66961c\u2026"
+    "previousHash": "883e728dd21745e6ba233d\u2026",
+    "hash": "f4b95af4da11717d40652b\u2026"
    },
    {
     "sequence": 13,
     "type": "tool_call_executed",
     "actor": "system",
-    "recordedAt": "2026-09-20T08:54:15.043Z",
     "payload": {
      "tool": "record_outcome",
      "parked": false
     },
-    "previousHash": "f6fc6b7e4ad2ba9b0d66961c\u2026",
-    "hash": "0b8dd6238e65fb894bf4b1aa\u2026"
-   },
-   {
-    "sequence": 14,
-    "type": "operator_action_approved",
-    "actor": "platform_admin",
-    "recordedAt": "2026-09-20T08:54:26.650Z",
-    "payload": {
-     "capability": "credit.grant",
-     "approvedBy": "usr_2cXV8L7o3mwd",
-     "requestedBy": "usr_Pr5ZFqloZAP3",
-     "fingerprint": "a8616444"
-    },
-    "previousHash": "0b8dd6238e65fb894bf4b1aa\u2026",
-    "hash": "cdb644f2fcd515cc6c40ce52\u2026"
-   },
-   {
-    "sequence": 15,
-    "type": "operator_action_executed",
-    "actor": "platform_admin",
-    "recordedAt": "2026-09-20T08:54:26.650Z",
-    "payload": {
-     "capability": "credit.grant",
-     "requestedBy": "usr_Pr5ZFqloZAP3",
-     "approvedBy": "usr_2cXV8L7o3mwd",
-     "fingerprint": "a8616444",
-     "amount": "\u00a32,500.00"
-    },
-    "previousHash": "cdb644f2fcd515cc6c40ce52\u2026",
-    "hash": "ecc4ccbc02ba68cf1731e61d\u2026"
-   },
-   {
-    "sequence": 16,
-    "type": "credit_granted",
-    "actor": "platform_admin",
-    "recordedAt": "2026-09-20T08:54:26.652Z",
-    "payload": {
-     "accountId": "acc_F8YkxNCwVSA",
-     "amount": 250000,
-     "currency": "GBP",
-     "kind": "grant_promotional",
-     "reason": "Agreed at the Q3 business review as the migration incentive.",
-     "requestedBy": "usr_Pr5ZFqloZAP3",
-     "approvedBy": "usr_2cXV8L7o3mwd",
-     "executedBy": "usr_2cXV8L7o3mwd"
-    },
-    "previousHash": "ecc4ccbc02ba68cf1731e61d\u2026",
-    "hash": "459d7be78ff9a1879f46cd26\u2026"
+    "previousHash": "f4b95af4da11717d40652b\u2026",
+    "hash": "edfc738311437acad7f64b\u2026"
    }
   ]
  },
@@ -122,13 +83,13 @@
   "billable": 1,
   "rows": [
    {
-    "correlation_id": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
+    "correlation_id": "corr_01M2Z2Q64WECC180DHGHESD8K5",
     "outcome": "book_meeting",
     "state": "CONFIRMED",
     "billable": true,
-    "recorded_at": "2026-09-20T08:54:15.043Z",
-    "confirmed_at": "2026-09-20T08:54:15.043Z",
-    "evidence_url": "/v1/admin/tenants/t_northwind/replay?correlation_id=corr_01M2Z0BVKR7GP1DJWSXHNK33TT"
+    "recorded_at": "2026-09-20T09:35:23.529Z",
+    "confirmed_at": "2026-09-20T09:35:23.529Z",
+    "evidence_url": "/v1/admin/tenants/t_northwind/replay?correlation_id=corr_01M2Z2Q64WECC180DHGHESD8K5"
    }
   ]
  },
@@ -173,7 +134,7 @@
   "crossTenantDenials": 0,
   "outputsBlocked": 0,
   "evidence": {
-   "auditEntriesExamined": 16,
+   "auditEntriesExamined": 13,
    "chainVerified": true
   }
  },

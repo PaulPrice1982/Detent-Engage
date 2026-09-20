@@ -4,13 +4,26 @@ Everything needed to give the end-to-end walkthrough to a CRO, CFO, COO and
 CIO, and everything needed to rebuild it from the product rather than from a
 slide deck.
 
+## Scope: Engage, and only Engage
+
+Ten scenes about the assistant that meets a visitor on a customer's website,
+qualifies them under governance, and hands over an outcome with the evidence
+attached.
+
+It does **not** cover **Detent Recover**, which is a separate offering:
+contract monetisation, excess-use recovery, renewal and notice windows. An
+earlier cut bled into it, selling Recover's proposition off Engage's screens,
+and those scenes are gone. The back-office money surfaces are also out,
+pricing, dual control and the money roles, because they are platform rather
+than Engage.
+
 | File | What it is |
 |---|---|
-| `player.html` | The demonstration. Fourteen scenes, keyboard-driven, plays the footage, the narration and the spoken conversation. Open it directly; no server needed. |
-| `clips/` | Eleven recordings of the product being used: the cursor moves, the form is typed, the pages respond. Not screenshots. |
+| `player.html` | The demonstration. Ten scenes, keyboard-driven, plays the footage, the narration and the spoken conversation. Open it directly; no server needed. |
+| `clips/` | Seven recordings of the product being used: the cursor moves, the form is typed, the pages respond. Not screenshots. |
 | `SCRIPT.md` | The script, with the reaction each seat has to have and what each scene must land. |
 | `scenes.json` | The running order as data: clips, shots, captions, narration, the conversation. |
-| `shots/` | Thirty screenshots. Poster frames for the films, and the fallback for any clip a browser will not decode. |
+| `shots/` | Fourteen screenshots. Poster frames for the films, and the fallback for any clip a browser will not decode. |
 | `json/` | The API responses shown in scenes 8, 11 and 12, exactly as the platform returned them. |
 | `audio/README.md` | Where the voiceover clips are and what to name them. |
 | `capture/` | The scripts that produced all of it, so it can be rebuilt. |

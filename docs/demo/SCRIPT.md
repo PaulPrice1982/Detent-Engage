@@ -1,307 +1,244 @@
 # Detent Engage: end-to-end demonstration
 
 **Audience:** CRO, CFO, COO, CIO, in one room.
-**Running time:** about eleven minutes of narration across thirteen scenes.
-**Every screen is a photograph of the running build.** Nothing here is a mockup,
-a wireframe or a rendering. What is not real is named as not real, in the scene
-where it appears and again in section 14.
+**Running time:** about nine minutes across ten scenes.
+**Every screen is the running build.** Nothing is a mockup, a wireframe or a
+rendering. What is not real is named as not real, in the scene where it
+appears and again in scene 10.
+
+## Scope
+
+This film is about **Detent Engage** and nothing else: the assistant that
+meets a visitor on a customer's website, qualifies them under governance, and
+hands over an outcome with the evidence attached.
+
+It deliberately does **not** cover contract monetisation, excess-use recovery,
+renewal and notice windows, or anything else in **Detent Recover**. Recover is
+a separate offering with its own proposition, and an earlier cut of this film
+bled into it: the contract-terms scenes were selling Recover's story off
+Engage's screens. Those scenes are gone. The back-office money surfaces,
+pricing, dual control and the money roles, are also out: they are platform,
+not Engage.
 
 ## The single reaction each seat must have
 
 | Seat | The unspoken problem | What must land |
 |---|---|---|
-| CRO | "We lose deals in the gap between the website and the CRM, and I cannot see the gap." | Qualification happens at the point of enquiry, with the reason attached. |
-| CFO | "I cannot tell you what our contracts entitle us to, or what we have given away." | Contract terms, notice deadlines, uplift and spend are first-class data, and nobody moves money alone. |
-| COO | "Every new tool is a six-month programme with a consultant attached." | An account and a contract in one form; the assistant live in one script tag. |
-| CIO | "Another AI vendor wants our customer data and cannot tell me what it does with it." | Consent before identification, disclosure every session, one tenant per row, a hash-chained record of every act. |
+| CRO | "We lose enquiries in the gap between the website and the CRM, and I cannot see the gap." | Qualification happens at the point of enquiry, with the reason and the transcript attached. |
+| CFO | "AI spend with nothing measurable coming back." | The platform charges for a confirmed outcome, and every outcome carries a link that replays the conversation behind it. |
+| COO | "Every new tool is a six-month programme with a consultant attached." | A customer in one form. The assistant live in one script tag. |
+| CIO | "Another AI vendor wants our customers' data and cannot tell me what it does with it." | Consent before identification, disclosure every session, one tenant per row, a hash-chained record of every act. |
 
 ---
 
-## Scene 1 — The claim (0:00, 40s)
+## Scene 1 — The claim
 
-**On screen:** `01-marketing-home.png`
+**Seat:** All  ·  **Audio:** `audio/01-claim.mp3`
 
-> Every company in this room has a website that takes enquiries, and a CRM that
-> takes records, and between them a gap that nobody owns. A visitor arrives at
-> two in the morning with a real problem and a real budget, types it into a box,
-> and what happens next is a form submission, a queue, and a reply eleven hours
-> later to someone who has already spoken to your competitor.
+**On screen:** `clips/01-marketing.webm` — a recording of the product being used
+
+*The public site. Nothing behind it yet.*
+
+> Every company in this room has a website that takes enquiries, and a CRM that takes records, and between them a gap that nobody owns. A visitor arrives at two in the morning with a real problem and a real budget, types it into a box, and what happens next is a form submission, a queue, and a reply eleven hours later to someone who has already spoken to your competitor.
 >
-> The usual answer is a chatbot. The reason you have not bought one is that a
-> chatbot will say anything. It will invent a price, promise a delivery date,
-> and enrol the visitor in a marketing sequence they never agreed to, and the
-> first you hear of it is from your DPO.
+> The usual answer is a chatbot. The reason you have not bought one is that a chatbot will say anything. It will invent a price, promise a delivery date, and enrol the visitor in a marketing sequence they never agreed to, and the first you hear of it is from your data protection officer.
 >
-> Detent Engage is the other thing. It is an assistant that is not allowed to
-> lie, cannot act without consent, and writes down everything it does.
+> Detent Engage is the other thing. It is an assistant that is not allowed to lie, cannot act without consent, and writes down everything it does.
 
 ---
 
-## Scene 2 — Setting up an account (0:40, 75s)
+## Scene 2 — Setting a customer up
 
-**On screen:** `08-console-new-account.png`
+**Seat:** COO  ·  **Audio:** `audio/02-setup.mp3`
 
-> This is how a customer is set up. One form.
->
-> Look at what it asks for, because this is the part every other revenue tool
-> leaves out. Term: thirty-six months. Start date. Notice period: a hundred and
-> eighty days. Renewal uplift: four and a half per cent. Monthly credits. A
-> spend cap. Seats, conversations, voice minutes.
->
-> Most systems capture the price and throw the contract away. The contract goes
-> into a PDF, the PDF goes into a folder, and eighteen months later nobody can
-> tell you when the notice window closes. Detent captures the commercial terms
-> at the moment the account is created, because everything downstream, renewal,
-> uplift, entitlement, the right to charge for overuse, is derived from them.
->
-> One form, and the customer exists with their contract attached.
+**On screen:** `clips/02-signin-and-setup.webm` — a recording of the product being used
 
-## Scene 3 — What that gives you (1:55, 70s)
+*One form, in real time and not sped up. Sign in to the account existing.*
 
-**On screen:** `13-console-account-contract.png`
-
-> Here is Northwind Logistics a moment later.
+> This is a customer being set up, in real time and not sped up. Sign in, one form, and that is the whole of it.
 >
-> Term, thirty-six months. Renews on the first of January 2029. **Notice
-> deadline: the fifth of July 2028, open.** That date is not in the contract.
-> It is derived from the contract: renewal date minus a hundred and eighty
-> days. It is the date on which this revenue becomes at risk, and it is
-> calculated, dated and shown without anybody remembering to work it out.
+> Name the organisation. Give it a tenant id and a billing address. Choose the plan. Then the entitlement: seats, conversations, voice minutes. Those three numbers are what the assistant is allowed to consume on this customer's behalf, and the platform meters against them from the first conversation.
 >
-> Renewal uplift, four and a half per cent, sitting next to it. Spend cap,
-> fifteen thousand pounds. Limits per period, with voice minutes and
-> conversations metered against them.
->
-> CFO: this is the answer to "what are we entitled to charge, and when do we
-> lose the right to ask". Not a report you commission. A field on a screen.
-
-## Scene 4 — Pricing that does not break the base (3:05, 55s)
-
-**On screen:** `26-support-forbidden.png`
-
-> Packaging, in the back office rather than in a deploy.
->
-> Read the line at the top: *changing a price here never changes what an
-> existing customer pays.* Every subscription is pinned to the version it was
-> sold on and the fee it was contracted at. A customer moves only by a
-> deliberate plan change, or at renewal with an agreed uplift.
->
-> Anyone who has repriced a SaaS base knows why that sentence matters. Editing
-> a price list and silently repricing four hundred live contracts is a way to
-> lose a year.
->
-> Note also what the plan charges for: not seats, not messages, but a confirmed
-> outcome. A booked meeting or a qualified handover.
+> Submit, and the customer exists. No implementation project, no data migration, no professional services line. The assistant can be on their site in the next two minutes.
 
 ---
 
-## Scene 5 — Installation (4:00, 45s)
+## Scene 3 — Installation
 
-**On screen:** `24-install-guide.png`
+**Seat:** COO, CIO  ·  **Audio:** `audio/03-install.mp3`
 
-> Installation is one script tag.
->
-> That is the whole integration for the visitor-facing assistant. No tag
-> manager project, no CDP, no data layer. The tenant's own knowledge is
-> uploaded separately and the assistant answers only from it.
->
-> COO: the question you are asking is how long before this is doing something.
-> The answer is that setting up the account is the long part, and it is a form.
+**On screen:** `clips/05-install.webm` — a recording of the product being used
 
-## Scene 6 — A visitor arrives (4:45, 90s)
+*One script tag. No tag manager project, no data layer.*
 
-**On screen:** `21-widget-open.png`, then `22-widget-turn-1.png` through `22-widget-turn-5.png`
+> Installation is one script tag. That is the whole integration for the visitor-facing assistant. No tag manager project, no customer data platform, no data layer. The tenant's own knowledge is uploaded separately, and the assistant answers only from it.
+>
+> COO: the question you are asking is how long before this is doing something. The answer is that setting up the account is the long part, and it is a form.
 
-> A visitor opens the panel. Before a single question, a disclosure: *you are
-> chatting with an AI assistant, not a person.* Every session. Not a footnote,
-> not a tooltip.
->
-> He says he runs forty vans out of two Midlands depots, and his telematics
-> contract ends in March.
->
-> Watch the assistant qualify. Scale. Requirement. Then this:
->
-> *"Then the decision has to be made before the notice window closes, not
-> before the contract ends. That is usually the date that catches people out."*
->
-> That is not small talk. That is the single most valuable sentence in the
-> conversation, and it is the same insight the back office calculates for your
-> own contracts, pointed at the prospect's.
->
-> Then authority. Then, and only then, the email address, because it asks for
-> contact details after it has given something worth having.
->
-> And at the end: *"Nothing else will be sent to you, and you have not been
-> added to any marketing list."*
+---
 
-## Scene 7 — Consent, not capture (6:15, 55s)
+## Scene 4 — A visitor arrives
 
-**On screen:** `22-widget-turn-5.png` (lower third), `20-widget-open-mobile.png`
+**Seat:** CRO  ·  **Audio:** `audio/04-conversation.mp3`
+
+**On screen:** `clips/06-conversation.webm` — a recording of the product being used
+
+*The real panel, driven end to end. Disclosure first, every session.*
+
+> A visitor opens the panel. Before a single question, a disclosure: you are chatting with an AI assistant, not a person. Every session. Not a footnote, not a tooltip.
+>
+> He runs forty vans out of two Midlands depots and he is replacing a supplier. Watch what the assistant does with that. It qualifies on scale. Then on requirement. Then on timing, and it hears the constraint he did not spell out. Then on authority. And only then, once he has had something worth having, does it ask for an email address.
+>
+> That order is not decoration. It is the difference between a form that harvests an address and a conversation that earns one.
+>
+> And at the end: nothing else will be sent to you, and you have not been added to any marketing list. The assistant says that because the platform will not let it do otherwise.
+
+**The spoken conversation**
+
+| Speaker | Line |
+|---|---|
+| Assistant | Just so you know, you are speaking with an AI assistant, not a person. I can answer questions and arrange a call with the team. |
+| Dan Harper | We run forty vans out of two depots in the Midlands. Our telematics contract ends in March and I'm looking at replacing it. |
+| Assistant | Replacing a telematics contract at renewal is the easiest time to change, so your timing is good. Two depots and vans suggests you care about utilisation as much as location. How many vehicles are in scope? |
+| Dan Harper | Forty vehicles, and we'd want driver behaviour scoring as well as tracking. |
+| Assistant | Forty vehicles with driver behaviour scoring puts you in the mid-fleet configuration rather than the enterprise one. I can give you the published band for that, but not a bespoke figure. Is the March date a hard stop, or is there a notice period that has to be served before it? |
+| Dan Harper | There's a ninety day notice period before March, so it's tighter than it looks. |
+| Assistant | Then the decision has to be made before the notice window closes, not before the contract ends. That is usually the date that catches people out. Are you the person who signs this off, or does it go to a board? |
+| Dan Harper | It's my call. I run the fleet. |
+| Assistant | Useful, thank you. On what you have told me, this is a fit and worth twenty minutes with the fleet team. They can walk through the behaviour scoring and what the migration from your current provider involves. What is the best work email for the invitation? |
+| Dan Harper | d.harper@northwind.example |
+| Assistant | Booked. You will get a confirmation to that address with the slot, and a short note on what they will cover. Nothing else will be sent to you, and you have not been added to any marketing list. |
+
+---
+
+## Scene 5 — Consent, not capture
+
+**Seat:** CIO  ·  **Audio:** `audio/05-consent.mp3`
+
+**On screen:** `clips/07-mobile.webm` — a recording of the product being used
+
+*Identity resolution does not begin until the visitor answers. Not degraded. Refused.*
 
 > Underneath the conversation, the thing your CIO is looking for.
 >
-> *"May we check whether we already know you, so we can put you through to the
-> right person?"* With a "what does this mean" explanation, a yes, a no, and a
-> "forget me".
+> "May we check whether we already know you, so we can put you through to the right person?" With a "what does this mean" explanation, a yes, a no, and a "forget me".
 >
-> Identity resolution does not begin until that is answered. Not degraded, not
-> deferred: refused. The assistant is told what it may do with a record; it is
-> never given the record. And on a phone it is the same panel and the same
-> gate.
+> Identity resolution does not begin until that is answered. Not degraded, not deferred: refused. The assistant is told what it may do with a record; it is never given the record. And on a phone, it is the same panel and the same gate.
 
-## Scene 8 — The outcome (7:10, 60s)
+---
+
+## Scene 6 — The outcome
+
+**Seat:** CRO  ·  **Audio:** `audio/06-outcome.mp3`
 
 **On screen:** `json/outcome-ledger.json`, `json/analytics.json`
 
-> The conversation produced one thing that matters: an outcome.
+*One outcome, confirmed and billable, with a link that replays the conversation that produced it.*
+
+> The conversation produced one thing that matters: an outcome. book_meeting, state CONFIRMED, billable true, with an evidence URL. That link replays the exact conversation that produced it.
 >
-> `book_meeting`, state CONFIRMED, billable true, with an **evidence URL**. That
-> link replays the exact conversation that produced it.
+> CRO: this is the difference between "the chatbot had four hundred conversations" and "here is the meeting, here is why it qualified, here is the transcript". The funnel underneath counts sessions, engaged, qualified, outcomes, meetings held, and how many arrived outside business hours.
 >
-> CRO: this is the difference between "the chatbot had four hundred
-> conversations" and "here is the meeting, here is why it qualified, here is
-> the transcript". The funnel underneath counts sessions, engaged, qualified,
-> outcomes, meetings held, and how many arrived outside business hours.
->
-> That last number is the honest one. It is the pipeline you were not going to
-> get.
+> That last number is the honest one. It is the pipeline you were not going to get.
 
 ---
 
-## Scene 9 — Nobody moves money alone (8:10, 80s)
+## Scene 7 — Voice: what is real, what is a stand-in
 
-**On screen:** `12-console-approvals.png`, then `28-approvals-after-approval.png`, then `29-account-after-approval.png`
+**Seat:** CIO, COO  ·  **Audio:** `audio/07-voice.mp3`
 
-> Two actions waiting. Two thousand five hundred pounds of promotional credit,
-> and a spend cap going from five and a half to nine thousand. Each with the
-> person who asked, the amount, and **the reason in their own words.**
->
-> Neither has happened. Above a threshold no single person acts, whatever their
-> role. An administrator is not a superuser here: they are the person most
-> worth compromising.
->
-> A second person approves. The queue drops to one, and the credit appears on
-> the account.
->
-> CFO: you cannot approve your own request, and you cannot approve an action
-> you would not be permitted to take yourself. The threshold is five hundred
-> pounds for a credit, two hundred and fifty for a refund, five thousand for a
-> spend cap, and a plan override always needs two people whatever it is worth.
+**On screen:** `json/session-text.json`, `json/session-voice.json`
 
-## Scene 10 — Who can do what (9:30, 70s)
+*Same product, two modalities. The disclosure changes; the governance does not.*
 
-**On screen:** `25-support-cannot-move-money.png`, `27-viewer-console.png`
+> A word on the voice you just heard, and I am going to be precise about this.
+>
+> Open a session in voice modality and the disclosure changes, in spoken form: "just so you know, you are speaking with an AI assistant". Voice minutes are metered against the contract. Concurrent calls are capped. And there is always a text-only route out of the voice channel. All of that is live today.
+>
+> The words the assistant spoke are not a performance. They are the words the governed pipeline actually produced in the conversation you have just watched. The voice carrying them is an ElevenLabs voice, standing in for the OpenAI Realtime voice being wired into the production build.
+>
+> And inside the voice component there is a guard that refuses to open a session in which the speech provider is allowed to answer on its own, because every spoken word has to come through the same governed pipeline as every typed one.
+>
+> The controls came first. The microphone is being connected now.
 
-> The same account, seen by the support team.
->
-> They can see everything: the contract, the balance, what is overdue. Every
-> money action is greyed. Hold dunning is not, because pausing a chase only
-> ever helps a customer.
->
-> And the pending approval shows *"Needs credit.grant"* instead of an Approve
-> button, with the reason on it, because an operator who cannot see a control
-> assumes the system is broken and asks a colleague to do it for them, which is
-> exactly the behaviour dual control exists to prevent.
->
-> Two more things a CIO will ask. First: the greyed button is not the control.
-> The endpoint behind it refuses the same request. Second: no role can move
-> money at all until that person has enrolled a second factor. Not the billing
-> team, not the administrator, not the owner. A password is one phishing email
-> away from a refund to somebody else's card.
->
-> And the owner role, which manages people, deliberately cannot move money,
-> because whoever can add a user must not also be able to pay themselves.
+---
 
-## Scene 11 — Voice, and what is actually built (10:40, 45s)
+## Scene 8 — The record
 
-**On screen:** `json/session-text.json` and `json/session-voice.json` side by side
-
-> A word on voice, and I am going to be precise about this.
->
-> Open a session in voice modality and the disclosure changes: *"you are
-> **speaking** with an AI assistant"*, in spoken form. Voice minutes are metered
-> against the contract, concurrent calls are capped, and there is always a
-> text-only route out of the voice channel.
->
-> The governance is live. The speech channel itself is built as a separate
-> component and is not yet connected to the server, and there is a guard in it
-> that refuses to open a session in which the speech provider is allowed to
-> answer on its own: every spoken word has to come through the same governed
-> pipeline as every typed one.
->
-> So: the controls came first, the microphone comes next. The voice you are
-> listening to now is the narrator, not the product.
-
-## Scene 12 — The record (11:25, 70s)
+**Seat:** CIO, CFO  ·  **Audio:** `audio/08-record.mp3`
 
 **On screen:** `json/audit.json`, `json/compliance.json`
 
-> Everything you have just seen, in one chain.
+*The conversation's own entries, each carrying the hash of the one before it.*
+
+> Everything you have just watched, in one chain. The session opened. The disclosure was shown. The policy decided what was allowed. The assistant requested a tool. The platform executed it. The outcome was recorded.
 >
-> Session opened. Disclosure shown. Tool executed. Outcome recorded. Credit
-> requested. Approved, by a named second person. Executed. Granted.
+> Each entry carries the hash of the one before it. Remove an entry, change a value, and every hash after it stops matching. This is not a log file somebody could quietly edit. It is a chain that tells you whether it has been edited.
 >
-> Each entry carries the hash of the one before it. Remove an entry, change an
-> amount, and every hash after it stops matching. This is not a log file that
-> somebody could edit; it is a chain that says whether it has been edited.
+> And the compliance view beside it: AI disclosure coverage, one hundred per cent. Identity resolutions blocked for consent. Marketing enrolments blocked. Cross-tenant denials. Injection attempts refused. Those are not aspirations. They are counters.
 >
-> And the compliance view: AI disclosure coverage, one hundred per cent.
-> Identity resolutions blocked for consent. Marketing enrolments blocked. CRM
-> disclosure denials. Those are not aspirations. They are counters.
->
-> CIO: when your regulator, your insurer or your largest customer's procurement
-> team asks what your AI did, this is the answer, and it is generated, not
-> written.
-
-## Scene 13 — Who touches it (12:35, 80s)
-
-**On screen:** persona table (below)
-
-> Seven people interact with this, and each sees only their own surface.
-
-| Persona | Surface | What they do | What they cannot do |
-|---|---|---|---|
-| **Visitor** | The panel on the customer's site | Ask, consent or refuse, book, be forgotten | Be identified before they consent; be enrolled in marketing |
-| **Customer owner** (Dan Harper, Northwind) | Detent Manage | See plan, usage, renewal, notice, credit; install; upload knowledge | See another tenant; see Detent's back office |
-| **Customer member** (Joy Okafor) | Detent Manage | Day-to-day use within the tenant | Billing and contract changes |
-| **Detent support** (Saada Ibrahim) | Back office | See any account, pause a chase | Move money; approve |
-| **Detent billing** (Marcus Whitlock) | Back office | Credits, invoices, payments, refunds, onboard a customer | Change a spend cap, override a plan, manage users |
-| **Detent commercial** (Grace Aldridge) | Back office | Plan overrides, spend caps, write-offs, approvals | Manage users |
-| **Detent owner** (operations) | Back office | Manage people and roles, approve | **Move money** — deliberately |
-| **Reseller** | Partner portal | Their own book, their own commission | Any customer that is not theirs |
-
-> The separations are the point. The person who opens a supplier account is not
-> the person who pays it, and that principle is wired into the roles rather
-> than written in a policy nobody reads.
-
-## Scene 14 — What is true, and what is next (13:55, 60s)
-
-**On screen:** `03-trust.png`, `04-assurance.png`
-
-> I will end where a demonstration usually does not, which is with the gaps.
->
-> Live and verified: the governance pipeline, consent, disclosure, the outcome
-> ledger, contract terms and notice calculation, dual control, role and
-> multi-factor gating, the hash-chained audit, one tenant per row enforced by
-> the database rather than by the application, and no card number anywhere in
-> the platform.
->
-> Not yet: the speech channel is not connected. The platform's own audit chain
-> and spend counters run in memory until the durable adapters are wired, which
-> is the last piece before a pilot. There is no screen for managing console
-> users, so roles are set by an administrator. And the assistant's wording in
-> this recording came from a deterministic script, not from a model, because
-> this build was recorded without a model key: the governance you saw is real,
-> the phrasing is fixed.
->
-> Everything on that second list is scheduled. Everything on the first list you
-> have just watched happen.
+> CIO: when your regulator, your insurer, or your largest customer's procurement team asks what your AI did, this is the answer, and it is generated, not written.
 
 ---
 
+## Scene 9 — Who touches it
+
+**Seat:** All  ·  **Audio:** `audio/09-personas.mp3`
+
+**On screen:** `clips/11-customer.webm` — a recording of the product being used
+
+*Five surfaces. Each person sees only their own.*
+
+> Five people touch Engage, and each sees only their own surface. The separations are enforced by the database and by the capability check, not by a policy nobody reads.
+
+---
+
+## Scene 10 — What is true, and what is next
+
+**Seat:** All  ·  **Audio:** `audio/10-close.mp3`
+
+**On screen:** `clips/14-assurance.webm` — a recording of the product being used
+
+*The trust and assurance pages, generated from the platform rather than written by marketing.*
+
+> I will end where a demonstration usually does not, which is with the gaps.
+>
+> Live and verified, in the build you have just watched: the disclosure on every session. Consent before any attempt to identify a visitor. The assistant answering only from the tenant's own knowledge. The tool gate between what the model proposes and what the platform permits. The outcome ledger, with a link that replays the conversation behind every outcome. One tenant per row, enforced by the database rather than by the application. And a hash-chained record of all of it.
+>
+> Not yet: the speech channel is being connected in the production build. The platform's own audit chain runs in memory until the durable adapters are wired, which is the last piece before a pilot. And the assistant's wording in this recording came from a deterministic script rather than from a model, because this build was recorded without a model key. The governance you saw is real. The phrasing is fixed.
+>
+> Everything on that second list is scheduled. Everything on the first list, you have just watched happen.
+
+---
+
+## Who touches it
+
+| Persona | Surface | May | May not |
+|---|---|---|---|
+| Visitor | The panel on the customer's site | Ask, consent or refuse, book, be forgotten | Be identified before they consent; be enrolled in marketing |
+| Customer owner — Dan Harper, Northwind | Detent Manage | Install with one script tag, upload the knowledge it answers from, see what it has done | See another tenant |
+| Customer team — Joy Okafor | Detent Manage | Day-to-day use inside their own tenant | Anything outside that tenant |
+| Detent support — Saada Ibrahim | Back office | See that a tenant's assistant is healthy, and help when it is not | Move money; approve |
+| Partner | Partner portal | Their own book | Any customer that is not theirs |
+
 ## Production notes
 
-- Screens live in `docs/demo/shots/`, API evidence in `docs/demo/json/`.
-- Reproduce with `AWA_DEMO_SEED=1` and a `DATABASE_URL`, then the capture
-  script in `docs/demo/capture/`. The seed is refused in a deployment.
-- Narration by ElevenLabs. The narrator is not the product; see scene 11.
+- Recordings in `clips/`, stills in `shots/`, API evidence in `json/`,
+  narration in `audio/`, film furniture in `frames/`.
+- Rebuild with `docs/demo/capture/` — see its README. `AWA_DEMO_SEED=1` is
+  refused in a deployment.
+- The MP4 is `node docs/demo/capture/stitch.mjs`.
+
+## What is not the production article
+
+Three things, each named in the scene where it appears rather than in a
+footnote:
+
+1. **The assistant's wording** came from the deterministic reference provider,
+   because this build was recorded without a model key. The governance path is
+   the real one; the phrasing is fixed text.
+2. **The assistant's voice** is an ElevenLabs voice standing in for the OpenAI
+   Realtime voice being wired into the production build. The words it speaks
+   are the words the governed pipeline produced.
+3. **The narrator** is a voice model, and is never the product. Scene 7 says so
+   out loud.

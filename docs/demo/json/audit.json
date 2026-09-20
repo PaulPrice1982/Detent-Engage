@@ -3,97 +3,97 @@
         {
             "tenantId": "t_northwind",
             "type": "policy_allowed",
-            "correlationId": "dpa_1789894443400",
+            "correlationId": "dpa_1789896922826",
             "actor": "tenant_admin",
             "payload": {
                 "change": "dpa_recorded",
                 "reference": "DPA-DEV"
             },
-            "id": "aud_01M2Z0BGC8RJWS41WKFTQ85D1Y",
+            "id": "aud_01M2Z2Q5PB93KT9E5MWJH8ZCSN",
             "sequence": 1,
-            "recordedAt": "2026-09-20T08:54:03.401Z",
+            "recordedAt": "2026-09-20T09:35:22.827Z",
             "previousHash": "0000000000000000000000000000000000000000000000000000000000000000",
-            "hash": "9f36f96560ace9d615d43878b4c19dd07ff940998376f62aab8e43d7fad6e5dd"
+            "hash": "78e4c495d11638f9aedb34bf68b758f22e69619a86f7b8c1e757ea4605a49456"
         },
         {
             "tenantId": "t_northwind",
             "type": "policy_allowed",
-            "correlationId": "lifecycle_1789894443402",
+            "correlationId": "lifecycle_1789896922829",
             "actor": "tenant_admin",
             "payload": {
                 "change": "state",
                 "from": "REGISTERED",
                 "to": "DPA_SIGNED"
             },
-            "id": "aud_01M2Z0BGCA3ARV0MBSWZVJEXJ7",
+            "id": "aud_01M2Z2Q5PDN7HQ271B2P9PYK34",
             "sequence": 2,
-            "recordedAt": "2026-09-20T08:54:03.402Z",
-            "previousHash": "9f36f96560ace9d615d43878b4c19dd07ff940998376f62aab8e43d7fad6e5dd",
-            "hash": "d4fbc3dfff7167483cbae0ad3e2a6277275ccac076469ae3748d0afd237c7f40"
+            "recordedAt": "2026-09-20T09:35:22.829Z",
+            "previousHash": "78e4c495d11638f9aedb34bf68b758f22e69619a86f7b8c1e757ea4605a49456",
+            "hash": "0e55c496b34d799c1e9e6c159d149d879bcca81e4d5cdd86a1672ee30697b130"
         },
         {
             "tenantId": "t_northwind",
             "type": "policy_allowed",
-            "correlationId": "lifecycle_1789894443403",
+            "correlationId": "lifecycle_1789896922830",
             "actor": "tenant_admin",
             "payload": {
                 "change": "state",
                 "from": "DPA_SIGNED",
                 "to": "CRM_CONNECTED"
             },
-            "id": "aud_01M2Z0BGCB8FZ45HS69HR5NS19",
+            "id": "aud_01M2Z2Q5PE5DTYV8V8EPC1HQ6T",
             "sequence": 3,
-            "recordedAt": "2026-09-20T08:54:03.403Z",
-            "previousHash": "d4fbc3dfff7167483cbae0ad3e2a6277275ccac076469ae3748d0afd237c7f40",
-            "hash": "bea21339544bc659ec7beeef8a681ec88855fd3e64fe68ba1b2a32195453bff7"
+            "recordedAt": "2026-09-20T09:35:22.830Z",
+            "previousHash": "0e55c496b34d799c1e9e6c159d149d879bcca81e4d5cdd86a1672ee30697b130",
+            "hash": "9ea2e8bf664266cbe4322e0aeaab20229879c0ebe08a9f34da8e2feed307866d"
         },
         {
             "tenantId": "t_northwind",
             "type": "policy_allowed",
-            "correlationId": "lifecycle_1789894443403",
+            "correlationId": "lifecycle_1789896922830",
             "actor": "tenant_admin",
             "payload": {
                 "change": "state",
                 "from": "CRM_CONNECTED",
                 "to": "MAPPED"
             },
-            "id": "aud_01M2Z0BGCBXAA4EHJQWX4EKRKN",
+            "id": "aud_01M2Z2Q5PEBRZ0XA8FRBYP490P",
             "sequence": 4,
-            "recordedAt": "2026-09-20T08:54:03.403Z",
-            "previousHash": "bea21339544bc659ec7beeef8a681ec88855fd3e64fe68ba1b2a32195453bff7",
-            "hash": "7b10dd64320518df8c29db44838eff6682125da8399fabec8010071ffa4d601f"
+            "recordedAt": "2026-09-20T09:35:22.830Z",
+            "previousHash": "9ea2e8bf664266cbe4322e0aeaab20229879c0ebe08a9f34da8e2feed307866d",
+            "hash": "8e151d9ebc4198bfefe0058e329c3e742825b284f7087440d7d0267fda665233"
         },
         {
             "tenantId": "t_northwind",
             "type": "policy_allowed",
-            "correlationId": "lifecycle_1789894443403",
+            "correlationId": "lifecycle_1789896922830",
             "actor": "tenant_admin",
             "payload": {
                 "change": "state",
                 "from": "MAPPED",
                 "to": "TEST_MODE"
             },
-            "id": "aud_01M2Z0BGCB0RQ05MP6ER4VVJZR",
+            "id": "aud_01M2Z2Q5PEDQMFAZ35GAHKDN6F",
             "sequence": 5,
-            "recordedAt": "2026-09-20T08:54:03.403Z",
-            "previousHash": "7b10dd64320518df8c29db44838eff6682125da8399fabec8010071ffa4d601f",
-            "hash": "61f7b3736ffc065fd2ab5f5f4cca114e7a63a86ac031f11e5bb99d07cb16a32a"
+            "recordedAt": "2026-09-20T09:35:22.830Z",
+            "previousHash": "8e151d9ebc4198bfefe0058e329c3e742825b284f7087440d7d0267fda665233",
+            "hash": "ef712c385cd2eb9e3415c605d19f801bfbe7d6d34cd156fa9dfe1a07b022947c"
         },
         {
             "tenantId": "t_northwind",
             "type": "policy_allowed",
-            "correlationId": "lifecycle_1789894443403",
+            "correlationId": "lifecycle_1789896922830",
             "actor": "tenant_admin",
             "payload": {
                 "change": "state",
                 "from": "TEST_MODE",
                 "to": "LIVE"
             },
-            "id": "aud_01M2Z0BGCB8WSA6SPME39Z22SD",
+            "id": "aud_01M2Z2Q5PE548PE2QV4EH2H8BJ",
             "sequence": 6,
-            "recordedAt": "2026-09-20T08:54:03.403Z",
-            "previousHash": "61f7b3736ffc065fd2ab5f5f4cca114e7a63a86ac031f11e5bb99d07cb16a32a",
-            "hash": "5abf5c02f10673f0a5d92a542e38e9692de34616580dd79abc1893d97d24da06"
+            "recordedAt": "2026-09-20T09:35:22.830Z",
+            "previousHash": "ef712c385cd2eb9e3415c605d19f801bfbe7d6d34cd156fa9dfe1a07b022947c",
+            "hash": "208e0ef1ca5b44d51d9d5868cf209b916a5b5bce52f52e4e2ebc8dc0f453dd92"
         },
         {
             "tenantId": "t_northwind",
@@ -107,19 +107,19 @@
                 "reason": "Agreed at the Q3 business review as the migration incentive.",
                 "requestedBy": "usr_Pr5ZFqloZAP3",
                 "requiresSecondPerson": true,
-                "fingerprint": "a8616444"
+                "fingerprint": "b456dbf4"
             },
-            "id": "aud_01M2Z0BGF6D7MRJVJE83S2WC2Q",
+            "id": "aud_01M2Z2Q5T3ADQ0K2A30R15AW28",
             "sequence": 7,
-            "recordedAt": "2026-09-20T08:54:03.494Z",
-            "previousHash": "5abf5c02f10673f0a5d92a542e38e9692de34616580dd79abc1893d97d24da06",
-            "hash": "a4330f389a000f3d4d617e605ea2ae7be5d86bc31c9a39b336818c6bccc5103f"
+            "recordedAt": "2026-09-20T09:35:22.947Z",
+            "previousHash": "208e0ef1ca5b44d51d9d5868cf209b916a5b5bce52f52e4e2ebc8dc0f453dd92",
+            "hash": "5cde8d53342cf688098a1ec0fa0893944366cdb1fa716ddec7aec21c969d9325"
         },
         {
             "tenantId": "t_northwind",
             "type": "session_opened",
-            "correlationId": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
-            "sessionId": "sess_01M2Z0BVKRN2HEBX9XPF2Y0VBR",
+            "correlationId": "corr_01M2Z2Q64WECC180DHGHESD8K5",
+            "sessionId": "sess_01M2Z2Q64W57CTKCQRSMC79JZ4",
             "actor": "system",
             "payload": {
                 "modality": "text",
@@ -132,17 +132,17 @@
                 "model": "model-pinned-2026.09",
                 "config": 8
             },
-            "id": "aud_01M2Z0BVKRE3BTA8F2VPA3HXSC",
+            "id": "aud_01M2Z2Q64WQCB0V0RJ1QR7RWQK",
             "sequence": 8,
-            "recordedAt": "2026-09-20T08:54:14.904Z",
-            "previousHash": "a4330f389a000f3d4d617e605ea2ae7be5d86bc31c9a39b336818c6bccc5103f",
-            "hash": "14f997038ed5835b1e23f7d4f5dc23382585e26ee5e7a2105417673112c54883"
+            "recordedAt": "2026-09-20T09:35:23.292Z",
+            "previousHash": "5cde8d53342cf688098a1ec0fa0893944366cdb1fa716ddec7aec21c969d9325",
+            "hash": "5504116c329eb89e62afaf33d86e8e6b07d5f254359e4003501b66c8970d0785"
         },
         {
             "tenantId": "t_northwind",
             "type": "disclosure_shown",
-            "correlationId": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
-            "sessionId": "sess_01M2Z0BVKRN2HEBX9XPF2Y0VBR",
+            "correlationId": "corr_01M2Z2Q64WECC180DHGHESD8K5",
+            "sessionId": "sess_01M2Z2Q64W57CTKCQRSMC79JZ4",
             "actor": "system",
             "payload": {
                 "modality": "text",
@@ -154,19 +154,19 @@
                 "model": "model-pinned-2026.09",
                 "config": 8
             },
-            "id": "aud_01M2Z0BVMX9DK9PYN9PS8SB4NA",
+            "id": "aud_01M2Z2Q68BTGRVQQ4PN3Z808M7",
             "sequence": 9,
-            "recordedAt": "2026-09-20T08:54:14.941Z",
-            "previousHash": "14f997038ed5835b1e23f7d4f5dc23382585e26ee5e7a2105417673112c54883",
-            "hash": "661f06794e559c4bdba3405228227bca8e908728e2977bfd2bf16794308fa5f1"
+            "recordedAt": "2026-09-20T09:35:23.403Z",
+            "previousHash": "5504116c329eb89e62afaf33d86e8e6b07d5f254359e4003501b66c8970d0785",
+            "hash": "482dfa8d0d610ab6c2beb5858bda9f7e85523d2891e7ac6498ee68b362d2f270"
         },
         {
             "tenantId": "t_northwind",
             "type": "policy_allowed",
-            "correlationId": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
-            "sessionId": "sess_01M2Z0BVKRN2HEBX9XPF2Y0VBR",
+            "correlationId": "corr_01M2Z2Q64WECC180DHGHESD8K5",
+            "sessionId": "sess_01M2Z2Q64W57CTKCQRSMC79JZ4",
             "actor": "policy",
-            "subjectRef": "pers_01M2Z0BVKRMMBH7T8KTQVATMK3",
+            "subjectRef": "pers_01M2Z2Q64WV5DCWPYQ4KAS37BB",
             "payload": {
                 "tool": "record_outcome",
                 "reasons": [
@@ -180,17 +180,17 @@
                 "model": "model-pinned-2026.09",
                 "config": 8
             },
-            "id": "aud_01M2Z0BVR20X3D04SHPJDNWAB6",
+            "id": "aud_01M2Z2Q6C8F88TNPX3QAWRD2Q2",
             "sequence": 10,
-            "recordedAt": "2026-09-20T08:54:15.042Z",
-            "previousHash": "661f06794e559c4bdba3405228227bca8e908728e2977bfd2bf16794308fa5f1",
-            "hash": "f89bdbe41446ff22e21e4811e669b353d13d3d404d9b5ccbf0c90bfc9d69cf13"
+            "recordedAt": "2026-09-20T09:35:23.528Z",
+            "previousHash": "482dfa8d0d610ab6c2beb5858bda9f7e85523d2891e7ac6498ee68b362d2f270",
+            "hash": "4f5cca00e3030ae0fe3452de0b782e93071e6c87c656112b9fefe9fc5119d362"
         },
         {
             "tenantId": "t_northwind",
             "type": "tool_call_requested",
-            "correlationId": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
-            "sessionId": "sess_01M2Z0BVKRN2HEBX9XPF2Y0VBR",
+            "correlationId": "corr_01M2Z2Q64WECC180DHGHESD8K5",
+            "sessionId": "sess_01M2Z2Q64W57CTKCQRSMC79JZ4",
             "actor": "assistant",
             "payload": {
                 "tool": "record_outcome"
@@ -201,16 +201,16 @@
                 "model": "model-pinned-2026.09",
                 "config": 8
             },
-            "id": "aud_01M2Z0BVR2H8J2181EZBJ3DCMW",
+            "id": "aud_01M2Z2Q6C81KF5V8M2KK0WB2AB",
             "sequence": 11,
-            "recordedAt": "2026-09-20T08:54:15.042Z",
-            "previousHash": "f89bdbe41446ff22e21e4811e669b353d13d3d404d9b5ccbf0c90bfc9d69cf13",
-            "hash": "787a732b64938d6b4edddaa9f9bc99279ae56debafc463ce02eb8a08ab00efd0"
+            "recordedAt": "2026-09-20T09:35:23.528Z",
+            "previousHash": "4f5cca00e3030ae0fe3452de0b782e93071e6c87c656112b9fefe9fc5119d362",
+            "hash": "883e728dd21745e6ba233db41ea44cc033e09bde36002e686a821ada943f35ff"
         },
         {
             "tenantId": "t_northwind",
             "type": "tool_call_executed",
-            "correlationId": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
+            "correlationId": "corr_01M2Z2Q64WECC180DHGHESD8K5",
             "actor": "system",
             "payload": {
                 "change": "outcome_recorded",
@@ -218,17 +218,17 @@
                 "billable": true,
                 "state": "CONFIRMED"
             },
-            "id": "aud_01M2Z0BVR3WJ5NHZPVQM6MJARQ",
+            "id": "aud_01M2Z2Q6C92C5CMNS4FRE7EH9Q",
             "sequence": 12,
-            "recordedAt": "2026-09-20T08:54:15.043Z",
-            "previousHash": "787a732b64938d6b4edddaa9f9bc99279ae56debafc463ce02eb8a08ab00efd0",
-            "hash": "f6fc6b7e4ad2ba9b0d66961c3fe795a6acb2a14ed43a58969d7cd5e9cc505913"
+            "recordedAt": "2026-09-20T09:35:23.529Z",
+            "previousHash": "883e728dd21745e6ba233db41ea44cc033e09bde36002e686a821ada943f35ff",
+            "hash": "f4b95af4da11717d40652be231ad2e3220ed3a6f45d983155840850c082be46e"
         },
         {
             "tenantId": "t_northwind",
             "type": "tool_call_executed",
-            "correlationId": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
-            "sessionId": "sess_01M2Z0BVKRN2HEBX9XPF2Y0VBR",
+            "correlationId": "corr_01M2Z2Q64WECC180DHGHESD8K5",
+            "sessionId": "sess_01M2Z2Q64W57CTKCQRSMC79JZ4",
             "actor": "system",
             "payload": {
                 "tool": "record_outcome",
@@ -240,77 +240,21 @@
                 "model": "model-pinned-2026.09",
                 "config": 8
             },
-            "id": "aud_01M2Z0BVR398NPQ8CB9JKEESVG",
+            "id": "aud_01M2Z2Q6C9MAQ8WR0RHFJ6MWZB",
             "sequence": 13,
-            "recordedAt": "2026-09-20T08:54:15.043Z",
-            "previousHash": "f6fc6b7e4ad2ba9b0d66961c3fe795a6acb2a14ed43a58969d7cd5e9cc505913",
-            "hash": "0b8dd6238e65fb894bf4b1aab0e01db461bd4f46b7a0fe262fe380f35eaaf066"
-        },
-        {
-            "tenantId": "t_northwind",
-            "type": "operator_action_approved",
-            "actor": "platform_admin",
-            "correlationId": "demo_credit_t_northwind",
-            "payload": {
-                "capability": "credit.grant",
-                "approvedBy": "usr_2cXV8L7o3mwd",
-                "requestedBy": "usr_Pr5ZFqloZAP3",
-                "fingerprint": "a8616444"
-            },
-            "id": "aud_01M2Z0C72T9WQSXWRRQYQC172W",
-            "sequence": 14,
-            "recordedAt": "2026-09-20T08:54:26.650Z",
-            "previousHash": "0b8dd6238e65fb894bf4b1aab0e01db461bd4f46b7a0fe262fe380f35eaaf066",
-            "hash": "cdb644f2fcd515cc6c40ce52ba328bf7a233b685f0bdc1722a9c6707749f2a3a"
-        },
-        {
-            "tenantId": "t_northwind",
-            "type": "operator_action_executed",
-            "actor": "platform_admin",
-            "correlationId": "demo_credit_t_northwind",
-            "payload": {
-                "capability": "credit.grant",
-                "requestedBy": "usr_Pr5ZFqloZAP3",
-                "approvedBy": "usr_2cXV8L7o3mwd",
-                "fingerprint": "a8616444",
-                "amount": "\u00a32,500.00"
-            },
-            "id": "aud_01M2Z0C72T43PMW0NPJX31GFQV",
-            "sequence": 15,
-            "recordedAt": "2026-09-20T08:54:26.650Z",
-            "previousHash": "cdb644f2fcd515cc6c40ce52ba328bf7a233b685f0bdc1722a9c6707749f2a3a",
-            "hash": "ecc4ccbc02ba68cf1731e61d5ecb6e3848442a32d9d7e6f87dbf54e881b08ede"
-        },
-        {
-            "tenantId": "t_northwind",
-            "type": "credit_granted",
-            "actor": "platform_admin",
-            "correlationId": "demo_credit_t_northwind",
-            "payload": {
-                "accountId": "acc_F8YkxNCwVSA",
-                "amount": 250000,
-                "currency": "GBP",
-                "kind": "grant_promotional",
-                "reason": "Agreed at the Q3 business review as the migration incentive.",
-                "requestedBy": "usr_Pr5ZFqloZAP3",
-                "approvedBy": "usr_2cXV8L7o3mwd",
-                "executedBy": "usr_2cXV8L7o3mwd"
-            },
-            "id": "aud_01M2Z0C72WSC36EREAQ6HQ5T65",
-            "sequence": 16,
-            "recordedAt": "2026-09-20T08:54:26.652Z",
-            "previousHash": "ecc4ccbc02ba68cf1731e61d5ecb6e3848442a32d9d7e6f87dbf54e881b08ede",
-            "hash": "459d7be78ff9a1879f46cd2660be2d82d00fc64e7071cf25e9e6583e69b5c4e4"
+            "recordedAt": "2026-09-20T09:35:23.529Z",
+            "previousHash": "f4b95af4da11717d40652be231ad2e3220ed3a6f45d983155840850c082be46e",
+            "hash": "edfc738311437acad7f64b5ba77daac3a609b93125dc4997453b2c5edbb6b8b2"
         }
     ],
     "verification": {
         "valid": true,
-        "checked": 16
+        "checked": 13
     },
     "page": {
         "fromSequence": 1,
-        "toSequence": 16,
-        "returned": 16,
-        "total": 16
+        "toSequence": 13,
+        "returned": 13,
+        "total": 13
     }
 }

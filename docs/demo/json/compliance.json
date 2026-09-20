@@ -4,7 +4,7 @@
         "from": "0000-01-01T00:00:00.000Z",
         "to": "9999-12-31T23:59:59.999Z"
     },
-    "generatedAt": "2026-09-20T08:54:26.699Z",
+    "generatedAt": "2026-09-20T09:36:07.139Z",
     "consentEvents": [],
     "identityResolutionsBlockedForConsent": 0,
     "identityResolutionsPerformed": 0,
@@ -26,7 +26,7 @@
     "crossTenantDenials": 0,
     "outputsBlocked": 0,
     "evidence": {
-        "auditEntriesExamined": 16,
+        "auditEntriesExamined": 13,
         "chainVerified": true
     }
 }
