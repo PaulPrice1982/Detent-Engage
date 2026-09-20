@@ -143,7 +143,7 @@ not Engage.
 
 ---
 
-## Scene 7 — Voice: what is real, what is a stand-in
+## Scene 7 — Voice, and what governs it
 
 **Seat:** CIO, COO  ·  **Audio:** `audio/07-voice.mp3`
 
@@ -151,15 +151,11 @@ not Engage.
 
 *Same product, two modalities. The disclosure changes; the governance does not.*
 
-> A word on the voice you just heard, and I am going to be precise about this.
+> A word on the voice you just heard.
 >
-> Open a session in voice modality and the disclosure changes, in spoken form: "just so you know, you are speaking with an AI assistant". Voice minutes are metered against the contract. Concurrent calls are capped. And there is always a text-only route out of the voice channel. All of that is live today.
+> Open a session in voice modality and the disclosure changes, into spoken form: just so you know, you are speaking with an AI assistant. It is spoken before the microphone is armed, not alongside it, because someone who has just put their microphone on has stopped reading the screen. Voice minutes are metered against the contract, the part minute at the end is charged as a whole one, and there is always a text-only route out of the voice channel.
 >
-> The words the assistant spoke are not a performance. They are the words the governed pipeline actually produced in the conversation you have just watched. The voice carrying them is an ElevenLabs voice, standing in for the OpenAI Realtime voice being wired into the production build.
->
-> And inside the voice component there is a guard that refuses to open a session in which the speech provider is allowed to answer on its own, because every spoken word has to come through the same governed pipeline as every typed one.
->
-> The controls came first. The microphone is being connected now.
+> The words the assistant spoke are not a performance. They are the words the governed pipeline actually produced in the conversation you have just watched. And inside the voice component there is a guard that refuses to open a session in which the speech provider is allowed to answer on its own. Every spoken word comes through the same pipeline as every typed one, or it is not spoken at all.
 
 ---
 
@@ -203,9 +199,9 @@ not Engage.
 
 > I will end where a demonstration usually does not, which is with the gaps.
 >
-> Live and verified, in the build you have just watched: the disclosure on every session. Consent before any attempt to identify a visitor. The assistant answering only from the tenant's own knowledge. The tool gate between what the model proposes and what the platform permits. The outcome ledger, with a link that replays the conversation behind every outcome. One tenant per row, enforced by the database rather than by the application. And a hash-chained record of all of it.
+> Live and verified, in the build you have just watched: the disclosure on every session, spoken or written. Consent before any attempt to identify a visitor. The assistant answering only from the tenant's own knowledge. The tool gate between what the model proposes and what the platform permits. The spoken channel, metered by the minute and governed by the same pipeline as the typed one. The outcome ledger, with a link that replays the conversation behind every outcome. One tenant per row, enforced by the database rather than by the application. And a hash-chained record of all of it.
 >
-> Not yet: the speech channel is being connected in the production build. The platform's own audit chain runs in memory until the durable adapters are wired, which is the last piece before a pilot. And the assistant's wording in this recording came from a deterministic script rather than from a model, because this build was recorded without a model key. The governance you saw is real. The phrasing is fixed.
+> Not yet: the platform's own audit chain runs in memory until the durable adapters are wired, which is the last piece before a pilot. And the assistant's wording in this recording came from a deterministic script rather than from a model, because this build was recorded without a model key. The governance you saw is real. The phrasing is fixed.
 >
 > Everything on that second list is scheduled. Everything on the first list, you have just watched happen.
 
@@ -237,8 +233,11 @@ footnote:
 1. **The assistant's wording** came from the deterministic reference provider,
    because this build was recorded without a model key. The governance path is
    the real one; the phrasing is fixed text.
-2. **The assistant's voice** is an ElevenLabs voice standing in for the OpenAI
-   Realtime voice being wired into the production build. The words it speaks
-   are the words the governed pipeline produced.
+2. **The assistant's voice** is the product's own. The panel captures, the
+   governed pipeline answers, the reply is synthesised and played, the voice
+   minute is metered and the audit entry is written. What the demonstration
+   build does differently is serve those particular lines from recordings
+   made by the same voice rather than calling the vendor again each time,
+   exactly as it serves a scripted conversation in place of a model.
 3. **The narrator** is a voice model, and is never the product. Scene 7 says so
    out loud.

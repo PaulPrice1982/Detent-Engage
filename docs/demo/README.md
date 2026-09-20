@@ -54,9 +54,12 @@ demonstration where it appears rather than in a footnote:
    because this build was recorded without a model key. The governance path,
    disclosure, consent gate, tool gate, outcome ledger, is the real one; the
    phrasing is fixed text in `packages/server/src/demo-seed.ts`.
-2. **The assistant's voice** is an ElevenLabs voice standing in for the OpenAI
-   Realtime voice being wired into the production build. The words it speaks
-   are the words the governed pipeline produced.
+2. **The assistant's voice** is the product's own. The panel captures, the
+   governed pipeline answers, the reply is synthesised and played, the voice
+   minute is metered and the audit entry is written. What the demonstration
+   build does differently is serve those particular lines from recordings
+   made by the same voice rather than calling the vendor again each time,
+   exactly as it serves a scripted conversation in place of a model.
 3. **The narrator** is a voice model, and is never the product. Scene 11 says
    so out loud.
 
@@ -69,13 +72,14 @@ Chrome or Edge. The clips are VP8 in WebM, which is what the bundled encoder
 produces; Safari plays them from version 14 on macOS, and the player falls
 back to the screenshots if a browser refuses one.
 
-## The three cuts
+## The four cuts
 
 | Cut | Audience | Length | Built by |
 |---|---|---|---|
-| `detent-engage-demo.mp4` | CRO, CFO, COO and CIO, in one room | about 9 min | `capture/stitch.mjs` from `scenes.json` |
-| `detent-engage-promo.mp4` | A CRO or founder who already has a chat agent | 1 min 03 | `capture/promo.mjs promo.json` |
-| `detent-engage-reseller.mp4` | A web agency that builds and hosts client sites | 1 min 46 | `capture/promo.mjs reseller.json` |
+| `detent-engage-demo.mp4` | CRO, CFO, COO and CIO, in one room | 8 min 48 | `capture/stitch.mjs` from `scenes.json` |
+| `detent-engage-promo.mp4` | A CRO or founder who already has a chat agent | 58 sec | `capture/promo.mjs promo.json` |
+| `detent-engage-reseller.mp4` | A web agency that builds and hosts client sites | 2 min 12 | `capture/promo.mjs reseller.json` |
+| `detent-engage-voice.mp4` | Anyone who asks whether it really speaks | 2 min 15 | `capture/voice-film.mjs` |
 
 The walkthrough gives every scene its own narration and lets the scene last
 as long as the narration. The other two have one continuous read and cut the
@@ -88,4 +92,27 @@ and took the first and last word off every headline.
 commission-rate warning in `PARTNER-CUT.md`.** The rate published on the
 marketing site and the default bands in `packages/reseller/src/bands.ts` are
 two different programmes.
+
+## The spoken assistant
+
+`detent-engage-voice.mp4` is the assistant holding the conversation out loud,
+and all three cuts that are not the walkthrough now carry it. Three voices,
+so a listener can tell who is talking: the narrator, the visitor, and the
+assistant's own English voice.
+
+What is filmed is the product. The panel is the shipping one, the server is
+the running build on PostgreSQL, the microphone control is the one a visitor
+presses, the voice disclosure is spoken before capture is armed, and the
+voice minute is metered from the duration that actually played. Two things
+the container cannot supply and the capture script does:
+
+- **A microphone.** There is no person and no sound card, so the browser's
+  speech recogniser is fed the visitor's lines as transcripts. That is what
+  the recogniser would hand the panel after hearing them, and it is the same
+  substitution already made for the cursor.
+- **A soundtrack.** A recorded page has no audio track, so the take writes a
+  cue sheet of what was spoken and when, and the mix is laid on afterwards
+  from the same recordings the panel fetched and played.
+
+`capture/voice.cjs` films it and `capture/voice-film.mjs` cuts it.
 

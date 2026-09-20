@@ -2,9 +2,9 @@
   "title": "Detent Engage",
   "subtitle": "End-to-end demonstration for the CRO, CFO, COO and CIO",
   "voices": {
-    "narrator": "Jim Executive (ElevenLabs) \u2014 the narrator, not the product",
-    "assistant": "Eryn (ElevenLabs) \u2014 standing in for the OpenAI Realtime voice being wired into the production build",
-    "visitor": "Ali (ElevenLabs) \u2014 Dan Harper, fleet manager at Northwind Logistics"
+    "narrator": "Jim Executive (ElevenLabs) — the narrator, not the product",
+    "assistant": "Ophelia (ElevenLabs) — the assistant's own English voice, as a visitor hears it",
+    "visitor": "Ali (ElevenLabs) — Dan Harper, fleet manager at Northwind Logistics"
   },
   "scenes": [
     {
@@ -111,7 +111,7 @@
         {
           "who": "assistant",
           "audio": "audio/conv-09-assistant.mp3",
-          "text": "Booked. You will get a confirmation to that address with the slot, and a short note on what they will cover. Nothing else will be sent to you, and you have not been added to any marketing list."
+          "text": "Booked. You will get a confirmation to that address with the slot and a short note on what they will cover. Nothing else will be sent to you, and you have not been added to any marketing list."
         }
       ],
       "text": "A visitor opens the panel. Before a single question, a disclosure: you are chatting with an AI assistant, not a person. Every session. Not a footnote, not a tooltip.\n\nHe runs forty vans out of two Midlands depots and he is replacing a supplier. Watch what the assistant does with that. It qualifies on scale. Then on requirement. Then on timing, and it hears the constraint he did not spell out. Then on authority. And only then, once he has had something worth having, does it ask for an email address.\n\nThat order is not decoration. It is the difference between a form that harvests an address and a conversation that earns one.\n\nAnd at the end: nothing else will be sent to you, and you have not been added to any marketing list. The assistant says that because the platform will not let it do otherwise.",
@@ -145,7 +145,7 @@
     },
     {
       "n": 7,
-      "title": "Voice: what is real, what is a stand-in",
+      "title": "Voice, and what governs it",
       "seat": "CIO, COO",
       "audio": "audio/07-voice.mp3",
       "json": [
@@ -153,7 +153,7 @@
         "json/session-voice.json"
       ],
       "caption": "Same product, two modalities. The disclosure changes; the governance does not.",
-      "text": "A word on the voice you just heard, and I am going to be precise about this.\n\nOpen a session in voice modality and the disclosure changes, in spoken form: \"just so you know, you are speaking with an AI assistant\". Voice minutes are metered against the contract. Concurrent calls are capped. And there is always a text-only route out of the voice channel. All of that is live today.\n\nThe words the assistant spoke are not a performance. They are the words the governed pipeline actually produced in the conversation you have just watched. The voice carrying them is an ElevenLabs voice, standing in for the OpenAI Realtime voice being wired into the production build.\n\nAnd inside the voice component there is a guard that refuses to open a session in which the speech provider is allowed to answer on its own, because every spoken word has to come through the same governed pipeline as every typed one.\n\nThe controls came first. The microphone is being connected now."
+      "text": "A word on the voice you just heard.\n\nOpen a session in voice modality and the disclosure changes, into spoken form: just so you know, you are speaking with an AI assistant. It is spoken before the microphone is armed, not alongside it, because someone who has just put their microphone on has stopped reading the screen. Voice minutes are metered against the contract, the part minute at the end is charged as a whole one, and there is always a text-only route out of the voice channel.\n\nThe words the assistant spoke are not a performance. They are the words the governed pipeline actually produced in the conversation you have just watched. And inside the voice component there is a guard that refuses to open a session in which the speech provider is allowed to answer on its own. Every spoken word comes through the same pipeline as every typed one, or it is not spoken at all."
     },
     {
       "n": 8,
@@ -190,7 +190,7 @@
         "shots/04-assurance.png"
       ],
       "caption": "The trust and assurance pages, generated from the platform rather than written by marketing.",
-      "text": "I will end where a demonstration usually does not, which is with the gaps.\n\nLive and verified, in the build you have just watched: the disclosure on every session. Consent before any attempt to identify a visitor. The assistant answering only from the tenant's own knowledge. The tool gate between what the model proposes and what the platform permits. The outcome ledger, with a link that replays the conversation behind every outcome. One tenant per row, enforced by the database rather than by the application. And a hash-chained record of all of it.\n\nNot yet: the speech channel is being connected in the production build. The platform's own audit chain runs in memory until the durable adapters are wired, which is the last piece before a pilot. And the assistant's wording in this recording came from a deterministic script rather than from a model, because this build was recorded without a model key. The governance you saw is real. The phrasing is fixed.\n\nEverything on that second list is scheduled. Everything on the first list, you have just watched happen.",
+      "text": "I will end where a demonstration usually does not, which is with the gaps.\n\nLive and verified, in the build you have just watched: the disclosure on every session, spoken or written. Consent before any attempt to identify a visitor. The assistant answering only from the tenant's own knowledge. The tool gate between what the model proposes and what the platform permits. The spoken channel, metered by the minute and governed by the same pipeline as the typed one. The outcome ledger, with a link that replays the conversation behind every outcome. One tenant per row, enforced by the database rather than by the application. And a hash-chained record of all of it.\n\nNot yet: the platform's own audit chain runs in memory until the durable adapters are wired, which is the last piece before a pilot. And the assistant's wording in this recording came from a deterministic script rather than from a model, because this build was recorded without a model key. The governance you saw is real. The phrasing is fixed.\n\nEverything on that second list is scheduled. Everything on the first list, you have just watched happen.",
       "clip": "clips/14-assurance.webm"
     }
   ],
@@ -202,19 +202,19 @@
       "cannot": "Be identified before they consent; be enrolled in marketing"
     },
     {
-      "who": "Customer owner \u2014 Dan Harper, Northwind",
+      "who": "Customer owner — Dan Harper, Northwind",
       "surface": "Detent Manage",
       "can": "Install with one script tag, upload the knowledge it answers from, see what it has done",
       "cannot": "See another tenant"
     },
     {
-      "who": "Customer team \u2014 Joy Okafor",
+      "who": "Customer team — Joy Okafor",
       "surface": "Detent Manage",
       "can": "Day-to-day use inside their own tenant",
       "cannot": "Anything outside that tenant"
     },
     {
-      "who": "Detent support \u2014 Saada Ibrahim",
+      "who": "Detent support — Saada Ibrahim",
       "surface": "Back office",
       "can": "See that a tenant's assistant is healthy, and help when it is not",
       "cannot": "Move money; approve"

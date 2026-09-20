@@ -17,7 +17,7 @@ knowing before anyone concludes the files are unreachable.
 | Role | Voice | Why |
 |---|---|---|
 | Narrator | Jim Executive — Authoritative, British and Warm | A British executive register for a British C-suite. The narrator, never the product. |
-| Assistant | Eryn — AI Assistant, Customer Service | Warm, neutral American, built for AI assistants. Stands in for the OpenAI Realtime voice Tony and Tom are wiring into the production build. |
+| Assistant | Ophelia — Clear British Customer Support | The assistant's own voice, as a visitor hears it. English, because the product is sold to British companies and speaks to their visitors, and in the register of the OpenAI Realtime assistant voices so that changing vendor is not a change of character. `DETENT_VOICE_ID` overrides it. |
 | Visitor | Ali — Everyday British (London) Male | Dan Harper, fleet manager. Unpolished on purpose, so he is never mistaken for the narrator. |
 
 ## Filenames
@@ -39,7 +39,7 @@ looks for them at these paths and shows a notice for any that is missing.
 | `08-outcome.mp3` | 8 — The outcome |
 | `09-dual-control.mp3` | 9 — Nobody moves money alone |
 | `10-roles.mp3` | 10 — Who can do what |
-| `11-voice.mp3` | 11 — Voice: what is real, what is a stand-in |
+| `11-voice.mp3` | 11 — Voice, and what governs it |
 | `12-audit.mp3` | 12 — The record |
 | `13-personas.mp3` | 13 — Who touches it |
 | `14-close.mp3` | 14 — What is true, and what is next |
@@ -80,4 +80,19 @@ One continuous read each, not one file per scene. The pictures are cut to the
 read, so re-recording either line re-times its film and nothing else. The
 partner read was generated on its own flow:
 **https://elevenlabs.io/app/flows/ECGVRny6g72xfC80q4Cm**
+
+### The assistant's own voice
+
+`voice/` holds the lines the assistant speaks, addressed by a hash of the
+words so the script owns the map. They are what the running build serves as
+its spoken replies when no vendor key is set, and they are also what the
+walkthrough plays for the assistant's side of the conversation: one voice for
+the product, wherever it is heard.
+
+`voice/visitor.json` maps the visitor's lines to their recordings and
+durations. The voice take is paced from it, so the two people take turns
+instead of talking over each other.
+
+`voice-intro.mp3` and `voice-outro.mp3` are the narrator's top and tail on
+`detent-engage-voice.mp4`.
 

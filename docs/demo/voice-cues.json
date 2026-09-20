@@ -1,0 +1,119 @@
+{
+  "clip": "clips/12-voice.webm",
+  "said": [
+    {
+      "text": "We run 40 vans out of two depots in the Midlands. Our telematics contract ends in March and I am looking at replacing it.",
+      "file": "audio/conv-01-visitor.mp3",
+      "durationMs": 8250,
+      "key": "6723d1aa2f63f3b1"
+    },
+    {
+      "text": "40 vehicles, and we would want driver behaviour scoring as well as tracking.",
+      "file": "audio/conv-03-visitor.mp3",
+      "durationMs": 5250,
+      "key": "cad0cfc697980600"
+    },
+    {
+      "text": "There is a 90 day notice period before March, so it is tighter than it looks.",
+      "file": "audio/conv-05-visitor.mp3",
+      "durationMs": 4860,
+      "key": "fe6248e0e3cf52f7"
+    },
+    {
+      "text": "It is my call, I run the fleet.",
+      "file": "audio/conv-07-visitor.mp3",
+      "durationMs": 2220,
+      "key": "0c85c86ddb07d23c"
+    }
+  ],
+  "marks": [
+    {
+      "at": 2181,
+      "what": "microphone pressed"
+    },
+    {
+      "at": 2241,
+      "what": "speech starts"
+    },
+    {
+      "at": 2241,
+      "what": "microphone armed"
+    },
+    {
+      "at": 9957,
+      "what": "visitor starts",
+      "ms": 8250
+    },
+    {
+      "at": 18710,
+      "what": "visitor speaks",
+      "text": "We run 40 vans out of two depots in the Midlands. Our telematics contract ends in March and I am looking at replacing it."
+    },
+    {
+      "at": 18756,
+      "what": "speech starts"
+    },
+    {
+      "at": 18770,
+      "what": "reply playing",
+      "ms": 14396
+    },
+    {
+      "at": 33569,
+      "what": "visitor starts",
+      "ms": 5250
+    },
+    {
+      "at": 39321,
+      "what": "visitor speaks",
+      "text": "40 vehicles, and we would want driver behaviour scoring as well as tracking."
+    },
+    {
+      "at": 39367,
+      "what": "speech starts"
+    },
+    {
+      "at": 39379,
+      "what": "reply playing",
+      "ms": 19040
+    },
+    {
+      "at": 58822,
+      "what": "visitor starts",
+      "ms": 4860
+    },
+    {
+      "at": 64184,
+      "what": "visitor speaks",
+      "text": "There is a 90 day notice period before March, so it is tighter than it looks."
+    },
+    {
+      "at": 64217,
+      "what": "speech starts"
+    },
+    {
+      "at": 64226,
+      "what": "reply playing",
+      "ms": 12817
+    },
+    {
+      "at": 77454,
+      "what": "visitor starts",
+      "ms": 2220
+    },
+    {
+      "at": 80177,
+      "what": "visitor speaks",
+      "text": "It is my call, I run the fleet."
+    },
+    {
+      "at": 80208,
+      "what": "speech starts"
+    },
+    {
+      "at": 80218,
+      "what": "reply playing",
+      "ms": 14907
+    }
+  ]
+}

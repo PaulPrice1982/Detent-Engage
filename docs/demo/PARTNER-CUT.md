@@ -2,7 +2,7 @@
 
 **Audience:** the owner of a web agency or IT reseller who already builds and
 hosts client websites.
-**Running time:** 1 minute 46.
+**Running time:** 2 minutes 12.
 **Files:** `detent-engage-reseller.mp4`, and
 `detent-engage-reseller-vertical.mp4` for a feed.
 **Manifest:** `reseller.json`. **Narration:** `audio/reseller.mp3`.
@@ -64,6 +64,10 @@ The three things the film does assert about the money, all true under both:
 > it says so, and hands the visitor to a human. It tells every visitor it is
 > AI before anything else happens. And it will not try to work out who someone
 > is until they have said yes.
+>
+> It does all of that out loud, too. A visitor presses the microphone and
+> talks to it, and it answers in its own voice, having told them what it is
+> first. Typed or spoken, it is the same governed answer.
 >
 > Which means you can put this on a client's site without inheriting their
 > risk.
