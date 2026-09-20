@@ -1,4 +1,4 @@
-# Replit prompt: the spoken assistant
+# Replit prompt: the spoken assistant, and the films' sign-off
 
 **Budget: 2 Agent requests.** One to update and run, one to look at the page.
 If the first does not produce a green run, drop to the Shell and follow "If
@@ -189,6 +189,17 @@ Source, tests, dependencies, migrations and the CSP. In particular:
   is armed. Do not make it concurrent to save a second.
 - **`MAX_SPOKEN_CHARS`**. It is the last gate before a per-character vendor
   bill.
+
+## A second thing in this build that needs a person
+
+There are two Detent identities in circulation and this build does not
+resolve them, it names them. `brand/detent-logo.jpg`, the amber dot and
+left-pointing chevron, is what the widget, the console, the customer app and
+the marketing site render, and it stays authoritative: **nothing in the
+product changed and nothing should be rebranded here.** The films sign off
+with a different mark, from a separate design canvas, and `brand/brand.md`
+says why and records the consequence. Do not "fix" the inconsistency by
+editing the product's logo or its palette.
 
 ## One thing in this build that needs a person, not a machine
 
