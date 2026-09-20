@@ -123,6 +123,8 @@ export function forbiddenPage(input: {
   capability: string;
   roles: readonly string[];
   mfaEnrolled: boolean;
+  /** What the service said, when it refused for a reason of its own. */
+  detail?: string;
 }): string {
   const mfaIsTheReason = !input.mfaEnrolled && MONEY_CAPABILITIES.includes(
     input.capability as (typeof MONEY_CAPABILITIES)[number],
@@ -137,16 +139,15 @@ export function forbiddenPage(input: {
     '<meta name="viewport" content="width=device-width,initial-scale=1">',
     '<meta name="robots" content="noindex,nofollow">',
     '<title>Not permitted</title>',
-    '<style>body{margin:0;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,',
-    'sans-serif;background:#F6F8FB;color:#16202B;display:flex;min-height:100vh;',
-    'align-items:center;justify-content:center;padding:24px}',
-    'main{max-width:34rem;background:#fff;border:1px solid #E3E8EF;border-radius:14px;padding:30px}',
-    'h1{font-size:20px;margin:0 0 8px}p{color:#42536B;margin:0 0 12px}',
-    'code{background:#EEF2F6;padding:2px 6px;border-radius:5px;font-size:14px}</style>',
-    '</head><body><main>',
+    // Linked, not inlined. Under `style-src 'self'` a <style> block is
+    // dropped, and a refusal page that arrives unstyled reads as a crash
+    // rather than as a decision the system made on purpose.
+    '<link rel="stylesheet" href="/backoffice.css">',
+    '</head><body class="refusal"><main>',
     '<h1>Not permitted</h1>',
     `<p>This action needs <code>${escape(input.capability)}</code>. ${escape(reason)}</p>`,
-    '<p><a href="/console">Back to the console</a></p>',
+    input.detail ? `<p>${escape(input.detail)}</p>` : '',
+    '<p><a class="link" href="/console">Back to the console</a></p>',
     '</main></body></html>',
   ].join('');
 }

@@ -22,6 +22,15 @@ export interface ConsolePageRequest {
   readonly path: string;
   readonly query: Readonly<Record<string, string>>;
   readonly user: ConsoleUser;
+  /**
+   * The session's CSRF token, for the forms on the page.
+   *
+   * Absent, the approve and reject forms are not drawn at all rather than
+   * drawn and rejected on submission: a button that always fails is worse
+   * than no button, because it looks like the system is broken rather than
+   * like the page was rendered without a session.
+   */
+  readonly csrf?: string;
 }
 
 const NAV = (current: string) => [
@@ -158,7 +167,7 @@ ${summary.credits.lots.length === 0
 
 ${mine.length === 0 ? '' : `<h2>Pending on this account</h2>
 <table><thead><tr><th>Action</th><th>Requested by</th><th class="num">Amount</th><th></th></tr></thead>
-<tbody>${mine.map((action) => this.pendingRow(action, request.user)).join('')}</tbody></table>`}`,
+<tbody>${mine.map((action) => this.pendingRow(action, request.user, request.csrf)).join('')}</tbody></table>`}`,
     );
   }
 
@@ -180,17 +189,17 @@ ${pending.length === 0
   <td>${escape(action.requestedBy)}</td>
   <td class="num">${escape(action.amount ? format(action.amount) : ', ')}</td>
   <td>${escape(action.reason)}</td>
-  <td>${this.approveControls(action, request.user)}</td>
+  <td>${this.approveControls(action, request.user, request.csrf)}</td>
 </tr>`).join('')}</tbody></table>`}`,
     );
   }
 
-  private pendingRow(action: OperatorAction, user: ConsoleUser): string {
+  private pendingRow(action: OperatorAction, user: ConsoleUser, csrf?: string): string {
     return `<tr class="dual">
   <td>${escape(action.summary)}</td>
   <td>${escape(action.requestedBy)}</td>
   <td class="num">${escape(action.amount ? format(action.amount) : ', ')}</td>
-  <td>${this.approveControls(action, user)}</td>
+  <td>${this.approveControls(action, user, csrf)}</td>
 </tr>`;
   }
 
@@ -201,18 +210,24 @@ ${pending.length === 0
    * cannot see the control assumes the system is broken and asks someone to do
    * it for them, which is precisely the behaviour dual control exists to stop.
    */
-  private approveControls(action: OperatorAction, user: ConsoleUser): string {
+  private approveControls(action: OperatorAction, user: ConsoleUser, csrf?: string): string {
     if (action.requestedBy === user.userId) {
       return `<span class="pill">You requested this</span>`;
     }
     if (!can(user, 'approval.grant') || !can(user, action.capability)) {
       return `<span class="pill">Needs ${escape(action.capability)}</span>`;
     }
+    if (!csrf) return `<span class="pill">No session</span>`;
     const id = encodeURIComponent(action.actionId);
-    return `<form method="post" action="/v1/console/approvals/${id}/approve" style="display:inline">
-  <button class="btn primary" type="submit">Approve</button></form>
-<form method="post" action="/v1/console/approvals/${id}/reject" style="display:inline">
-  <button class="btn danger" type="submit">Reject</button></form>`;
+    // On the console's own path, not `/v1/...`. The API reserves `/v1/*` and
+    // authenticates a bearer key; a browser here carries a session cookie, so
+    // these buttons used to post into a 403 and dual control could not be
+    // exercised by anybody.
+    const token = `<input type="hidden" name="csrf" value="${escape(csrf)}">`;
+    return `<form method="post" action="/console/approvals/${id}/approve" class="inline">
+  ${token}<button class="btn primary" type="submit">Approve</button></form>
+<form method="post" action="/console/approvals/${id}/reject" class="inline">
+  ${token}<button class="btn danger" type="submit">Reject</button></form>`;
   }
 
   private actionButton(label: string, href: string, permitted: boolean): string {

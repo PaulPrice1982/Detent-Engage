@@ -1183,7 +1183,7 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
         const rendered = await consoleSite.render({
           path: `/console/accounts/${accountId}`,
           query: { ...request.query, tenant: account?.tenantId ?? accountId },
-          user: operator,
+          user: operator, csrf: request.csrf,
         });
         // The commercial terms are appended to the money summary the console
         // already renders, so an operator sees both without changing page.
@@ -1216,8 +1216,53 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
         return { status: rendered.status, html };
       }
 
+      /**
+       * A second person's decision on an action held for dual control.
+       *
+       * Handled here, on the console's own session, rather than at
+       * `/v1/console/approvals/...`, which is where the buttons used to post.
+       * Nothing served that path: `/v1/*` is reserved by the transport for the
+       * API, the API authenticates a bearer key and a browser carries a
+       * session cookie, so every Approve and every Reject in the back office
+       * answered POLICY_DENIED. The control that the whole dual-control design
+       * rests on could not be exercised by the people it exists for.
+       */
+      if (path.startsWith('approvals/') && request.method === 'POST') {
+        const parts = path.split('/');
+        const actionId = decodeURIComponent(parts[1] ?? '');
+        const decision = parts[2];
+        // Approving is itself a privileged act, and the service checks that
+        // the approver is not the requester and holds the capability. This is
+        // the endpoint saying the same thing before it is asked.
+        const refused = refuse('approval.grant');
+        if (refused) return refused;
+        try {
+          if (decision === 'approve') {
+            const action = await consoleService.approve(operator, actionId);
+            // Approval records a decision; something still has to carry it
+            // out. Credit is the one that can be, so it is.
+            if (action.capability === 'credit.grant') {
+              await consoleService.executeCreditGrant(operator, actionId);
+            }
+          } else if (decision === 'reject') {
+            await consoleService.reject(operator, actionId,
+              request.form['reason'] ?? 'Rejected in the back office.');
+          } else {
+            return { status: 404, html: forbiddenPage({
+              capability: 'approval.grant', roles: operator.roles, mfaEnrolled: operator.mfaEnrolled }) };
+          }
+        } catch (error) {
+          // A refused approval is an ordinary outcome of the control working,
+          // not a fault, so it is shown as a page with the reason on it.
+          return { status: 403, html: forbiddenPage({
+            capability: 'approval.grant', roles: operator.roles, mfaEnrolled: operator.mfaEnrolled,
+            detail: error instanceof Error ? error.message : undefined }) };
+        }
+        return { status: 303, redirect: '/console/approvals' };
+      }
+
       const rendered = await consoleSite.render({
-        path: request.path, query: request.query, user: operator,
+        path: request.path, query: request.query, user: operator, csrf: request.csrf,
       });
       return { status: rendered.status, html: rendered.html };
     },

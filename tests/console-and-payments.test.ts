@@ -419,11 +419,17 @@ describe('the console site', () => {
       actionId: 'act1', accountId: 'a1', tenantId: 't1', amount: money(100_000),
       kind: 'grant_goodwill', expiresAt: '2026-12-31T00:00:00.000Z', reason: 'goodwill',
     });
+    // The CSRF token is supplied because a real request always carries one:
+    // the router derives it from the session before it calls the renderer.
+    // Without it the buttons are deliberately not drawn, since a form that
+    // will be rejected on submission is worse than no form at all.
     const result = await rendered.render({
       path: '/console/approvals', query: {},
       user: user({ userId: 'u_sam', roles: ['admin'] }),
+      csrf: 'csrf-token-for-this-session',
     });
     expect(result.html).toContain('>Approve<');
+    expect(result.html).toContain('action="/console/approvals/act1/approve"');
   });
 
   it('shows a permission failure as a page, not a stack trace', async () => {

@@ -68,3 +68,14 @@ a.link:hover{text-decoration:underline}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
 .dual{border-left:3px solid var(--amber);padding-left:13px}
 footer{color:var(--slate);font-size:12px;margin-top:44px;padding-top:16px;border-top:1px solid var(--line)}
+
+/* The refusal page. Its own layout, because it is not a console screen: it is
+   the answer to a request the console would not make. */
+body.refusal { display: flex; min-height: 100vh; align-items: center;
+  justify-content: center; padding: 24px; background: #F6F8FB; }
+body.refusal main { max-width: 34rem; background: #fff; border: 1px solid #E3E8EF;
+  border-radius: 14px; padding: 30px; margin: 0; }
+body.refusal h1 { font-size: 20px; margin: 0 0 8px; }
+body.refusal p { color: #42536B; margin: 0 0 12px; }
+body.refusal code { background: #EEF2F6; padding: 2px 6px; border-radius: 5px; font-size: 14px; }
+.inline { display: inline; }
