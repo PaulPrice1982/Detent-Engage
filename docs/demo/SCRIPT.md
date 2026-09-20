@@ -25,7 +25,7 @@ not Engage.
 | Seat | The unspoken problem | What must land |
 |---|---|---|
 | CRO | "We lose enquiries in the gap between the website and the CRM, and I cannot see the gap." | Qualification happens at the point of enquiry, with the reason and the transcript attached. |
-| CFO | "AI spend with nothing measurable coming back." | The platform charges for a confirmed outcome, and every outcome carries a link that replays the conversation behind it. |
+| CFO | "AI spend with nothing measurable coming back." | A reply that could not answer is not billed, the worst a single conversation can cost is knowable before signing, and every outcome carries a link that replays the conversation behind it. |
 | COO | "Every new tool is a six-month programme with a consultant attached." | A customer in one form. The assistant live in one script tag. |
 | CIO | "Another AI vendor wants our customers' data and cannot tell me what it does with it." | Consent before identification, disclosure every session, one tenant per row, a hash-chained record of every act. |
 
