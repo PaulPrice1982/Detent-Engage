@@ -4,7 +4,10 @@
   "reaction": "Ours bills us whether it helps or not. This one doesn't.",
   "model": "A monthly subscription buying replies and voice minutes, drawn against included credits, with a cap on billable replies per conversation and a hard spend cap per account. A reply that could not answer from approved knowledge is not billed at all.",
   "note": "An earlier cut claimed the product is paid per confirmed outcome. It is not: that is one line item on some plans, not the basis of the relationship. No code, no JSON, no configuration screens.",
+  "frames": "frames/promo",
   "audio": "audio/promo.mp3",
+  "out": "detent-engage-promo.mp4",
+  "vertical": "detent-engage-promo-vertical.mp4",
   "beats": [
     { "card": "hook", "seconds": 7,
       "big": "Most AI assistants<br>charge you when they fail.",

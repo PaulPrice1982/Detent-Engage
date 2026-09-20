@@ -27,6 +27,9 @@ than Engage.
 | `json/` | The API responses shown in scenes 8, 11 and 12, exactly as the platform returned them. |
 | `audio/README.md` | Where the voiceover clips are and what to name them. |
 | `capture/` | The scripts that produced all of it, so it can be rebuilt. |
+| `PARTNER-CUT.md` | The partner cut: who it is for, its narration, and why it states no commission rate. |
+| `reseller.json` | The partner cut as data: beats, cue points and lower thirds. |
+| `promo.json` | The promotional cut as data, in the same shape. |
 
 ## Rebuilding it
 
@@ -65,3 +68,24 @@ told the gaps believes the rest.
 Chrome or Edge. The clips are VP8 in WebM, which is what the bundled encoder
 produces; Safari plays them from version 14 on macOS, and the player falls
 back to the screenshots if a browser refuses one.
+
+## The three cuts
+
+| Cut | Audience | Length | Built by |
+|---|---|---|---|
+| `detent-engage-demo.mp4` | CRO, CFO, COO and CIO, in one room | about 9 min | `capture/stitch.mjs` from `scenes.json` |
+| `detent-engage-promo.mp4` | A CRO or founder who already has a chat agent | 1 min 03 | `capture/promo.mjs promo.json` |
+| `detent-engage-reseller.mp4` | A web agency that builds and hosts client sites | 1 min 46 | `capture/promo.mjs reseller.json` |
+
+The walkthrough gives every scene its own narration and lets the scene last
+as long as the narration. The other two have one continuous read and cut the
+pictures to it, which is why they share an assembler and differ only by
+manifest. Each has a 1080x1920 version for a feed, fitted and padded rather
+than centre-cropped: a 9:16 crop of a 16:9 frame keeps the middle 607 pixels
+and took the first and last word off every headline.
+
+**Before showing the partner cut to anyone who could sign, read the
+commission-rate warning in `PARTNER-CUT.md`.** The rate published on the
+marketing site and the default bands in `packages/reseller/src/bands.ts` are
+two different programmes.
+

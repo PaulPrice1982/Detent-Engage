@@ -68,3 +68,16 @@ Open the flow, find the node, and regenerate it with a different voice or a
 different take. Every node on that canvas is editable and the script text for
 each one is in `docs/demo/SCRIPT.md`, so a line can be rewritten and
 regenerated without touching the player.
+
+### The single-read cuts
+
+| File | Film | Voice |
+|---|---|---|
+| `promo.mp3` | `detent-engage-promo.mp4` | Narrator |
+| `reseller.mp3` | `detent-engage-reseller.mp4` (the partner cut) | Narrator |
+
+One continuous read each, not one file per scene. The pictures are cut to the
+read, so re-recording either line re-times its film and nothing else. The
+partner read was generated on its own flow:
+**https://elevenlabs.io/app/flows/ECGVRny6g72xfC80q4Cm**
+

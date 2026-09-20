@@ -1,13 +1,16 @@
 /**
- * Cuts the promotional film.
+ * Cuts a single-read film: the promotional cut, the partner cut, any other.
  *
  * Different from stitch.mjs in the one way that matters: a walkthrough gives
  * each scene its own narration and lets the scene last as long as that
- * narration does. A promotional cut has a single continuous read, and the
- * pictures are cut to it. So the beats are laid out at their authored
- * lengths, then scaled together to land exactly on the end of the voice.
+ * narration does. A single-read cut has one continuous read, and the pictures
+ * are cut to it. So the beats are laid out at their authored lengths, then
+ * scaled together to land exactly on the end of the voice.
  *
- *   node docs/demo/capture/promo.mjs
+ * The manifest names its own frames directory and output files, so a second
+ * film is a second manifest rather than a second copy of this script.
+ *
+ *   node docs/demo/capture/promo.mjs [manifest.json]
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -46,7 +49,10 @@ function duration(file) {
 }
 
 const W = 1920, H = 1080;
-const promo = JSON.parse(readFileSync(resolve(DEMO, 'promo.json'), 'utf8'));
+const MANIFEST = process.argv[2] ?? 'promo.json';
+const promo = JSON.parse(readFileSync(resolve(DEMO, MANIFEST), 'utf8'));
+// Named in the manifest so two films cannot overwrite each other's frames.
+const FRAMES = resolve(DEMO, promo.frames ?? 'frames/promo');
 const voice = resolve(DEMO, promo.audio);
 const hasVoice = existsSync(voice);
 
@@ -64,7 +70,7 @@ const segments = [];
 promo.beats.forEach((beat, i) => {
   const n = String(i).padStart(2, '0');
   const seconds = (beat.seconds * scale).toFixed(2);
-  const frame = resolve(DEMO, `frames/promo/beat-${n}.png`);
+  const frame = resolve(FRAMES, `beat-${n}.png`);
   const out = resolve(WORK, `beat-${n}.mp4`);
   const still = beat.shot ?? beat.slide;
 
@@ -110,7 +116,7 @@ writeFileSync(list, segments.map((f) => `file '${f}'`).join('\n') + '\n');
 const silent = resolve(WORK, 'video.mp4');
 run(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', silent]);
 
-const OUT = resolve(DEMO, 'detent-engage-promo.mp4');
+const OUT = resolve(DEMO, promo.out ?? 'detent-engage-promo.mp4');
 if (hasVoice) {
   run(['-i', silent, '-i', voice,
     '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11,aformat=channel_layouts=stereo:sample_rates=48000',
@@ -121,11 +127,21 @@ if (hasVoice) {
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', OUT]);
 }
 
-// A vertical crop for a feed, from the same cut rather than a second edit.
-const VERT = resolve(DEMO, 'detent-engage-promo-vertical.mp4');
-run(['-i', OUT, '-vf', 'crop=ih*9/16:ih,scale=1080:1920', '-c:a', 'copy',
-  '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-movflags', '+faststart', VERT]);
-
 console.log(`\n${OUT}\n  ${duration(OUT).toFixed(1)}s`);
-console.log(`${VERT}\n  1080x1920, for a feed`);
+
+// A vertical version for a feed, from the same cut rather than a second edit.
+//
+// Fitted and padded, never centre-cropped. A 9:16 crop of a 16:9 frame keeps
+// the middle 607 pixels, and the cards set their type left-aligned across the
+// full width: the crop took the first and last word off every headline. A
+// letterboxed band is less dramatic and is the whole sentence.
+if (promo.vertical) {
+  const VERT = resolve(DEMO, promo.vertical);
+  run(['-i', OUT, '-vf',
+    'scale=1080:1920:force_original_aspect_ratio=decrease,' +
+    'pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0x0B1622',
+    '-c:a', 'copy',
+    '-c:v', 'libx264', '-preset', 'medium', '-crf', '21', '-movflags', '+faststart', VERT]);
+  console.log(`${VERT}\n  1080x1920, for a feed`);
+}
 rmSync(WORK, { recursive: true, force: true });

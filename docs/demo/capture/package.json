@@ -1,8 +1,9 @@
 {
   "name": "detent-demo-capture",
   "private": true,
-  "description": "Capture and stitch tooling for the demonstration. Outside the pnpm workspace (which globs packages/* only) on purpose: it pulls a large ffmpeg binary that nothing in the product needs.",
+  "description": "Capture and stitch tooling for the demonstration. Outside the pnpm workspace (which globs packages/* only) on purpose: it pulls a large ffmpeg binary and a browser that nothing in the product needs.",
   "devDependencies": {
-    "ffmpeg-static": "^5.2.0"
+    "ffmpeg-static": "^5.2.0",
+    "playwright": "^1.55.0"
   }
 }
