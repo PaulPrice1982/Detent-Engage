@@ -1,0 +1,70 @@
+{
+  "title": "Detent Engage \u2014 promotional cut",
+  "reader": "A CRO or founder who has considered an AI assistant on their website and decided against it.",
+  "reaction": "Someone finally built the version I could put my name to.",
+  "audio": "audio/promo.mp3",
+  "beats": [
+    {
+      "card": "hook",
+      "seconds": 7,
+      "big": "Your website's AI assistant<br>will say anything.",
+      "small": "That is why you have not got one."
+    },
+    {
+      "clip": "clips/06-conversation.webm",
+      "seconds": 9,
+      "from": 2,
+      "lower": "It will invent a price. Promise a date you cannot hit."
+    },
+    {
+      "card": "turn",
+      "seconds": 5,
+      "big": "So we built one<br>that is not allowed to.",
+      "small": ""
+    },
+    {
+      "shot": "shots/22-widget-turn-1.png",
+      "seconds": 7,
+      "lower": "Discloses that it is AI. Before the first question. Every session."
+    },
+    {
+      "shot": "shots/22-widget-turn-5.png",
+      "seconds": 8,
+      "focus": "bottom",
+      "lower": "Cannot try to identify a visitor until they say yes. Not degraded. Refused."
+    },
+    {
+      "clip": "clips/06-conversation.webm",
+      "seconds": 9,
+      "from": 24,
+      "lower": "Answers only from your own approved knowledge. It cannot make anything up."
+    },
+    {
+      "slide": "frames/slide-08.png",
+      "seconds": 8,
+      "lower": "Every act in a hash-chained record you can hand to an auditor."
+    },
+    {
+      "shot": "shots/22-widget-turn-4.png",
+      "seconds": 8,
+      "lower": "It qualifies. It books."
+    },
+    {
+      "slide": "frames/slide-06.png",
+      "seconds": 7,
+      "lower": "You are charged for the confirmed outcome. Not seats. Not messages."
+    },
+    {
+      "clip": "clips/05-install.webm",
+      "seconds": 6,
+      "from": 3,
+      "lower": "One script tag."
+    },
+    {
+      "card": "end",
+      "seconds": 8,
+      "big": "Detent Engage",
+      "small": "An assistant you can put your name to."
+    }
+  ]
+}
