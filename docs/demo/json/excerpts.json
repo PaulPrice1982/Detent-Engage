@@ -1,104 +1,104 @@
 {
  "audit": {
-  "entries_total": 19,
+  "entries_total": 16,
   "shown": [
    {
     "sequence": 1,
     "type": "policy_allowed",
     "actor": "tenant_admin",
-    "recordedAt": "2026-09-20T08:15:44.222Z",
+    "recordedAt": "2026-09-20T08:54:03.401Z",
     "payload": {
      "change": "dpa_recorded",
      "reference": "DPA-DEV"
     },
     "previousHash": "000000000000000000000000\u2026",
-    "hash": "46e1baa57718045b38d0750d\u2026"
+    "hash": "9f36f96560ace9d615d43878\u2026"
    },
    {
-    "sequence": 13,
+    "sequence": 8,
+    "type": "session_opened",
+    "actor": "system",
+    "recordedAt": "2026-09-20T08:54:14.904Z",
+    "payload": {
+     "modality": "text",
+     "jurisdiction": "UK",
+     "state": "LIVE"
+    },
+    "previousHash": "a4330f389a000f3d4d617e60\u2026",
+    "hash": "14f997038ed5835b1e23f7d4\u2026"
+   },
+   {
+    "sequence": 9,
+    "type": "disclosure_shown",
+    "actor": "system",
+    "recordedAt": "2026-09-20T08:54:14.941Z",
+    "payload": {
+     "modality": "text",
+     "wording": "You are chatting with an AI assistant, not a person. It can answer questions and arrange a call with the team."
+    },
+    "previousHash": "14f997038ed5835b1e23f7d4\u2026",
+    "hash": "661f06794e559c4bdba34052\u2026"
+   },
+   {
+    "sequence": 12,
     "type": "tool_call_executed",
     "actor": "system",
-    "recordedAt": "2026-09-20T08:16:29.549Z",
+    "recordedAt": "2026-09-20T08:54:15.043Z",
     "payload": {
      "change": "outcome_recorded",
      "outcome": "book_meeting",
      "billable": true,
      "state": "CONFIRMED"
     },
-    "previousHash": "5d5331e782c1e30af0493fae\u2026",
-    "hash": "0a5350ab5f9dcdaa60542b33\u2026"
+    "previousHash": "787a732b64938d6b4edddaa9\u2026",
+    "hash": "f6fc6b7e4ad2ba9b0d66961c\u2026"
    },
    {
-    "sequence": 14,
+    "sequence": 13,
     "type": "tool_call_executed",
     "actor": "system",
-    "recordedAt": "2026-09-20T08:16:29.549Z",
+    "recordedAt": "2026-09-20T08:54:15.043Z",
     "payload": {
      "tool": "record_outcome",
      "parked": false
     },
-    "previousHash": "0a5350ab5f9dcdaa60542b33\u2026",
-    "hash": "83acda191e504db24a4c9886\u2026"
+    "previousHash": "f6fc6b7e4ad2ba9b0d66961c\u2026",
+    "hash": "0b8dd6238e65fb894bf4b1aa\u2026"
+   },
+   {
+    "sequence": 14,
+    "type": "operator_action_approved",
+    "actor": "platform_admin",
+    "recordedAt": "2026-09-20T08:54:26.650Z",
+    "payload": {
+     "capability": "credit.grant",
+     "approvedBy": "usr_2cXV8L7o3mwd",
+     "requestedBy": "usr_Pr5ZFqloZAP3",
+     "fingerprint": "a8616444"
+    },
+    "previousHash": "0b8dd6238e65fb894bf4b1aa\u2026",
+    "hash": "cdb644f2fcd515cc6c40ce52\u2026"
    },
    {
     "sequence": 15,
-    "type": "session_opened",
-    "actor": "system",
-    "recordedAt": "2026-09-20T08:16:31.938Z",
+    "type": "operator_action_executed",
+    "actor": "platform_admin",
+    "recordedAt": "2026-09-20T08:54:26.650Z",
     "payload": {
-     "modality": "text",
-     "jurisdiction": "UK",
-     "state": "LIVE"
+     "capability": "credit.grant",
+     "requestedBy": "usr_Pr5ZFqloZAP3",
+     "approvedBy": "usr_2cXV8L7o3mwd",
+     "fingerprint": "a8616444",
+     "amount": "\u00a32,500.00"
     },
-    "previousHash": "83acda191e504db24a4c9886\u2026",
-    "hash": "4969ba22a809228ab37f9f24\u2026"
+    "previousHash": "cdb644f2fcd515cc6c40ce52\u2026",
+    "hash": "ecc4ccbc02ba68cf1731e61d\u2026"
    },
    {
     "sequence": 16,
-    "type": "disclosure_shown",
-    "actor": "system",
-    "recordedAt": "2026-09-20T08:16:33.700Z",
-    "payload": {
-     "modality": "text",
-     "wording": "You are chatting with an AI assistant, not a person. It can answer questions and arrange a call with the team."
-    },
-    "previousHash": "4969ba22a809228ab37f9f24\u2026",
-    "hash": "95c6db79250cca112f312328\u2026"
-   },
-   {
-    "sequence": 17,
-    "type": "operator_action_approved",
-    "actor": "platform_admin",
-    "recordedAt": "2026-09-20T08:16:52.696Z",
-    "payload": {
-     "capability": "credit.grant",
-     "approvedBy": "usr_2cXV8L7o3mwd",
-     "requestedBy": "usr_Pr5ZFqloZAP3",
-     "fingerprint": "5f8bc157"
-    },
-    "previousHash": "95c6db79250cca112f312328\u2026",
-    "hash": "51876d2bdadaac12be8b548d\u2026"
-   },
-   {
-    "sequence": 18,
-    "type": "operator_action_executed",
-    "actor": "platform_admin",
-    "recordedAt": "2026-09-20T08:16:52.696Z",
-    "payload": {
-     "capability": "credit.grant",
-     "requestedBy": "usr_Pr5ZFqloZAP3",
-     "approvedBy": "usr_2cXV8L7o3mwd",
-     "fingerprint": "5f8bc157",
-     "amount": "\u00a32,500.00"
-    },
-    "previousHash": "51876d2bdadaac12be8b548d\u2026",
-    "hash": "dbb664e6de6c0086514d4627\u2026"
-   },
-   {
-    "sequence": 19,
     "type": "credit_granted",
     "actor": "platform_admin",
-    "recordedAt": "2026-09-20T08:16:52.699Z",
+    "recordedAt": "2026-09-20T08:54:26.652Z",
     "payload": {
      "accountId": "acc_F8YkxNCwVSA",
      "amount": 250000,
@@ -109,8 +109,8 @@
      "approvedBy": "usr_2cXV8L7o3mwd",
      "executedBy": "usr_2cXV8L7o3mwd"
     },
-    "previousHash": "dbb664e6de6c0086514d4627\u2026",
-    "hash": "aeee5e2b76ac735cbf9e2a1c\u2026"
+    "previousHash": "ecc4ccbc02ba68cf1731e61d\u2026",
+    "hash": "459d7be78ff9a1879f46cd26\u2026"
    }
   ]
  },
@@ -122,13 +122,13 @@
   "billable": 1,
   "rows": [
    {
-    "correlation_id": "corr_01M2YY6BWX6YSK0P572Z4AANAS",
+    "correlation_id": "corr_01M2Z0BVKR7GP1DJWSXHNK33TT",
     "outcome": "book_meeting",
     "state": "CONFIRMED",
     "billable": true,
-    "recorded_at": "2026-09-20T08:16:29.549Z",
-    "confirmed_at": "2026-09-20T08:16:29.549Z",
-    "evidence_url": "/v1/admin/tenants/t_northwind/replay?correlation_id=corr_01M2YY6BWX6YSK0P572Z4AANAS"
+    "recorded_at": "2026-09-20T08:54:15.043Z",
+    "confirmed_at": "2026-09-20T08:54:15.043Z",
+    "evidence_url": "/v1/admin/tenants/t_northwind/replay?correlation_id=corr_01M2Z0BVKR7GP1DJWSXHNK33TT"
    }
   ]
  },
@@ -137,16 +137,16 @@
    "meetings_held": 1,
    "qualified_leads": 1,
    "deflection_rate_pct": 100,
-   "implied_hours_saved": 0.6,
+   "implied_hours_saved": 0.2,
    "outside_business_hours_sessions": 0
   },
   "funnel": {
-   "sessions": 3,
+   "sessions": 1,
    "engaged": 1,
    "qualified": 1,
    "outcomes": 1,
    "heldMeetings": 1,
-   "engagementRatePct": 33.3,
+   "engagementRatePct": 100,
    "qualificationRatePct": 100
   }
  },
@@ -157,9 +157,9 @@
   "identityResolutionsPerformed": 0,
   "marketingEnrolmentsBlocked": 0,
   "crmDisclosureDenials": 0,
-  "sessionsOpened": 3,
-  "sessionsWithDisclosure": 2,
-  "aiDisclosureCoveragePct": 66.7,
+  "sessionsOpened": 1,
+  "sessionsWithDisclosure": 1,
+  "aiDisclosureCoveragePct": 100,
   "recordingConsent": {
    "granted": 0,
    "refused": 0,
@@ -173,7 +173,7 @@
   "crossTenantDenials": 0,
   "outputsBlocked": 0,
   "evidence": {
-   "auditEntriesExamined": 19,
+   "auditEntriesExamined": 16,
    "chainVerified": true
   }
  },

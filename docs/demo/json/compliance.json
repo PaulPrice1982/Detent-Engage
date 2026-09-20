@@ -4,15 +4,15 @@
         "from": "0000-01-01T00:00:00.000Z",
         "to": "9999-12-31T23:59:59.999Z"
     },
-    "generatedAt": "2026-09-20T08:17:21.446Z",
+    "generatedAt": "2026-09-20T08:54:26.699Z",
     "consentEvents": [],
     "identityResolutionsBlockedForConsent": 0,
     "identityResolutionsPerformed": 0,
     "marketingEnrolmentsBlocked": 0,
     "crmDisclosureDenials": 0,
-    "sessionsOpened": 3,
-    "sessionsWithDisclosure": 2,
-    "aiDisclosureCoveragePct": 66.7,
+    "sessionsOpened": 1,
+    "sessionsWithDisclosure": 1,
+    "aiDisclosureCoveragePct": 100,
     "recordingConsent": {
         "granted": 0,
         "refused": 0,
@@ -26,7 +26,7 @@
     "crossTenantDenials": 0,
     "outputsBlocked": 0,
     "evidence": {
-        "auditEntriesExamined": 19,
+        "auditEntriesExamined": 16,
         "chainVerified": true
     }
 }

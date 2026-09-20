@@ -2,16 +2,16 @@
     "usage": {
         "tenantId": "t_northwind",
         "period": "2026-09",
-        "conversations": 3,
-        "textMessages": 6,
+        "conversations": 1,
+        "textMessages": 5,
         "voiceMinutes": 0,
         "crmCalls": 0,
-        "llmTokens": 1080,
+        "llmTokens": 900,
         "qualifiedOutcomes": 1,
         "enrichmentRecords": 0,
         "companyResolutions": 0,
-        "spendPence": 7.872,
+        "spendPence": 3.56,
         "concurrentVoice": 0
     },
-    "cost_per_conversation_pence": 2.624
+    "cost_per_conversation_pence": 3.56
 }

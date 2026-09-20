@@ -5,3 +5,6 @@ dist/
 *.log
 dist-tools/
 dist-zip/
+docs/demo/capture/node_modules/
+docs/demo/.stitch/
+docs/demo/capture/wk.txt

@@ -56,3 +56,25 @@ Edge and Firefox play them anywhere; Safari from version 14 on macOS.
 `AWA_DEMO_SEED=1` is refused in a deployment. It writes credit to accounts,
 and a fixture that can run against a customer's data is a fixture that
 eventually will.
+
+## Stitching the MP4
+
+```sh
+cd docs/demo/capture && npm install     # pulls ffmpeg-static, which has H.264
+node docs/demo/capture/stitch.mjs
+```
+
+Produces `docs/demo/detent-engage-demo.mp4`: 1920x1080, H.264 and AAC, which
+plays anywhere without a plugin.
+
+Each scene lasts as long as its narration rather than as long as its
+recording, because the clips were filmed at the pace somebody uses the product
+and the narration over them is longer. The recording holds on its last frame
+to fill the gap rather than looping, since a loop replays a form that was just
+submitted and reads as a glitch.
+
+**Without the narration in `audio/` the film is still produced**, silent, with
+each scene timed from its word count at a measured reading pace. Drop the
+clips in (see `docs/demo/audio/README.md`) and run the same command again.
+Nothing else changes, and a scene whose clip is missing gets silence over it
+rather than shifting every scene after it.

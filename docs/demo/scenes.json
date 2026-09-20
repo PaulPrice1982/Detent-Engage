@@ -215,7 +215,7 @@
         "json/audit.json",
         "json/compliance.json"
       ],
-      "caption": "Nineteen entries, each carrying the hash of the one before it.",
+      "caption": "Sixteen entries, each carrying the hash of the one before it.",
       "text": "Everything you have just seen, in one chain. Session opened. Disclosure shown. Tool executed. Outcome recorded. Credit requested. Approved, by a named second person. Executed. Granted.\n\nEach entry carries the hash of the one before it. Remove an entry, change an amount, and every hash after it stops matching. This is not a log file that somebody could edit. It is a chain that tells you whether it has been edited.\n\nAnd the compliance view: AI disclosure coverage, one hundred per cent. Identity resolutions blocked for consent. Marketing enrolments blocked. CRM disclosure denials. Those are not aspirations. They are counters.\n\nCIO: when your regulator, your insurer, or your largest customer's procurement team asks what your AI did, this is the answer, and it is generated, not written."
     },
     {
