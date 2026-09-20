@@ -44,8 +44,15 @@ If this is not a git checkout, use the supplied zip instead. This build adds
 files and does not move code between them, so extracting over the top is
 safe:
 
-    unzip -o detent-agentic-website-assistant.zip
+    unzip -o detent-engage-replit.zip
     pnpm install
+
+Two zips exist and they are not interchangeable.
+`detent-engage-replit.zip` is 2.6 MB and is the one to use here: everything
+the build and the tests need. `detent-agentic-website-assistant.zip` is
+33 MB and is the full archive, which additionally carries the
+demonstration's recordings, screenshots and film frames. Nothing on Replit
+reads those, and they are 38 of its 43 MB.
 
 NOTE: never run `pnpm install --no-optional`. It breaks esbuild's platform
 binary, which tsx needs, and the failure looks like a broken repository.
