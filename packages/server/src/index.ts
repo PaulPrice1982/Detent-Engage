@@ -22,6 +22,7 @@ export * from './console-cms.js';
 export * from './console-resellers.js';
 export * from './console-site.js';
 export * from './demo-seed.js';
+export * from './demo-speech.js';
 export * from './detent-knowledge.js';
 export * from './dev-sites.js';
 export * from './host-routing.js';

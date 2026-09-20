@@ -119,9 +119,16 @@ const model: ModelProvider = boot.modelKey
  * spoken assistant simply does not set it. The text assistant is the full
  * product; voice is an addition to it and never a prerequisite.
  */
+const demoVoiceDirectory = new URL('../../../docs/demo/audio/voice/', import.meta.url).pathname;
 const speech: SpeechSynthesiser = boot.voiceKey
   ? new ElevenLabsSpeech({ apiKey: boot.voiceKey, voiceId: boot.voiceId })
-  : new VoiceNotConfigured();
+  // Without a key there is no vendor. The demonstration flag serves the same
+  // words from recordings made by the configured voice, exactly as it serves
+  // a scripted conversation in place of a model. Never in a deployment, which
+  // cannot boot without its own keys in the first place.
+  : process.env['AWA_DEMO_SEED'] === '1' && !boot.deployed
+    ? new (await import('./demo-speech.js')).DemoSpeech(demoVoiceDirectory)
+    : new VoiceNotConfigured();
 
 const crm = new SandboxConnector({ hasSeparateLeadObject: true });
 const platform = new Platform({

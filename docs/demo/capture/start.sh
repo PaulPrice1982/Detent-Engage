@@ -26,6 +26,7 @@ sleep 2
 DATABASE_URL="${DATABASE_URL:-postgres://appowner@127.0.0.1:5433/detent_demo}" \
 REDIS_URL="${REDIS_URL:-redis://127.0.0.1:6380}" \
 AWA_DEV_PRINT_KEYS=1 AWA_DEMO_SEED=1 PORT="$PORT" \
+AWA_FEATURE_SPOKEN_VOICE=1 \
 AWA_TENANT_ID='t_northwind' AWA_TENANT_NAME='Northwind Logistics Group' \
 AWA_ORIGINS="http://localhost:$PORT,http://127.0.0.1:$PORT" \
 DETENT_CONSOLE_EMAIL="${DETENT_CONSOLE_EMAIL:-ops@detentgtm.io}" \
