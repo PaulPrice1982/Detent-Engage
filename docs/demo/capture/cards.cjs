@@ -31,8 +31,32 @@ const CHROME = process.env.CHROME
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
   .replace(/>/g, '&gt;').replace(/&lt;br&gt;/g, '<br>');
 
+/**
+ * The Engage mark, on the last frame.
+ *
+ * One seated detent and one outbound vector: the family rule from the logo
+ * system, where Recover's line falls, seats and returns, and Engage's leaves
+ * the seat and does not come back. Drawn inline rather than loaded, because
+ * a frame that renders before its logo arrives is a frame with a hole in it.
+ *
+ * Deliberately NOT the chevron mark in brand/detent-logo.jpg, which is what
+ * the widget, the console and the marketing site ship. That mark stays
+ * authoritative for the product; this one is the film's sign-off. They are
+ * different symbols and somebody should reconcile them, which is recorded in
+ * brand/brand.md rather than quietly decided here.
+ */
+const ENGAGE_MARK = (size) => `<svg viewBox="0 0 48 48" width="${size}" height="${size}"
+  role="img" aria-label="Detent Engage" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(1.173 2.374) scale(0.924)">
+    <path d="M 9 35 L 40 11" fill="none" stroke="#F4F7FA" stroke-width="4.8" stroke-linecap="butt"/>
+    <g fill="#F4F7FA" stroke="#F4F7FA"><g transform="translate(40 11) rotate(-37.747)">
+      <path d="M 6.6 0 L -0.6 -4.5 L -0.6 4.5 Z" stroke-width="1.1" stroke-linejoin="round"/>
+    </g></g>
+    <circle cx="9" cy="35" r="5.4" fill="#2E6BE6"/>
+  </g></svg>`;
+
 const SHELL = (body, extra) => `<!doctype html><html><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;600&display=swap">
 <style>
 :root{--ink:#0B1622;--amber:#EFA13C;--paper:#F4F7FA;--mute:#93A6BB;
  --display:"Newsreader",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif}
@@ -41,8 +65,14 @@ html,body{width:1920px;height:1080px;overflow:hidden}
 body{font:400 16px/1.5 var(--body);color:var(--paper)}
 ${extra}</style></head><body>${body}</body></html>`;
 
-/** A full card. The type is the picture. */
-const card = (b) => SHELL(`
+/**
+ * A full card. The type is the picture.
+ *
+ * The last card is the exception: it signs off with the mark and the
+ * wordmark rather than setting the product's name in the body serif, which
+ * is a caption of a logo rather than a logo.
+ */
+const card = (b) => b.card === 'end' ? endCard(b) : SHELL(`
   <div class="wrap">
     <div class="mark"><span class="dot"></span><span>Detent Engage</span></div>
     <h1>${esc(b.big)}</h1>
@@ -58,6 +88,25 @@ const card = (b) => SHELL(`
   p{font:400 ${b.card === 'end' ? 34 : 38}px/1.4 var(--body);color:var(--mute);margin-top:32px;
     max-width:30ch}
   ${b.card === 'end' ? '.wrap{text-align:center;margin:0 auto}p{margin-left:auto;margin-right:auto}' : ''}`);
+
+/** The sign-off: the mark, the wordmark, and one line under it. */
+const endCard = (b) => SHELL(`
+  <div class="wrap">
+    <div class="lockup">
+      ${ENGAGE_MARK(118)}
+      <div class="wordmark">Detent <span>Engage</span></div>
+    </div>
+    ${b.small ? `<p>${esc(b.small)}</p>` : ''}
+  </div>`, `
+  body{background:var(--ink);display:grid;place-items:center;padding:0 130px}
+  .wrap{text-align:center}
+  .lockup{display:flex;align-items:center;justify-content:center;gap:30px}
+  /* Space Grotesk, matching the logo system's own wordmark. The films' body
+     face stays IBM Plex; this is the mark, not a heading. */
+  .wordmark{font:600 84px/1 "Space Grotesk",system-ui,sans-serif;letter-spacing:-.02em;
+    color:var(--paper)}
+  .wordmark span{font-weight:400;color:var(--mute)}
+  p{font:400 32px/1.4 var(--body);color:var(--mute);margin:36px auto 0;max-width:30ch}`);
 
 /** A lower third: one sentence, over the footage, with room to breathe. */
 const lower = (text) => SHELL(`<div class="bar"><p>${esc(text)}</p></div>`, `

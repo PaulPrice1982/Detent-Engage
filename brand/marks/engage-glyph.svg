@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Detent Engage">
+  <g transform="translate(1.173 2.374) scale(0.924)">
+    <path d="M 9 35 L 40 11" fill="none" stroke="#0D1117" stroke-width="4.8" stroke-linecap="butt"/>
+    <g fill="#0D1117" stroke="#0D1117">
+      <g transform="translate(40 11) rotate(-37.747)">
+        <path d="M 6.6 0 L -0.6 -4.5 L -0.6 4.5 Z" stroke-width="1.1" stroke-linejoin="round"/>
+      </g>
+    </g>
+    <circle cx="9" cy="35" r="5.4" fill="#2E6BE6"/>
+  </g>
+</svg>
