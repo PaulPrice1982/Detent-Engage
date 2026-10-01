@@ -103,7 +103,7 @@ export function configurationProblems(boot: BootEnvironment): string[] {
       + 'chain, consent evidence and spend counters would be lost at the next restart.',
     );
   }
-  if (!boot.rootKey && !boot.allowLocalKey) {
+  if (!boot.rootKey) {
     problems.push(
       'AWA_ROOT_KEY is not set. It encrypts the CRM credentials at rest; a generated '
       + 'one would change at every restart and make the stored credentials unreadable. '

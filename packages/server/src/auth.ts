@@ -80,6 +80,16 @@ export interface ApiKeyView {
 }
 
 export class ApiKeyService {
+  snapshot(): ApiKeyRecord[] { return structuredClone([...this.byId.values()]); }
+
+  restore(records: readonly ApiKeyRecord[]): void {
+    this.byId.clear(); this.byDigest.clear(); this.byPrefix.clear();
+    for (const record of structuredClone(records)) {
+      this.byId.set(record.id, record);
+      this.byDigest.set(record.digest, record);
+      this.byPrefix.set(record.prefix, record);
+    }
+  }
   /** Digest → record. The authentication path. */
   private readonly byDigest = new Map<string, ApiKeyRecord>();
   /** Id → record, so revoke and rotate are not a linear scan. */

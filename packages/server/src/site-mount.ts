@@ -43,12 +43,13 @@ export function createSiteMount(options: SiteMountOptions): MountedSite {
 
     async handle(request: SiteRequest): Promise<SiteResponse | undefined> {
       const host = request.headers['host'];
+      const match = resolveSite(hosts, host, request.path);
 
       // A staff console asked for on a customer hostname. Named as a setting
       // rather than as a hostname: whoever configured the console host knows
       // it, and anybody else asking a public URL for /console is not entitled
       // to be told where the staff entrance is.
-      if (consoleIsElsewhere(hosts, request.path)) {
+      if (match?.site !== 'console' && consoleIsElsewhere(hosts, request.path)) {
         return { status: 404, html: consoleElsewherePage() };
       }
 
@@ -57,7 +58,6 @@ export function createSiteMount(options: SiteMountOptions): MountedSite {
       const alias = signInAliasFor(request.path);
       if (alias) return { status: 303, redirect: alias };
 
-      const match = resolveSite(hosts, host, request.path);
       if (!match) {
         // No site, and still an answer. A hosting platform decides a container
         // is alive by asking for '/' through its own proxy on an internal

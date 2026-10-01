@@ -96,7 +96,7 @@ export class PostgresSubscriptionStore implements SubscriptionStore {
         // The version a subscription was sold on, lifted out because it is the
         // column that proves a price change did not reach an existing customer.
         (subscription as { planVersion?: number }).planVersion ?? null,
-        (subscription as { state?: string }).state ?? 'active',
+        subscription.status,
         JSON.stringify(subscription),
       ],
     );

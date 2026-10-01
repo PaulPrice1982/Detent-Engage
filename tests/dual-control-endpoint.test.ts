@@ -39,15 +39,16 @@ async function harness() {
     secureCookies: false,
   });
 
-  const enrol = async (userId: string): Promise<void> => {
+  const enrol = async (userId: string): Promise<string> => {
     const { secret } = await sites.users.beginMfaEnrolment(userId);
     const { totpAt, stepAt } = await import('@detent/awa-auth');
-    await sites.users.confirmMfaEnrolment(userId, totpAt(secret, stepAt(clock.nowMs())));
+    const { recoveryCodes } = await sites.users.confirmMfaEnrolment(userId, totpAt(secret, stepAt(clock.nowMs())));
+    return recoveryCodes[0]!;
   };
 
   const approver = await sites.users.byEmail('console', APPROVER);
   if (!approver) throw new Error('the operator was not seeded');
-  await enrol(approver.userId);
+  const mfaCode = await enrol(approver.userId);
 
   // A second person, because an approver may not approve their own request.
   const requester = await sites.users.create({
@@ -79,7 +80,7 @@ async function harness() {
 
   const signIn = await sites.consoleRouter.handle({
     method: 'POST', path: '/console/signin', query: {}, headers: {},
-    rawBody: new URLSearchParams({ email: APPROVER, password: PASSWORD }).toString(),
+    rawBody: new URLSearchParams({ email: APPROVER, password: PASSWORD, mfaCode }).toString(),
   });
   const cookie = (signIn?.cookies ?? []).map((one) => one.split(';')[0]).join('; ');
 
@@ -97,7 +98,7 @@ async function harness() {
     } as SiteRequest);
   };
 
-  return { sites, get, post, account };
+  return { sites, get, post, account, cookie };
 }
 
 describe('the approvals page', () => {
@@ -146,12 +147,7 @@ describe('a second person approving', () => {
   });
 
   it('is refused without the CSRF token, like every other console write', async () => {
-    const { sites } = await harness();
-    const signIn = await sites.consoleRouter.handle({
-      method: 'POST', path: '/console/signin', query: {}, headers: {},
-      rawBody: new URLSearchParams({ email: APPROVER, password: PASSWORD }).toString(),
-    });
-    const cookie = (signIn?.cookies ?? []).map((one) => one.split(';')[0]).join('; ');
+    const { sites, cookie } = await harness();
     const response = await sites.consoleRouter.handle({
       method: 'POST', path: '/console/approvals/act_held/approve', query: {}, headers: { cookie },
       rawBody: '',

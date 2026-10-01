@@ -77,6 +77,66 @@ describe('uploading a document', () => {
     expect((await documents.list('t1')).length).toBe(1);
   });
 
+  it('keeps identical uploads and their lifecycle separate across tenants', async () => {
+    const { documents } = build();
+    const content = bytes('Shared supplier documentation.');
+    const [first, second] = await Promise.all([
+      documents.upload({ tenantId: 't1', filename: 'first.txt', bytes: content, uploadedBy: 'u1' }),
+      documents.upload({ tenantId: 't2', filename: 'second.txt', bytes: content, uploadedBy: 'u2' }),
+    ]);
+    expect(first.documentId).not.toBe(second.documentId);
+    expect(first.checksum).toBe(second.checksum);
+    expect(await documents.list('t1')).toEqual([first]);
+    expect(await documents.list('t2')).toEqual([second]);
+    await documents.extract(first.documentId, content);
+    await documents.markProcessed(first.documentId, 2);
+    expect(await documents.get(second.documentId)).toEqual(second);
+    await documents.remove('t1', first.documentId);
+    expect(await documents.get(second.documentId)).toEqual(second);
+    const duplicate = await documents.upload({ tenantId: 't2', filename: 'copy.txt', bytes: content, uploadedBy: 'u3' });
+    expect(duplicate.documentId).toBe(second.documentId);
+    expect((await documents.list('t2')).length).toBe(1);
+  });
+
+  it('keeps knowledge citations separate for identical source files', async () => {
+    const { documents, drafts, time } = build();
+    const content = bytes('Shared supplier documentation.');
+    const agent = new KnowledgeAgent(scriptedModel(), drafts, time);
+    const ids: string[] = [];
+    for (const tenantId of ['t1', 't2']) {
+      const uploaded = await documents.upload({ tenantId, filename: 'guide.txt', bytes: content, uploadedBy: tenantId });
+      const extracted = await documents.extract(uploaded.documentId, content);
+      await agent.readDocument(extracted);
+      ids.push(uploaded.documentId);
+    }
+    const firstDrafts = await drafts.listByDocument(ids[0]!);
+    const secondDrafts = await drafts.listByDocument(ids[1]!);
+    expect(firstDrafts.length).toBeGreaterThan(0);
+    expect(secondDrafts.length).toBeGreaterThan(0);
+    expect(firstDrafts.every(draft => draft.tenantId === 't1')).toBe(true);
+    expect(secondDrafts.every(draft => draft.tenantId === 't2')).toBe(true);
+  });
+
+  it('does not reuse a removed document identity on re-upload', async () => {
+    const { documents } = build();
+    const input = { tenantId: 't1', filename: 'guide.txt', bytes: bytes('content'), uploadedBy: 'u1' };
+    const original = await documents.upload(input);
+    await documents.remove('t1', original.documentId);
+    const replacement = await documents.upload(input);
+    expect(replacement.documentId).not.toBe(original.documentId);
+    expect((await documents.get(original.documentId))!.state).toBe('removed');
+    expect(replacement.state).toBe('uploaded');
+  });
+
+  it('refuses to overwrite a stored document with another tenant owner', async () => {
+    const store = new InMemoryDocumentStore();
+    const documents = new DocumentService(store, [new PlainTextExtractor()], clock());
+    const original = await documents.upload({ tenantId: 't1', filename: 'guide.txt', bytes: bytes('content'), uploadedBy: 'u1' });
+    await expect(store.put({ ...original, tenantId: 't2' })).rejects.toThrow(/ownership/);
+    expect(await store.get(original.documentId)).toEqual(original);
+    expect(await store.listByTenant('t2')).toEqual([]);
+  });
+
   it('says a scanned document needs OCR rather than proposing nothing', async () => {
     const { documents } = build();
     const uploaded = await documents.upload({
@@ -105,7 +165,7 @@ describe('uploading a document', () => {
       tenantId: 't1', filename: 'guide.txt', bytes: bytes('secret content'), uploadedBy: 'u1',
     });
     await documents.extract(uploaded.documentId, bytes('secret content'));
-    const removed = await documents.remove(uploaded.documentId);
+    const removed = await documents.remove('t1', uploaded.documentId);
     expect(removed.text).toBeUndefined();
   });
 
@@ -284,7 +344,7 @@ describe('reviewing and approving', () => {
       '# Pricing\n\nPlans start at £350 a month.',
       [{ kind: 'article', title: 'Pricing', body: 'Plans start at £350 a month.' }],
     );
-    await expect(knowledge.approve({
+    await expect(knowledge.approve({ tenantId: 't1',
       draftId: report.drafts[0]!.draftId, reviewedBy: 'sam@customer',
     })).rejects.toThrow(/£350/);
   });
@@ -294,7 +354,7 @@ describe('reviewing and approving', () => {
       '# Pricing\n\nPlans start at £350 a month.',
       [{ kind: 'article', title: 'Pricing', body: 'Plans start at £350 a month.' }],
     );
-    const approved = await knowledge.approve({
+    const approved = await knowledge.approve({ tenantId: 't1',
       draftId: report.drafts[0]!.draftId,
       reviewedBy: 'sam@customer',
       confirmedFigures: ['£350'],
@@ -309,7 +369,7 @@ describe('reviewing and approving', () => {
       '# Pricing\n\nPlans start at £350 a month.',
       [{ kind: 'article', title: 'Pricing', body: 'Plans start at £350 a month.' }],
     );
-    await expect(knowledge.approve({
+    await expect(knowledge.approve({ tenantId: 't1',
       draftId: report.drafts[0]!.draftId,
       reviewedBy: 'sam@customer',
       editedBody: 'Plans start at £420 a month.',
@@ -322,7 +382,7 @@ describe('reviewing and approving', () => {
       '# Support\n\nOur team is based in the UK.',
       [{ kind: 'article', title: 'Support', body: 'Our team is based in the UK.' }],
     );
-    await expect(knowledge.approve({
+    await expect(knowledge.approve({ tenantId: 't1',
       draftId: report.drafts[0]!.draftId, reviewedBy: 'sam@customer',
     })).resolves.toBeDefined();
   });
@@ -332,7 +392,7 @@ describe('reviewing and approving', () => {
       '# Support\n\nOur team is UK based.',
       [{ kind: 'article', title: 'Support', body: 'Our team is UK based.' }],
     );
-    await knowledge.approve({ draftId: report.drafts[0]!.draftId, reviewedBy: 'sam@customer' });
+    await knowledge.approve({ tenantId: 't1', draftId: report.drafts[0]!.draftId, reviewedBy: 'sam@customer' });
     const [chunk] = corpus.published('t1');
     expect(chunk?.sourceRef).toContain('Support');
     expect(chunk?.approvedBy).toBe('sam@customer');
@@ -340,7 +400,7 @@ describe('reviewing and approving', () => {
 
   it('requires a reason to reject, so the agent can be improved', async () => {
     const { knowledge, report } = await proposed('# X\n\nContent.');
-    await expect(knowledge.reject(report.drafts[0]!.draftId, 'sam@customer', '  '))
+    await expect(knowledge.reject('t1', report.drafts[0]!.draftId, 'sam@customer', '  '))
       .rejects.toThrow(/why/i);
   });
 
@@ -349,7 +409,7 @@ describe('reviewing and approving', () => {
       '# Support\n\nUK based.',
       [{ kind: 'article', title: 'Support', body: 'UK based.' }],
     );
-    await knowledge.approve({ draftId: report.drafts[0]!.draftId, reviewedBy: 'sam@customer' });
+    await knowledge.approve({ tenantId: 't1', draftId: report.drafts[0]!.draftId, reviewedBy: 'sam@customer' });
     const entries = (await audit.export('t1')).entries;
     const approval = entries.find((entry) => entry.type === 'knowledge_approved');
     expect(approval?.payload?.['reviewedBy']).toBe('sam@customer');

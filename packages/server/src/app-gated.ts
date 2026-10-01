@@ -135,6 +135,8 @@ the assistant on. It injects a Web Component with its own Shadow DOM, so it cann
 disturb your site's styles, and the conversation bundle only loads when somebody opens it.</p>
 
 <h2>Your snippet</h2>
+<p class="sub">Before going live, complete onboarding and have your website origins registered.
+Your key is restricted to your own tenant and registered websites.</p>
 <div class="card">
   <pre class="snippet">${escape(snippet)}</pre>
   <p class="sub" style="margin:12px 0 0">

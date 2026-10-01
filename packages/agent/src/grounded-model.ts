@@ -25,10 +25,13 @@ export class GroundedModelProvider implements ModelProvider {
   ) {}
 
   async turn(input: ModelTurnInput): Promise<ModelTurnOutput> {
+    const lookupResults = (input.toolRounds ?? []).flatMap(round => round.results.filter(result =>
+      round.calls.some(call => call.id === result.toolUseId && call.tool === 'knowledge_lookup'),
+    ));
     // First turn: nothing has been retrieved yet, so ask for it. Retrieval
     // runs as a tool so it passes the same policy gate as everything else,
     // which means the model has to request it rather than reach for it.
-    if (input.referenceEnvelope === undefined) {
+    if (input.referenceEnvelope === undefined && lookupResults.length === 0) {
       const canLookUp = input.tools.some((tool) => tool.name === 'knowledge_lookup');
       if (canLookUp) {
         return {
@@ -45,7 +48,9 @@ export class GroundedModelProvider implements ModelProvider {
       }
     }
 
-    const references = parseReferences(input.referenceEnvelope);
+    const references = input.referenceEnvelope
+      ? parseReferences(input.referenceEnvelope)
+      : lookupResults.flatMap(result => parseReferences(typeof result.content['reference'] === 'string' ? result.content['reference'] : undefined));
     const best = bestFor(input.visitorInput, references);
 
     if (!best) {

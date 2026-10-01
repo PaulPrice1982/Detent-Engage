@@ -105,6 +105,21 @@ export const DEFAULT_SESSION_TTL: SessionTtl = {
 };
 
 export class SessionManager {
+  snapshot() {
+    this.sweep();
+    return structuredClone([...this.sessions.values()].map(session => ({
+      session, lastSeen: this.lastSeen.get(session.id) ?? this.clock.nowMs(),
+    })));
+  }
+
+  restore(records: ReturnType<SessionManager['snapshot']>): void {
+    this.sessions.clear(); this.lastSeen.clear();
+    for (const { session, lastSeen } of structuredClone(records)) {
+      this.sessions.set(session.id, session);
+      this.lastSeen.set(session.id, lastSeen);
+    }
+    this.sweep();
+  }
   private readonly sessions = new Map<string, Session>();
   private readonly lastSeen = new Map<string, number>();
   private readonly ttl: SessionTtl;

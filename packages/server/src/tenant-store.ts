@@ -43,6 +43,11 @@ export interface CreateTenantInput {
 export class TenantStore {
   private readonly tenants = new Map<string, TenantConfig>();
 
+  restore(configs: readonly TenantConfig[]): void {
+    this.tenants.clear();
+    for (const config of configs) this.tenants.set(config.tenantId, structuredClone(config));
+  }
+
   constructor(
     private readonly audit: AuditLog,
     private readonly clock: Clock = systemClock,

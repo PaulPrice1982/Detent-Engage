@@ -76,13 +76,13 @@ describe('what a deployment must have', () => {
       .toMatch(/AWA_MODEL is not set/);
   });
 
-  it('allows a local root key only when the deployment says so explicitly', () => {
+  it('requires a stable root key even when local key generation was requested', () => {
     const { AWA_ROOT_KEY: _unused, ...withoutKey } = complete;
     expect(configurationProblems(bootEnvironmentFrom(withoutKey)).join(' '))
       .toMatch(/AWA_ROOT_KEY/);
     expect(configurationProblems(
       bootEnvironmentFrom({ ...withoutKey, AWA_ALLOW_LOCAL_KEY: '1' }),
-    )).toEqual([]);
+    ).join(' ')).toContain('AWA_ROOT_KEY');
   });
 });
 

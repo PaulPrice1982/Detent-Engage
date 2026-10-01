@@ -83,7 +83,8 @@ ${problems.length > 0 ? `<div class="warn">
            placeholder="Paid by invoice INV-1042 / goodwill after the outage on the 3rd">
     <p class="sub">Recorded against the account. A credit with no reason is one nobody can
     explain at the year end.</p>
-    <div class="actions"><button class="btn primary" type="submit">Grant it</button></div>
+    <p class="sub">Credit worth £500 or more requires approval from a second authorized operator.</p>
+    <div class="actions"><button class="btn primary" type="submit">Request credit</button></div>
   </form>
 </div>`,
   );

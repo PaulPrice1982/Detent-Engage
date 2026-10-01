@@ -30,6 +30,9 @@ export type ConsoleRole =
   | 'owner';
 
 export type ConsoleCapability =
+  | 'website.read'
+  | 'website.edit'
+  | 'website.publish'
   | 'account.read'
   | 'account.list'
   /**
@@ -66,6 +69,7 @@ export type ConsoleCapability =
   | 'approval.grant';
 
 const VIEWER: readonly ConsoleCapability[] = [
+  'website.read',
   'account.read', 'account.list', 'usage.read', 'invoice.read',
   'payment.read', 'subscription.read',
 ];
@@ -81,6 +85,7 @@ const BILLING: readonly ConsoleCapability[] = [
 ];
 
 const ADMIN: readonly ConsoleCapability[] = [
+  'website.edit', 'website.publish',
   ...BILLING, 'invoice.write_off', 'plan.override', 'spend_cap.change',
   'dunning.suspend', 'tenant.kill_switch', 'approval.grant',
 ];

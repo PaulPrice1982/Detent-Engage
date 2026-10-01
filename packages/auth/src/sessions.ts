@@ -16,6 +16,8 @@ import type { Realm } from './users.js';
  */
 
 export interface Session {
+  /** Absent on legacy/password-only sessions. Set only after MFA verification. */
+  readonly mfaVerified?: boolean;
   readonly sessionId: string;
   readonly userId: string;
   /** Part of the session, so a console cookie cannot be replayed at the app. */
@@ -125,6 +127,7 @@ export class SessionService {
   }
 
   async start(input: {
+    readonly mfaVerified?: boolean;
     readonly userId: string;
     readonly realm: Realm;
     readonly userAgent?: string;
@@ -132,6 +135,7 @@ export class SessionService {
   }): Promise<{ readonly session: Session; readonly token: string }> {
     const now = this.clock.nowMs();
     const session: Session = {
+      mfaVerified: input.mfaVerified === true,
       sessionId: randomBytes(24).toString('base64url'),
       userId: input.userId,
       realm: input.realm,

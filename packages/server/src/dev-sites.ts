@@ -1,7 +1,8 @@
 import { randomBytes } from 'node:crypto';
+import { PostgresApprovalStore } from './runtime-postgres.js';
 import {
   PostgresAccountStore, PostgresInvoiceStore, PostgresLedgerStore, PostgresPageStore,
-  PostgresPaymentStore,
+  PostgresPaymentStore, PostgresPlanCatalogueStore,
   PostgresResetTokenStore, PostgresSessionStore, PostgresSubscriptionStore,
   PostgresResellerStore, PostgresSupportRequestStore, PostgresTerritoryStore,
   PostgresUserStore, type Database,
@@ -72,6 +73,7 @@ import {
 } from './app-gated.js';
 import { boundaryOf, fieldOf, fileOf, parseMultipart } from './multipart.js';
 import { SiteRouter, type SiteResponse } from './site-router.js';
+import type { CustomerWidgetProvisioner } from './customer-widgets.js';
 import { escape as escapeHtml, forbiddenPage } from './site-html.js';
 
 /**
@@ -103,6 +105,7 @@ export interface DevSitesOptions {
    * discovered by a restart.
    */
   readonly database?: Database;
+  readonly catalogue?: PlanCatalogueService;
   /** Signs session cookies. Generated per boot when not configured. */
   readonly sessionSecret?: string;
   /** Seed operator, from the environment. Never a literal in source. */
@@ -132,8 +135,13 @@ export interface DevSitesOptions {
    */
   readonly googleConfigured?: boolean;
   readonly appleConfigured?: boolean;
-  /** The tenant's public widget key, shown in the install snippet. */
-  readonly widgetKeyFor?: (tenantId: string) => string;
+  /** Shares the API's tenant and key registries; never supplies a shared boot key. */
+  readonly customerWidgets?: CustomerWidgetProvisioner;
+  readonly customerKnowledge?: {
+    readonly corpus: KnowledgeCorpus;
+    readonly documents: InMemoryDocumentStore;
+    readonly drafts: InMemoryDraftStore;
+  };
   /** Where the customer area lives, for links from the marketing site. */
   readonly appBaseUrl?: string;
   /** Detent's own assistant, embedded on the marketing site. */
@@ -295,12 +303,14 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
 
   const accountStore = database
     ? new PostgresAccountStore(database) : new InMemoryAccountStore();
-  const accounts = new AccountService(accountStore, clock);
+  const catalogue = options.catalogue ?? new PlanCatalogueService(database ? new PostgresPlanCatalogueStore(database) : new InMemoryPlanCatalogueStore(), clock);
+  await catalogue.seed('system');
+  const accounts = new AccountService(accountStore, clock, catalogue);
   const credits = new CreditLedger(
     database ? new PostgresLedgerStore(database) : new InMemoryLedgerStore(),
     audit, clock,
   );
-  const approvals = new ApprovalService(new InMemoryApprovalStore(), audit, clock);
+  const approvals = new ApprovalService(database ? new PostgresApprovalStore(database) : new InMemoryApprovalStore(), audit, clock);
   const invoices = new InvoiceService(
     database ? new PostgresInvoiceStore(database) : new InMemoryInvoiceStore(), clock,
   );
@@ -327,18 +337,13 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
     audit, clock,
   );
   const consoleService = new ConsoleService({
-    approvals, credits, invoices, dunning, payments, audit, clock,
+    approvals, credits, invoices, dunning, payments, audit, clock, catalogue,
     subscriptions: new SubscriptionService(
       database ? new PostgresSubscriptionStore(database) : new InMemorySubscriptionStore(),
-      audit, clock,
+      audit, clock, catalogue,
     ),
   });
   const consoleSite = new ConsoleSite(consoleService);
-
-  // The plan catalogue. Seeded from the plans in code, then edited here rather
-  // than by a deploy.
-  const catalogue = new PlanCatalogueService(new InMemoryPlanCatalogueStore(), clock);
-  await catalogue.seed('system');
 
   // The marketing site's content, authored in the console.
   const pages = new PageService(
@@ -455,15 +460,15 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
   // a real KnowledgeModel and nothing above it changes: the governance,
   // provenance and approval gate are in the agent, not the model.
   const documents = new DocumentService(
-    new InMemoryDocumentStore(),
+    options.customerKnowledge?.documents ?? new InMemoryDocumentStore(),
     // Word and PDF as well as text. The upload form has always invited them and
     // until now nothing could read either, so the first thing a new customer
     // uploads was the first thing that failed.
     [new PlainTextExtractor(), new DocxExtractor(), new PdfExtractor()],
     clock,
   );
-  const drafts = new InMemoryDraftStore();
-  const corpus = new KnowledgeCorpus(clock);
+  const drafts = options.customerKnowledge?.drafts ?? new InMemoryDraftStore();
+  const corpus = options.customerKnowledge?.corpus ?? new KnowledgeCorpus(clock);
   const knowledge = new DetentKnowledgeService(drafts, corpus, audit, clock);
   const knowledgeModel: KnowledgeModel = {
     id: 'demo',
@@ -658,11 +663,15 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
       }
 
       if (path.startsWith('website')) {
+        const readDenied = refuse('website.read');
+        if (readDenied) return readDenied;
+        const canEdit = can(operator, 'website.edit');
+        const canPublish = can(operator, 'website.publish');
         const renderList = async (extra: { notice?: string; error?: string } = {}): Promise<SiteResponse> => ({
           status: extra.error ? 400 : 200,
           html: websiteListPage({
             userEmail: request.user.email, csrf: request.csrf,
-            pages: await pages.list(), ...extra,
+            pages: await pages.list(), canEdit, ...extra,
           }),
         });
         const renderEditor = async (pageId: string, extra: { notice?: string; error?: string } = {}) => {
@@ -671,13 +680,20 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           return {
             status: extra.error ? 400 : 200,
             html: pageEditorPage({
-              userEmail: request.user.email, csrf: request.csrf, page: found, ...extra,
+              userEmail: request.user.email, csrf: request.csrf, page: found, canEdit, canPublish, ...extra,
             }),
           } satisfies SiteResponse;
         };
 
         const rest = path.slice('website'.length).replace(/^\//, '');
         const [pageId, action, sectionId] = rest.split('/');
+
+        // Gate every mutation before looking up or changing any page or section.
+        if (request.method === 'POST') {
+          const denied = refuse(action === 'publish' || action === 'archive'
+            ? 'website.publish' : 'website.edit');
+          if (denied) return denied;
+        }
 
         try {
           if (request.method === 'POST' && pageId === 'new') {
@@ -901,12 +917,11 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           if (path === 'pricing/publish') {
             const denied = refuse('plan.override');
             if (denied) return denied;
-            const published = await catalogue.publish(
-              planCode, Number(request.form['version']), request.user.email,
-            );
+            await consoleService.publishCatalogue(operator, {
+              actionId: newId('corr', clock.nowMs()), planCode, version: Number(request.form['version']),
+            });
             return renderPricing({
-              notice: `Version ${published.version} is live for new sales. `
-                + 'No existing subscription changed price.',
+              notice: 'Publication requested. A second authorized operator must approve it in Approvals. Nothing is live yet.',
             });
           }
 
@@ -953,18 +968,22 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           }
           try {
             assertSellable(bundle);
-            await credits.grant({
-              accountId,
+            const account = await accounts.get(accountId);
+            if (!account) return renderBundles('No such account.');
+            const action = await consoleService.grantCredit(operator, {
+              actionId: newId('corr', clock.nowMs()), accountId, tenantId: account.tenantId,
               // Granted at list value rather than at what was paid. That is
               // what the discount is: the customer gets the replies they were
               // sold, not the ones their money would buy at list.
               amount: creditValueOf(bundle),
               kind: 'grant_purchased',
               reason: `${bundle.name}: ${reason}`,
-              grantedBy: request.user.email,
-              correlationId: newId('corr', clock.nowMs()),
               sourceRef: bundle.code,
             });
+            if (action.state !== 'approved') {
+              return renderBundles('Credit requested. A second authorized operator must approve it in Approvals. No credit has been granted yet.');
+            }
+            await consoleService.executeCreditGrant(operator, action.actionId);
           } catch (error) {
             return renderBundles(error instanceof Error ? error.message : 'That did not work.');
           }
@@ -1239,10 +1258,11 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
         try {
           if (decision === 'approve') {
             const action = await consoleService.approve(operator, actionId);
-            // Approval records a decision; something still has to carry it
-            // out. Credit is the one that can be, so it is.
+            // Execute only the stored, fingerprinted action, never posted arguments.
             if (action.capability === 'credit.grant') {
               await consoleService.executeCreditGrant(operator, actionId);
+            } else if (action.capability === 'plan.override' && action.arguments['operation'] === 'catalogue.publish') {
+              await consoleService.executeCataloguePublication(operator, actionId);
             }
           } else if (decision === 'reject') {
             await consoleService.reject(operator, actionId,
@@ -1369,7 +1389,7 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
       if (!organisation) throw new Error('An organisation name is required.');
       // Signing up creates the tenant and the account together, so a customer
       // never exists in one system and not the other.
-      const tenantId = `t_${organisation.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 24)}`;
+      const tenantId = newId('t', clock.nowMs());
       const account = await accounts.create({
         name: organisation,
         tenantId,
@@ -1394,7 +1414,7 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
         createdBy: 'self_service',
       });
 
-      return users.create({
+      const user = await users.create({
         realm: 'app',
         email: form['email'] ?? '',
         name: form['name'] ?? '',
@@ -1403,6 +1423,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
         tenantId,
         accountId: account.accountId,
       });
+      options.customerWidgets?.provision(account);
+      return user;
     },
     async handler(request): Promise<SiteResponse> {
       const path = request.path.replace(/^\/app\/?/, '');
@@ -1508,12 +1530,24 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
         }
         const apiBaseUrl = options.baseUrl || '';
         if (path === 'install') {
+          if (account.tenantId !== request.user.tenantId) {
+            return { status: 403, html: 'This account does not belong to your tenant.' };
+          }
+          if (!options.customerWidgets) {
+            return { status: 503, html: 'Widget provisioning is unavailable. Contact support.' };
+          }
+          let widgetKey: string;
+          try {
+            // Also provisions existing billing accounts when they first request installation.
+            widgetKey = options.customerWidgets.provision(account);
+          } catch {
+            return { status: 503, html: 'Your widget could not be provisioned. Contact support.' };
+          }
           return {
             status: 200,
             html: installPage({
               user: request.user, account, subscription, apiBaseUrl,
-              widgetKey: options.widgetKeyFor?.(account.tenantId)
-                ?? 'awa_pub_(issued when you go live)',
+              widgetKey,
               panelUrl: `${apiBaseUrl}/widget/panel.html`,
             }),
           };
@@ -1592,6 +1626,7 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
               .filter(([key]) => key.startsWith('figure_'))
               .map(([, value]) => value);
             await knowledge.approve({
+              tenantId,
               draftId,
               reviewedBy: request.user.email,
               editedTitle: request.form['editedTitle'],
@@ -1604,7 +1639,7 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
 
           if (path === 'knowledge/reject') {
             await knowledge.reject(
-              request.form['draftId'] ?? '', request.user.email, request.form['reason'] ?? '',
+              tenantId, request.form['draftId'] ?? '', request.user.email, request.form['reason'] ?? '',
             );
             return render({ notice: 'Rejected.' });
           }
@@ -1622,7 +1657,8 @@ export async function buildDevSites(options: DevSitesOptions): Promise<DevSites>
           }
 
           if (path === 'knowledge/remove') {
-            await documents.remove(request.form['documentId'] ?? '');
+            const document = await documents.remove(tenantId, request.form['documentId'] ?? '');
+            await knowledge.withdrawDocument(tenantId, document.documentId, request.user.email);
             return render({ notice: 'Document removed.' });
           }
         } catch (error) {

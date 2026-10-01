@@ -48,3 +48,4 @@ export * from './static-files.js';
 export * from './support-pages.js';
 export * from './tenant-store.js';
 export * from './webhooks.js';
+export * from './customer-widgets.js';

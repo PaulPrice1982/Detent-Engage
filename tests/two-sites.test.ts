@@ -127,9 +127,10 @@ describe('the customer app', () => {
 
   it('creates the tenant and the account together at sign-up', async () => {
     // A customer must never exist in one system and not the other.
-    const { accounts, response } = await signUp();
+    const { accounts, users, response } = await signUp();
     expect(response?.status).toBe(303);
-    const account = await accounts.byTenant('t_vertex_systems');
+    const user = await users.byEmail('app', 'sam@vertex.example');
+    const account = await accounts.byTenant(user!.tenantId!);
     expect(account?.name).toBe('Vertex Systems');
   });
 

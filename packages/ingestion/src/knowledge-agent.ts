@@ -48,6 +48,8 @@ export interface SourceCitation {
 export type DraftState = 'proposed' | 'approved' | 'rejected' | 'quarantined' | 'edited';
 
 export interface DraftKnowledge {
+  readonly publishedChunkId?: string;
+  readonly sourceWithdrawn?: boolean;
   readonly draftId: string;
   readonly tenantId: string;
   readonly kind: KnowledgeKind;
@@ -220,6 +222,11 @@ export interface DraftStore {
 }
 
 export class InMemoryDraftStore implements DraftStore {
+  snapshot(): DraftKnowledge[] { return structuredClone([...this.drafts.values()]); }
+  restore(records: readonly DraftKnowledge[]): void {
+    this.drafts.clear();
+    for (const record of structuredClone(records)) this.drafts.set(record.draftId, record);
+  }
   private readonly drafts = new Map<string, DraftKnowledge>();
   async get(draftId: string): Promise<DraftKnowledge | undefined> { return this.drafts.get(draftId); }
   async put(draft: DraftKnowledge): Promise<void> { this.drafts.set(draft.draftId, draft); }

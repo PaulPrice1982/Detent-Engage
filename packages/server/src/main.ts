@@ -1,10 +1,10 @@
 /**
  * The entry point, in both modes.
  *
- * Boots a platform with the in-memory stores, one demo tenant on the sandbox
- * connector, and the HTTP gateway. Production wiring differs in exactly two
- * places, the store implementations and the model provider passed to
- * `new Platform(...)`, because both are behind interfaces.
+ * Without a database, boots a development demo in memory. With a database,
+ * restores assistant state under a single-writer lease and wires Postgres
+ * evidence stores before accepting traffic. Production never seeds demo CRM
+ * credentials or replaces existing API keys at boot.
  *
  *   pnpm serve
  *
@@ -21,7 +21,11 @@
  * starting. It does not exit: a process that exits is restarted, called a crash
  * loop, and its explanation ends up in a log somebody has to go and find.
  */
-import { SandboxConnector } from '@detent/awa-connectors';
+import { SandboxConnector, FetchHttpClient, HubSpotConnector, SalesforceConnector, DynamicsConnector, PipedriveConnector, ZohoConnector } from '@detent/awa-connectors';
+import { Database, PostgresPlanCatalogueStore } from '@detent/awa-persistence';
+import { PlanCatalogueService, InMemoryPlanCatalogueStore } from '@detent/awa-billing';
+import { DurableRuntime } from './runtime-state.js';
+import { PostgresRuntimeArchive, durablePlatformStores } from './runtime-postgres.js';
 import { AnthropicModelProvider, ScriptedModelProvider, type ModelProvider } from '@detent/awa-agent';
 import { ALL_FEATURES, JsonLogger, LocalKeyProvider, MetricsRegistry, featuresFromEnv } from '@detent/awa-core';
 import { Api, ApiKeyService, Platform, RequestRateLimiter, createHttpServer, listenFailureMessage } from './index.js';
@@ -31,6 +35,8 @@ import {
   ElevenLabsSpeech, VoiceNotConfigured, type SpeechSynthesiser,
 } from '@detent/awa-voice';
 import { buildDevSites } from './dev-sites.js';
+import { CustomerWidgetProvisioner } from './customer-widgets.js';
+import { InMemoryDocumentStore, InMemoryDraftStore } from '@detent/awa-ingestion';
 import { createSiteMount } from './site-mount.js';
 import { baseUrlFor, checkHosts, hostConfigFrom, recognisedHosts } from './host-routing.js';
 import { senderFromEnvironment } from '@detent/awa-auth';
@@ -130,19 +136,35 @@ const speech: SpeechSynthesiser = boot.voiceKey
     ? new (await import('./demo-speech.js')).DemoSpeech(demoVoiceDirectory)
     : new VoiceNotConfigured();
 
+// A database-backed runtime owns an exclusive lease before reading cached state.
+// Until the synchronous domain models support distributed transactions, refuse
+// a second serving instance rather than let it overwrite another's state.
+const siteDatabase = boot.databaseUrl ? new Database({ connectionString: boot.databaseUrl }) : undefined;
+if (siteDatabase && !boot.rootKey) throw new Error('AWA_ROOT_KEY is required for durable runtime storage.');
+if (siteDatabase && !boot.checkpointKey) throw new Error('AWA_CHECKPOINT_KEY is required for durable audit checkpoints.');
+const releaseRuntimeLease = await siteDatabase?.acquireRuntimeLease(() => {
+  console.error('Runtime database lease lost; stopping to prevent conflicting writers.');
+  process.exit(75);
+});
+const http = new FetchHttpClient();
+const realConnectors = [new HubSpotConnector(http), new SalesforceConnector(http),
+  new DynamicsConnector(http), new PipedriveConnector(http), new ZohoConnector(http)];
 const crm = new SandboxConnector({ hasSeparateLeadObject: true });
+const catalogue = new PlanCatalogueService(siteDatabase ? new PostgresPlanCatalogueStore(siteDatabase) : new InMemoryPlanCatalogueStore());
+await catalogue.seed();
 const platform = new Platform({
+  catalogue,
   model,
   speech,
-  connectors: [crm],
+  connectors: boot.deployed ? realConnectors : [crm, ...realConnectors],
+  ...(siteDatabase ? durablePlatformStores(siteDatabase, boot.rootKey!) : {}),
   logger,
   metrics,
   // Everything on in development, so the surfaces behind flags are reachable.
   // A deployment gets `SPINE_FEATURES` unless it says otherwise.
   features: featuresFromEnv(process.env, ALL_FEATURES),
-  // Credentials are encrypted at rest even here (audit SEC-4). A generated
-  // root key means a restart cannot read the previous run's credentials, which
-  // is the honest behaviour for a process that also loses everything else.
+  // Durable boots require the stable key above. Only an ephemeral development
+  // runtime may generate one.
   keyProvider: new LocalKeyProvider(process.env['AWA_ROOT_KEY'] ?? LocalKeyProvider.generateRootKey()),
   checkpointKey: process.env['AWA_CHECKPOINT_KEY'],
   // Install verification fetches the tenant's own page and looks for the
@@ -162,24 +184,43 @@ const platform = new Platform({
 const TENANT = process.env['AWA_TENANT_ID'] ?? 't_demo';
 const ORIGINS = (process.env['AWA_ORIGINS'] ?? 'http://localhost:8787').split(',').map((o) => o.trim()).filter(Boolean);
 
-platform.tenants.create({
-  tenantId: TENANT,
-  name: process.env['AWA_TENANT_NAME'] ?? 'Demo Ltd',
-  connector: 'sandbox',
-  serviceCatalogue: ['contract-review', 'revenue-recovery'],
-  outboundAllowlist: (process.env['AWA_ALLOWLIST'] ?? '').split(',').filter(Boolean),
-  // A widget key is refused from any origin not registered here (audit SEC-5).
-  origins: ORIGINS,
-});
-await platform.tenants.recordDpa(TENANT, 'DPA-DEV');
-await platform.connectCrm(TENANT, 'sandbox', { kind: 'oauth2', accessToken: 'dev-token' });
-await platform.tenants.transition(TENANT, 'CRM_CONNECTED', 'tenant');
-await platform.tenants.transition(TENANT, 'MAPPED', 'tenant');
-platform.tenants.acceptFieldMapping(TENANT);
-await platform.tenants.transition(TENANT, 'TEST_MODE', 'tenant');
-await platform.tenants.transition(TENANT, 'LIVE', 'tenant');
-
 const keys = new ApiKeyService();
+const customerKnowledge = { corpus: platform.corpus, documents: new InMemoryDocumentStore(), drafts: new InMemoryDraftStore() };
+const customerWidgets = new CustomerWidgetProvisioner(platform.tenants, keys, boot.deployed ? 'unconfigured' : 'sandbox');
+const runtime = siteDatabase ? new DurableRuntime(
+  new PostgresRuntimeArchive(siteDatabase, platform.keyring), platform, keys, customerWidgets, customerKnowledge,
+) : undefined;
+await runtime?.restore();
+await runtime?.flush();
+if (boot.deployed && !platform.durable) throw new Error('Deployment requires durable assistant stores.');
+
+// Demo fixtures and printed credentials exist only in an ephemeral development
+// runtime. A durable boot restores its identities and never reissues its keys.
+let widget: ReturnType<ApiKeyService['issue']> | undefined;
+let admin: ReturnType<ApiKeyService['issue']> | undefined;
+let platformAdmin: ReturnType<ApiKeyService['issue']> | undefined;
+if (!siteDatabase && !boot.deployed) {
+  platform.tenants.create({
+    tenantId: TENANT,
+    name: process.env['AWA_TENANT_NAME'] ?? 'Demo Ltd',
+    connector: 'sandbox',
+    serviceCatalogue: ['contract-review', 'revenue-recovery'],
+    outboundAllowlist: (process.env['AWA_ALLOWLIST'] ?? '').split(',').filter(Boolean),
+    // A widget key is refused from any origin not registered here (audit SEC-5).
+    origins: ORIGINS,
+  });
+  await platform.tenants.recordDpa(TENANT, 'DPA-DEV');
+  await platform.connectCrm(TENANT, 'sandbox', { kind: 'oauth2', accessToken: 'dev-token' });
+  await platform.tenants.transition(TENANT, 'CRM_CONNECTED', 'tenant');
+  await platform.tenants.transition(TENANT, 'MAPPED', 'tenant');
+  platform.tenants.acceptFieldMapping(TENANT);
+  await platform.tenants.transition(TENANT, 'TEST_MODE', 'tenant');
+  await platform.tenants.transition(TENANT, 'LIVE', 'tenant');
+  widget = keys.issue(TENANT, 'widget', { label: 'development', origins: ORIGINS });
+  admin = keys.issue(TENANT, 'tenant_admin', { label: 'development' });
+  platformAdmin = keys.issue('*platform*', 'platform_admin', { label: 'development' });
+}
+
 const api = new Api(platform, {
   keys,
   logger,
@@ -187,9 +228,6 @@ const api = new Api(platform, {
   limiter: new RequestRateLimiter(undefined, platform.clock),
 });
 
-const widget = keys.issue(TENANT, 'widget', { label: 'development', origins: ORIGINS });
-const admin = keys.issue(TENANT, 'tenant_admin', { label: 'development' });
-const platformAdmin = keys.issue('*platform*', 'platform_admin', { label: 'development' });
 
 /**
  * The websites: marketing, the customer area, the reseller portal, the console.
@@ -226,11 +264,9 @@ const fallbackOrigin = process.env['DETENT_BASE_URL']?.trim() || `http://localho
  * nothing here, so the staff accounts, their sessions and their password-reset
  * tokens were in memory even in a deployment that had a database.
  */
-const siteDatabase = boot.databaseUrl
-  ? new (await import('@detent/awa-persistence')).Database({ connectionString: boot.databaseUrl })
-  : undefined;
 
 const sites = await buildDevSites({
+  catalogue,
   audit: platform.audit,
   clock: platform.clock,
   ...(siteDatabase ? { database: siteDatabase } : {}),
@@ -250,15 +286,14 @@ const sites = await buildDevSites({
   deployed: boot.deployed,
   stripeSecretKey: process.env['STRIPE_SECRET_KEY'],
   stripeWebhookSecret: process.env['STRIPE_WEBHOOK_SECRET'],
-  widgetKeyFor: () => widget.key,
+  customerWidgets,
+  customerKnowledge,
 });
 
 /**
  * Demonstration fixtures, off unless explicitly asked for and never deployed.
  *
- * The approval queue is in process memory, so the only place that can put an
- * action on it is this process. Without this, a walkthrough of dual control
- * has to be described rather than shown.
+ * Fixtures exercise dual control without operator setup in a local demo.
  */
 const demoSeeded = process.env['AWA_DEMO_SEED'] === '1' && !boot.deployed
   // A fixture must never be able to stop the server starting. It writes to the
@@ -288,13 +323,28 @@ const staticMounts = [
 ];
 
 // Sweeps expired sessions and publishes gauges (audit PERF-7).
-platform.startMaintenance();
+if (!runtime) platform.startMaintenance();
+const durableMaintenance = runtime ? setInterval(() => {
+  void runtime.run(async () => {
+    platform.sessions.sweep();
+    await platform.reconciliation.runOnce();
+  }).catch(() => console.error('Durable runtime maintenance failed; restart required.'));
+}, 60_000) : undefined;
+durableMaintenance?.unref();
 
-const server = createHttpServer(api, {
+const server = createHttpServer(runtime ? { handle: request => {
+  // Probes must not queue behind a slow model call or rewrite the snapshot.
+  if (request.method === 'GET' && ['/health', '/livez'].includes(request.path)) return api.handle(request);
+  if (request.method === 'GET' && request.path === '/readyz') {
+    return runtime.ready ? api.handle(request)
+      : Promise.resolve({ status: 503, body: { status: 'not_ready', durable: true } });
+  }
+  return runtime.api(() => api.handle(request));
+} } : api, {
   port,
-  sites: [siteMount],
-  allowedOrigins: ORIGINS,
-  panelFrameAncestors: ORIGINS,
+  sites: [runtime ? { ...siteMount, handle: request => runtime.run(() => siteMount.handle(request)) } : siteMount],
+  get allowedOrigins() { return [...new Set([...ORIGINS, ...platform.tenants.list().flatMap(t => t.origins)])]; },
+  get panelFrameAncestors() { return [...new Set([...ORIGINS, ...platform.tenants.list().flatMap(t => t.origins)])]; },
   hsts: process.env['AWA_HSTS'] === '1',
   trustProxy: process.env['AWA_TRUST_PROXY'] === '1',
   staticMounts,
@@ -303,7 +353,15 @@ const server = createHttpServer(api, {
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
     platform.stopMaintenance();
-    server.close(() => process.exit(0));
+    if (durableMaintenance) clearInterval(durableMaintenance);
+    server.close(() => {
+      void (async () => {
+        await runtime?.run(async () => undefined);
+        await releaseRuntimeLease?.();
+        await siteDatabase?.close();
+        process.exit(0);
+      })().catch(() => process.exit(1));
+    });
   });
 }
 
@@ -347,7 +405,7 @@ server.listen(port, host, () => {
       ? 'OFFERED BUT SILENT; set DETENT_VOICE_API_KEY'
       : 'text only (AWA_FEATURE_SPOKEN_VOICE=1 to offer it)'}`);
   for (const action of demoSeeded) console.log(`  demo action      ${action.state.padEnd(16)} ${action.summary}`);
-  if (boot.printKeys) {
+  if (boot.printKeys && widget && admin && platformAdmin) {
     // Keys are stored as digests, so this is the only moment they exist in
     // readable form. Printed only when asked for, and never in production:
     // a key on stdout is a key in whatever aggregates the logs, held by
@@ -365,7 +423,7 @@ server.listen(port, host, () => {
     console.log('        restart. Pass the Postgres adapters from @detent/awa-db before a pilot.');
     console.log('');
   }
-  if (boot.printKeys) {
+  if (boot.printKeys && widget) {
     console.log(`  curl -s -XPOST localhost:${port}/v1/sessions -H "authorization: Bearer ${widget.key}" -H 'origin: ${ORIGINS[0]}' -H 'content-type: application/json' -d '{"jurisdiction":"UK"}'`);
   }
 });

@@ -19,9 +19,8 @@ import type { ToolDefinition } from '../tools.js';
  *  - retrieved content never enters the system prompt. It arrives as a
  *    separate, delimited user content block, exactly as `wrapAsData` produced
  *    it, and the system prompt says it is data;
- *  - streaming emits sentence-level chunks. Output validation runs per sentence
- *    in the orchestrator, so perceived latency drops without any text reaching
- *    a visitor before it has been validated (audit UX-2).
+ *  - streaming chunks remain provisional; the orchestrator validates the
+ *    completed answer after tool continuation before emitting visitor text.
  */
 export interface AnthropicProviderOptions {
   /** Defaults to the `ANTHROPIC_API_KEY` environment variable. */
@@ -90,7 +89,18 @@ function messagesFor(input: ModelTurnInput): Anthropic.MessageParam[] {
   }
   content.push({ type: 'text', text: input.visitorInput });
 
-  return [...history, { role: 'user', content }];
+  const messages: Anthropic.MessageParam[] = [...history, { role: 'user', content }];
+  for (const round of input.toolRounds ?? []) {
+    messages.push({ role: 'assistant', content: [
+      ...(round.text ? [{ type: 'text' as const, text: round.text }] : []),
+      ...round.calls.map(call => ({ type: 'tool_use' as const, id: call.id, name: call.tool, input: call.args })),
+    ] });
+    messages.push({ role: 'user', content: round.results.map(result => ({
+      type: 'tool_result' as const, tool_use_id: result.toolUseId,
+      content: JSON.stringify(result.content), is_error: result.isError ?? false,
+    })) });
+  }
+  return messages;
 }
 
 interface ParsedTurn {
@@ -135,7 +145,7 @@ function parseMessage(message: Anthropic.Message): ParsedTurn {
       }
       continue;
     }
-    parsed.toolCalls.push({ tool: block.name, args: (block.input ?? {}) as Record<string, unknown> });
+    parsed.toolCalls.push({ id: block.id, tool: block.name, args: (block.input ?? {}) as Record<string, unknown> });
   }
 
   parsed.text = parsed.text.trim();
@@ -223,11 +233,8 @@ export class AnthropicModelProvider implements ModelProvider, StreamingModelProv
   /**
    * Streamed turn.
    *
-   * Text is emitted sentence by sentence rather than token by token, because
-   * the sentence is the unit output validation can honestly police: a partial
-   * sentence cannot be checked for an unapproved price or a human claim, and
-   * emitting an unvalidated fragment to a visitor would trade the product's
-   * central guarantee for a few hundred milliseconds.
+   * Provisional sentence chunks are consumed privately by the orchestrator.
+   * Only the completed and validated answer can reach the visitor.
    */
   async *stream(input: ModelTurnInput): AsyncGenerator<TurnChunk, ModelTurnOutput, void> {
     let stream;

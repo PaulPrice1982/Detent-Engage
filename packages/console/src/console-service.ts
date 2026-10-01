@@ -1,7 +1,7 @@
 import type { AuditLog } from '@detent/awa-audit';
 import { AwaError, type Clock, systemClock } from '@detent/awa-core';
 import {
-  CreditLedger, DunningService, InvoiceService, SubscriptionService,
+  CreditLedger, DunningService, InvoiceService, SubscriptionService, PlanCatalogueService,
   format, money, type CreditBalance, type Money, type PlanCode, type PlanOverride,
 } from '@detent/awa-billing';
 import type { PaymentService, ProviderRef } from '@detent/awa-payments';
@@ -25,6 +25,7 @@ import { ForbiddenError, require as requireCapability, type ConsoleUser } from '
  */
 
 export interface ConsoleDeps {
+  readonly catalogue?: PlanCatalogueService;
   readonly approvals: ApprovalService;
   readonly credits: CreditLedger;
   readonly invoices: InvoiceService;
@@ -92,7 +93,8 @@ export class ConsoleService {
     readonly tenantId: string;
     readonly amount: Money;
     readonly kind: 'grant_goodwill' | 'grant_promotional' | 'grant_purchased';
-    readonly expiresAt: string;
+    readonly expiresAt?: string;
+    readonly sourceRef?: string;
     readonly reason: string;
   }): Promise<OperatorAction> {
     requireCapability(user, 'credit.grant');
@@ -106,6 +108,7 @@ export class ConsoleService {
       arguments: {
         accountId: input.accountId, amount: input.amount.amount,
         currency: input.amount.currency, kind: input.kind, expiresAt: input.expiresAt,
+        sourceRef: input.sourceRef,
       },
       reason: input.reason,
       requestedBy: user,
@@ -133,6 +136,8 @@ export class ConsoleService {
       // The action id correlates the grant to the approval that authorised it,
       // so the ledger entry and the two-person record replay together.
       correlationId: actionId,
+      sourceRef: args['sourceRef'] as string | undefined,
+      idempotencyKey: actionId,
     });
     await this.deps.audit.write({
       tenantId: action.tenantId, type: 'credit_granted', actor: 'platform_admin',
@@ -283,6 +288,54 @@ export class ConsoleService {
       reason: input.reason,
       requestedBy: user,
     });
+  }
+
+  /** Publishing catalogue terms always requires a second authorized operator. */
+  async publishCatalogue(user: ConsoleUser, input: {
+    actionId: string; planCode: PlanCode; version: number;
+  }): Promise<OperatorAction> {
+    requireCapability(user, 'plan.override');
+    const catalogue = this.deps.catalogue;
+    if (!catalogue) throw new AwaError({ kind: 'NOT_FOUND', message: 'Catalogue is not configured.' });
+    const draft = (await catalogue.all()).find(one => one.planCode === input.planCode && one.version === input.version);
+    if (!draft || draft.state !== 'draft') {
+      throw new AwaError({ kind: 'CONFLICT', message: 'Only a draft version can be submitted for publication.' });
+    }
+    return this.deps.approvals.request({
+      actionId: input.actionId, capability: 'plan.override',
+      accountId: '*catalogue*', tenantId: '*platform*',
+      summary: `Publish ${draft.name} version ${draft.version}: ${format(draft.platformFee.monthly)} monthly, ${format(draft.platformFee.annual)} annually`,
+      arguments: {
+        operation: 'catalogue.publish', planCode: input.planCode, version: input.version,
+        draft: structuredClone(draft),
+        previousVersion: (await catalogue.current(input.planCode))?.version ?? null,
+      },
+      reason: draft.changeNote, requestedBy: user,
+    });
+  }
+
+  async executeCataloguePublication(user: ConsoleUser, actionId: string): Promise<void> {
+    requireCapability(user, 'plan.override');
+    const catalogue = this.deps.catalogue;
+    if (!catalogue) throw new AwaError({ kind: 'NOT_FOUND', message: 'Catalogue is not configured.' });
+    const action = await this.deps.approvals.forAction(actionId);
+    if (action.arguments['operation'] !== 'catalogue.publish') {
+      throw new AwaError({ kind: 'CONFLICT', message: 'This is not a catalogue publication.' });
+    }
+    const planCode = action.arguments['planCode'] as PlanCode;
+    const version = action.arguments['version'] as number;
+    const draft = (await catalogue.all()).find(one => one.planCode === planCode && one.version === version);
+    if (!draft || draft.state !== 'draft') {
+      throw new AwaError({ kind: 'CONFLICT', message: 'That draft is no longer available. Request approval again.' });
+    }
+    await this.deps.approvals.claim(actionId, {
+      capability: 'plan.override', accountId: '*catalogue*',
+      arguments: {
+        operation: 'catalogue.publish', planCode, version, draft,
+        previousVersion: (await catalogue.current(planCode))?.version ?? null,
+      },
+    });
+    await catalogue.publish(planCode, version, user.email);
   }
 
   /** Raises or lowers a tenant's spend cap. */

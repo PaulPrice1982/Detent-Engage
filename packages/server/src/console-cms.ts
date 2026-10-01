@@ -36,6 +36,7 @@ const STATE_TONE: Readonly<Record<Page['state'], 'ok' | 'warn' | 'neutral'>> = {
 };
 
 export function websiteListPage(input: {
+  readonly canEdit: boolean;
   readonly userEmail: string;
   readonly csrf: string;
   readonly pages: readonly Page[];
@@ -68,7 +69,7 @@ ${input.pages.length === 0
   <td><a class="btn" href="/console/website/${escape(page.pageId)}/preview">Preview</a></td>
 </tr>`).join('')}</tbody></table>`}
 
-<h2>Add a page</h2>
+${input.canEdit ? `<h2>Add a page</h2>
 <form class="card" method="post" action="/console/website/new">
   <input type="hidden" name="csrf" value="${escape(input.csrf)}">
   <div class="grid">
@@ -86,11 +87,13 @@ ${input.pages.length === 0
   <input class="field" id="description" name="description" required
          placeholder="What a buyer reads under the title in a search result.">
   <div class="actions"><button class="btn primary" type="submit">Create as a draft</button></div>
-</form>`,
+</form>` : '<p class="sub">Read-only access. You can view and preview pages.</p>'}`,
   );
 }
 
 export function pageEditorPage(input: {
+  readonly canEdit: boolean;
+  readonly canPublish: boolean;
   readonly userEmail: string;
   readonly csrf: string;
   readonly page: Page;
@@ -99,6 +102,17 @@ export function pageEditorPage(input: {
 }): string {
   const { page } = input;
   const id = escape(page.pageId);
+
+  if (!input.canEdit) {
+    return shell(
+      { title: page.title, site: 'console', nav: NAV('website'), user: input.userEmail },
+      `<h1>${escape(page.title)}</h1>
+<p class="sub">Read-only access. ${escape(page.description)}</p>
+<p><code>/${escape(page.slug)}</code> ${pill(page.state, STATE_TONE[page.state])}</p>
+<a class="btn" href="/console/website/${id}/preview">Preview</a>
+<a class="btn" href="/console/website">All pages</a>`,
+    );
+  }
 
   return shell(
     { title: page.title, site: 'console', nav: NAV('website'), user: input.userEmail },
@@ -113,10 +127,10 @@ ${input.notice ? `<div class="banner">${escape(input.notice)}</div>` : ''}
 
 <div class="actions" style="margin-bottom:22px">
   <a class="btn" href="/console/website/${id}/preview" target="_blank" rel="noopener">Preview</a>
-  <form method="post" action="/console/website/${id}/publish" style="display:inline">
+  ${input.canPublish ? `<form method="post" action="/console/website/${id}/publish" style="display:inline">
     <input type="hidden" name="csrf" value="${escape(input.csrf)}">
-    <button class="btn primary" type="submit">Publish</button></form>
-  ${page.state !== 'archived' ? `<form method="post" action="/console/website/${id}/archive" style="display:inline">
+    <button class="btn primary" type="submit">Publish</button></form>` : ''}
+  ${input.canPublish && page.state !== 'archived' ? `<form method="post" action="/console/website/${id}/archive" style="display:inline">
     <input type="hidden" name="csrf" value="${escape(input.csrf)}">
     <button class="btn" type="submit">Take off the site</button></form>` : ''}
   <a class="btn" href="/console/website">All pages</a>

@@ -69,6 +69,7 @@ export interface PlanVersion {
 export interface PlanCatalogueStore {
   get(planCode: PlanCode, version: number): Promise<PlanVersion | undefined>;
   put(version: PlanVersion): Promise<void>;
+  publish(version: PlanVersion, previousVersion?: number): Promise<void>;
   listVersions(planCode: PlanCode): Promise<readonly PlanVersion[]>;
   listAll(): Promise<readonly PlanVersion[]>;
 }
@@ -78,18 +79,35 @@ export class InMemoryPlanCatalogueStore implements PlanCatalogueStore {
   private key(planCode: string, version: number): string { return `${planCode}:${version}`; }
 
   async get(planCode: PlanCode, version: number): Promise<PlanVersion | undefined> {
-    return this.versions.get(this.key(planCode, version));
+    return structuredClone(this.versions.get(this.key(planCode, version)));
   }
   async put(version: PlanVersion): Promise<void> {
-    this.versions.set(this.key(version.planCode, version.version), version);
+    const existing = this.versions.get(this.key(version.planCode, version.version));
+    if (existing) {
+      const { state: _oldState, withdrawnAt: _oldAt, ...before } = existing;
+      const { state: _newState, withdrawnAt: _newAt, ...after } = version;
+      if (existing.state !== 'draft' || version.state !== 'withdrawn' || JSON.stringify(before) !== JSON.stringify(after)) {
+        throw new AwaError({ kind: 'CONFLICT', message: 'Catalogue version already exists.' });
+      }
+    }
+    this.versions.set(this.key(version.planCode, version.version), structuredClone(version));
+  }
+  async publish(version: PlanVersion, previousVersion?: number): Promise<void> {
+    const current = [...this.versions.values()].find(v => v.planCode === version.planCode && v.state === 'published');
+    const draft = this.versions.get(this.key(version.planCode, version.version));
+    if (current?.version !== previousVersion || draft?.state !== 'draft') {
+      throw new AwaError({ kind: 'CONFLICT', message: 'Catalogue changed; review publication again.' });
+    }
+    if (current) this.versions.set(this.key(current.planCode, current.version), { ...current, state: 'withdrawn', withdrawnAt: version.publishedAt });
+    this.versions.set(this.key(version.planCode, version.version), structuredClone({ ...draft, state: 'published', publishedAt: version.publishedAt, publishedBy: version.publishedBy }));
   }
   async listVersions(planCode: PlanCode): Promise<readonly PlanVersion[]> {
-    return [...this.versions.values()]
+    return structuredClone([...this.versions.values()])
       .filter((version) => version.planCode === planCode)
       .sort((a, b) => b.version - a.version);
   }
   async listAll(): Promise<readonly PlanVersion[]> {
-    return [...this.versions.values()].sort((a, b) =>
+    return structuredClone([...this.versions.values()]).sort((a, b) =>
       a.planCode.localeCompare(b.planCode) || b.version - a.version);
   }
 }
@@ -336,13 +354,10 @@ export class PlanCatalogueService {
     if (current && current.version === version) {
       throw new AwaError({ kind: 'CONFLICT', message: 'That version is already published.' });
     }
-    if (current) {
-      await this.store.put({ ...current, state: 'withdrawn', withdrawnAt: this.clock.iso() });
-    }
     const published: PlanVersion = {
       ...draft, state: 'published', publishedAt: this.clock.iso(), publishedBy,
     };
-    await this.store.put(published);
+    await this.store.publish(published, current?.version);
     return published;
   }
 
@@ -365,6 +380,12 @@ export class PlanCatalogueService {
   /** The exact version a subscription was sold on, whatever has happened since. */
   async versionFor(planCode: PlanCode, version: number): Promise<PlanVersion | undefined> {
     return this.store.get(planCode, version);
+  }
+
+  async salePlan(planCode: PlanCode): Promise<Plan> {
+    const current = await this.current(planCode);
+    if (!current) throw new AwaError({ kind: 'NOT_FOUND', message: `No published plan ${planCode}.` });
+    return this.asPlan(current);
   }
 
   /** A catalogue version as the Plan shape the rest of billing expects. */

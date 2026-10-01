@@ -42,13 +42,11 @@ describe('UX-2 · streamed turns', () => {
     expect((done!.data as { next_action: unknown }).next_action).toBeDefined();
   });
 
-  it('validates each sentence before it leaves, not just the whole turn', async () => {
+  it('withholds the entire answer when complete-turn validation rejects it', async () => {
     const harness = await buildHarness({
       script: [{
         match: /.*/,
-        // An unapproved figure in the second sentence. Output validation must
-        // catch it per sentence, because a sentence already sent cannot be
-        // recalled.
+        // A harmless opening must not leak from an answer whose final text is blocked.
         output: { text: 'We can help with that. It will cost £127 per contract.' },
       }],
     });
@@ -64,6 +62,8 @@ describe('UX-2 · streamed turns', () => {
     while (!next.done) { chunks.push(next.value.text); next = await run.next(); }
 
     expect(chunks.join(' ')).not.toContain('£127');
+    expect(chunks.join(' ')).not.toContain('We can help with that.');
+    expect(chunks.join(' ')).toBe(next.value.text);
   });
 
   it('is off when the deployment has not enabled it', async () => {
@@ -137,7 +137,7 @@ describe('SEC-3 · the production model provider', () => {
     expect(output.text).toBe('We audit commercial agreements.');
     // The signal tool is consumed by the provider, not passed on as a tool call
     // for the policy engine to authorise.
-    expect(output.toolCalls).toEqual([{ tool: 'knowledge_lookup', args: { query: 'contract review' } }]);
+    expect(output.toolCalls).toEqual([{ id: 'tu_1', tool: 'knowledge_lookup', args: { query: 'contract review' } }]);
     expect(output.confidence).toBe(0.82);
     expect(output.sentiment).toBe('positive');
     expect(output.tokensUsed).toBe(1_020);

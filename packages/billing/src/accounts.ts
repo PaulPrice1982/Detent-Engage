@@ -1,7 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { AwaError, type Clock, systemClock } from '@detent/awa-core';
 import { money, type Money } from './money.js';
-import { PLAN_CATALOGUE, type BillingInterval, type PlanCode } from './plans.js';
+import { PLAN_CATALOGUE, type BillingInterval, type PlanCode, type Plan } from './plans.js';
+import type { PlanCatalogueService } from './plan-catalogue.js';
 
 /**
  * Accounts, contract terms and the limits a subscription actually carries.
@@ -108,6 +109,7 @@ export interface AccountSubscription {
   readonly tenantId: string;
   readonly planCode: PlanCode;
   readonly planVersion: number;
+  readonly planSnapshot?: Plan;
   readonly terms: ContractTerms;
   readonly limits: SubscriptionLimits;
   /** Credits granted at the start of every billing period. */
@@ -169,8 +171,7 @@ export function addMonths(fromIso: string, months: number, day?: number): string
 }
 
 /** Limits taken from the plan, as the starting point before negotiation. */
-export function defaultLimitsFor(planCode: PlanCode): SubscriptionLimits {
-  const plan = PLAN_CATALOGUE[planCode];
+export function defaultLimitsFor(planCode: PlanCode, plan: Plan = PLAN_CATALOGUE[planCode]): SubscriptionLimits {
   return {
     connectorsTier1: plan.connectorEntitlement.tier1,
     connectorsTier2: plan.connectorEntitlement.tier2,
@@ -212,6 +213,7 @@ export class AccountService {
   constructor(
     private readonly store: AccountStore,
     private readonly clock: Clock = systemClock,
+    private readonly catalogue?: PlanCatalogueService,
   ) {}
 
   async create(input: CreateAccountInput): Promise<Account> {
@@ -257,7 +259,7 @@ export class AccountService {
     if (await this.store.getSubscription(input.accountId)) {
       throw new AwaError({ kind: 'CONFLICT', message: 'This account already has a subscription.' });
     }
-    const plan = PLAN_CATALOGUE[input.planCode];
+    const plan = structuredClone(this.catalogue ? await this.catalogue.salePlan(input.planCode) : PLAN_CATALOGUE[input.planCode]);
     const billingDay = input.billingDay ?? new Date(input.startDate).getUTCDate();
     if (billingDay < 1 || billingDay > 28) {
       // Capped at 28 so the date exists in February. A billing day of 31 is a
@@ -290,8 +292,9 @@ export class AccountService {
       tenantId: account.tenantId,
       planCode: input.planCode,
       planVersion: plan.version,
+      planSnapshot: plan,
       terms,
-      limits: { ...defaultLimitsFor(input.planCode), ...input.limits },
+      limits: { ...defaultLimitsFor(input.planCode, plan), ...input.limits },
       monthlyCreditsPence: input.monthlyCreditsPence ?? plan.includedCreditsPence,
       contractedPlatformFee: input.contractedPlatformFee ?? plan.platformFee[input.billingInterval],
       createdAt: this.clock.iso(),

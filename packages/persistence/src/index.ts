@@ -1,6 +1,7 @@
 export * from './database.js';
 export * from './auth-stores.js';
 export * from './billing-stores.js';
+export * from './plan-catalogue-store.js';
 export * from './site-stores.js';
 export * from './channel-stores.js';
 export * from './audit-store.js';

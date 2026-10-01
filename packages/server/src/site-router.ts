@@ -130,7 +130,7 @@ export class SiteRouter {
       return { status: 303, redirect: `${prefix}/signin` };
     }
     const user = await this.options.users.byId(session.userId);
-    if (!user || !user.active || user.realm !== realm) {
+    if (!user || !user.active || user.realm !== realm || (user.mfaEnrolled && !session.mfaVerified)) {
       await this.options.sessions.end(this.cookieToken(request));
       return {
         status: 303,
@@ -169,7 +169,13 @@ export class SiteRouter {
     if (request.method !== 'POST') {
       // Already signed in? Go where they were heading.
       const existing = await this.options.sessions.resolve(realm, this.cookieToken(request));
-      if (existing) return { status: 303, redirect: prefix };
+      if (existing) {
+        const user = await this.options.users.byId(existing.userId);
+        if (user?.active && user.realm === realm && (!user.mfaEnrolled || existing.mfaVerified)) {
+          return { status: 303, redirect: prefix };
+        }
+        await this.options.sessions.end(this.cookieToken(request));
+      }
       return {
         status: 200,
         html: signInPage({
@@ -183,7 +189,7 @@ export class SiteRouter {
 
     const form = parseForm(request.rawBody);
     const email = form['email'] ?? '';
-    const outcome = await this.options.users.login(realm, email, form['password'] ?? '');
+    const outcome = await this.options.users.login(realm, email, form['password'] ?? '', form['mfaCode'] ?? '');
     if (!outcome.ok) {
       return {
         status: 401,
@@ -198,6 +204,7 @@ export class SiteRouter {
     }
 
     const { token } = await this.options.sessions.start({
+      mfaVerified: outcome.user.mfaEnrolled,
       userId: outcome.user.userId,
       realm,
       userAgent: request.headers['user-agent'],
@@ -228,6 +235,8 @@ export class SiteRouter {
     const form = parseForm(request.rawBody);
     try {
       const user = await this.options.onSignUp(form);
+      // A signup callback must never provide a shortcut around enrolled MFA.
+      if (user.mfaEnrolled) return { status: 303, redirect: signInHref };
       const { token } = await this.options.sessions.start({ userId: user.userId, realm });
       return {
         status: 303,

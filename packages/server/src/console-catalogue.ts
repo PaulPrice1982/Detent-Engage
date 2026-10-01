@@ -194,7 +194,7 @@ function draftCard(draft: PlanVersion, impact: PriceImpact | undefined, csrf: st
       <input type="hidden" name="csrf" value="${escape(csrf)}">
       <input type="hidden" name="planCode" value="${escape(draft.planCode)}">
       <input type="hidden" name="version" value="${draft.version}">
-      <button class="btn primary" type="submit">Publish version ${draft.version}</button>
+        <button class="btn primary" type="submit">Request publication of version ${draft.version}</button>
     </form>
     <form method="post" action="/console/pricing/discard" style="flex:0">
       <input type="hidden" name="csrf" value="${escape(csrf)}">

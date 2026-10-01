@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { AwaError, type Clock, systemClock } from '@detent/awa-core';
 import { looksReadable } from './office-extractors.js';
 
@@ -79,11 +79,20 @@ export interface DocumentStore {
 }
 
 export class InMemoryDocumentStore implements DocumentStore {
+  snapshot(): UploadedDocument[] { return structuredClone([...this.documents.values()]); }
+  restore(records: readonly UploadedDocument[]): void {
+    this.documents.clear();
+    for (const record of structuredClone(records)) this.documents.set(record.documentId, record);
+  }
   private readonly documents = new Map<string, UploadedDocument>();
   async get(documentId: string): Promise<UploadedDocument | undefined> {
     return this.documents.get(documentId);
   }
   async put(document: UploadedDocument): Promise<void> {
+    const existing = this.documents.get(document.documentId);
+    if (existing && existing.tenantId !== document.tenantId) {
+      throw new AwaError({ kind: 'CONFLICT', message: 'Document ownership cannot be changed.' });
+    }
     this.documents.set(document.documentId, document);
   }
   async listByTenant(tenantId: string): Promise<readonly UploadedDocument[]> {
@@ -191,7 +200,10 @@ export class DocumentService {
     }
 
     const document: UploadedDocument = {
-      documentId: `doc_${checksum.slice(0, 16)}`,
+      // Identity is independent of content. The tenant-scoped checksum lookup
+      // above handles duplicates; identical files in different tenants must
+      // never share a record or its downstream citations.
+      documentId: `doc_${randomUUID()}`,
       tenantId: input.tenantId,
       filename: input.filename,
       format,
@@ -271,8 +283,11 @@ export class DocumentService {
   }
 
   /** Withdraws a document. Its knowledge is retired separately, by the caller. */
-  async remove(documentId: string): Promise<UploadedDocument> {
+  async remove(tenantId: string, documentId: string): Promise<UploadedDocument> {
     const document = await this.require(documentId);
+    if (!tenantId || document.tenantId !== tenantId) {
+      throw new AwaError({ kind: 'NOT_FOUND', message: 'No such document.' });
+    }
     // The text goes with it: a customer who deletes a document expects its
     // content gone, not retained in a column nobody mentioned.
     const removed: UploadedDocument = {

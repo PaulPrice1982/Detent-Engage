@@ -107,7 +107,7 @@ function isApiPath(path: string): boolean {
 
 const DEFAULT_TIMEOUTS = { headersMs: 15_000, requestMs: 30_000, keepAliveMs: 5_000 };
 
-export function createHttpServer(api: Api, options: HttpServerOptions = {}): Server {
+export function createHttpServer(api: Pick<Api, 'handle'>, options: HttpServerOptions = {}): Server {
   const maxBodyBytes = options.maxBodyBytes ?? 256 * 1024;
   const staticMounts = options.staticMounts ?? [];
 
@@ -318,7 +318,7 @@ export function securityHeaders(options: {
 }
 
 async function handle(
-  api: Api,
+  api: Pick<Api, 'handle'>,
   request: IncomingMessage,
   response: ServerResponse,
   maxBodyBytes: number,

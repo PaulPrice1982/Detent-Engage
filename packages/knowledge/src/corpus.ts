@@ -158,6 +158,22 @@ export class KnowledgeCorpus {
     this.writeThrough(retired);
   }
 
+  /** Publish for customer-facing writes: disk first, then the serving index. */
+  async publishDurably(tenantId: string, chunkId: string, approvedBy: string): Promise<KnowledgeChunk> {
+    await this.flush();
+    const list = this.chunks.get(tenantId) ?? [];
+    const index = list.findIndex(chunk => chunk.id === chunkId);
+    if (index < 0) throw new Error(`chunk ${chunkId} not found for tenant ${tenantId}`);
+    const version = (this.versions.get(tenantId) ?? 0) + 1;
+    const published: KnowledgeChunk = { ...list[index]!, state: 'PUBLISHED', corpusVersion: version,
+      approvedBy, approvedAt: this.clock.iso() };
+    try { await this.archive?.save(published); }
+    catch (error) { this.lastWriteError = error; throw error; }
+    list[index] = published;
+    this.versions.set(tenantId, version);
+    return published;
+  }
+
   /**
    * Read published chunks for exactly one tenant. The tenant id is a required
    * argument, not an optional filter, binding at query construction rather
@@ -177,6 +193,9 @@ export class KnowledgeCorpus {
 
   /**
    * Wait for every queued write-through save, then surface the last failure.
+   * Failure stays sticky: a caller handling the error must not accidentally
+   * make the runtime's later persistence check report healthy. Restart to
+   * recover committed state before serving again.
    *
    * Callers that need to know the corpus is on disk (shutdown, a test, the
    * step before reporting an approval back to a customer) await this. A save
@@ -187,7 +206,6 @@ export class KnowledgeCorpus {
     await this.writes.drain();
     const error = this.lastWriteError;
     if (error !== undefined) {
-      this.lastWriteError = undefined;
       throw error instanceof Error ? error : new Error(String(error));
     }
   }

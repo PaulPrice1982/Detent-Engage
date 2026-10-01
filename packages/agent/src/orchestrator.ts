@@ -4,7 +4,7 @@ import { approvedFigures, evaluateEscalation, type MeteringService } from '@dete
 import { detectInjectionDeep, type InjectionClassifier } from '@detent/awa-knowledge';
 import {
   buildSystemPrompt, supportsStreaming,
-  type ModelProvider, type ModelTurnOutput, type ProposedToolCall, type TurnChunk,
+  type ModelProvider, type ModelTurnOutput, type ModelToolRound, type TurnChunk,
 } from './model.js';
 import { buildToolCatalogue, type ToolDefinition } from './tools.js';
 import { BLOCKED_OUTPUT_REPLACEMENT, validateOutput } from './output-validation.js';
@@ -86,22 +86,19 @@ export class TurnOrchestrator {
   /**
    * Streamed turn (audit UX-2).
    *
-   * Sentences are emitted as the model produces them, each one validated before
-   * it leaves, the same validator, run per sentence. The final `TurnResult` is
-   * the generator's return value, so a caller that ignores the chunks gets
-   * exactly the behaviour of `run()`.
+   * No provider fragment is public until the complete turn has passed policy,
+   * escalation and output validation. Sentences are derived only from that
+   * final answer, including any refusal or degraded replacement.
    */
   async *runStreaming(input: TurnInput): AsyncGenerator<TurnChunk, TurnResult, void> {
-    const chunks: TurnChunk[] = [];
-    let emitted = 0;
-    const result = await this.execute(input, (chunk) => { chunks.push(chunk); });
-    // The executor collects chunks synchronously; replay them in order and then
-    // return the complete result.
-    for (; emitted < chunks.length; emitted += 1) yield chunks[emitted]!;
+    const result = await this.execute(input, true);
+    for (const sentence of result.text.split(/(?<=[.!?])\s+/).filter(Boolean)) {
+      yield { type: 'sentence', text: sentence };
+    }
     return result;
   }
 
-  private async execute(input: TurnInput, onChunk?: (chunk: TurnChunk) => void): Promise<TurnResult> {
+  private async execute(input: TurnInput, streaming = false): Promise<TurnResult> {
     const { session, config } = input;
     const catalogue = buildToolCatalogue(config.serviceCatalogue);
 
@@ -159,36 +156,85 @@ export class TurnOrchestrator {
 
     // --- Steps 2 and 3. Retrieval runs as a tool so it passes the same gate as
     // everything else; the model decides what to look up.
+    const rounds: ModelToolRound[] = [];
+    const executed: string[] = [];
+    const denied: { tool: string; reason: string }[] = [];
+    const completed = new Map<string, ModelToolRound['results'][number]>();
+    let retrievedText = '';
+    let toolLimitReached = false;
+    const detectedTopics = new Set<string>();
     const modelInput = {
       systemPrompt: buildSystemPrompt(config),
       history: session.history,
       visitorInput,
       tools: catalogue,
       config,
+      toolRounds: rounds,
     };
 
-    // Sentences streamed to the caller are validated one at a time before they
-    // are handed over. Governance is preserved; perceived latency is not.
-    const streamed: string[] = [];
+    // Provider fragments are provisional. Even an individually safe sentence
+    // can belong to an answer suppressed by the complete-turn decision.
     let output: ModelTurnOutput;
     try {
-      if (onChunk && supportsStreaming(this.deps.model)) {
-        const stream = this.deps.model.stream(modelInput);
-        let next = await stream.next();
-        while (!next.done) {
-          const sentence = next.value.text;
-          const perSentence = validateOutput({
-            text: sentence, config, approvedFigures: approvedFigures(config), retrievedText: '',
-          });
-          if (perSentence.allowed) {
-            streamed.push(perSentence.text);
-            onChunk({ type: 'sentence', text: perSentence.text });
+      for (let round = 0; ; round++) {
+        if (round > 0) {
+          const verdict = await this.deps.metering.check(session.tenantId, config.spendCaps);
+          if (verdict.state === 'BLOCKED') {
+            await this.deps.audit.write({
+              tenantId: session.tenantId, type: verdict.reason === 'spend_cap' ? 'spend_cap_reached' : 'quota_exceeded',
+              correlationId: session.correlationId, sessionId: session.id, actor: 'policy',
+              payload: { reason: verdict.reason, stage: 'model_continuation' }, versions: session.versions,
+            });
+            const degraded = await this.degraded(session, config, disclosure, catalogue, verdict.reason);
+            return { ...degraded, toolsExecuted: executed, toolsDenied: denied, injectionDetected: injection.detected };
           }
-          next = await stream.next();
         }
-        output = next.value;
-      } else {
-        output = await this.deps.model.turn(modelInput);
+        // Three execution rounds, then one synthesis-only call.
+        const request = { ...modelInput, tools: round < 3 ? catalogue : [] };
+        if (streaming && supportsStreaming(this.deps.model)) {
+          const stream = this.deps.model.stream(request);
+          let next = await stream.next();
+          while (!next.done) {
+            next = await stream.next();
+          }
+          output = next.value;
+        } else {
+          output = await this.deps.model.turn(request);
+        }
+        for (const topic of output.detectedTopics) detectedTopics.add(topic);
+        await this.deps.metering.record(session.tenantId, 'llm_token', output.tokensUsed);
+        if (round === 0) await this.deps.metering.record(session.tenantId, 'text_message', 1);
+        if (output.toolCalls.length === 0) break;
+        if (round === 3 || output.toolCalls.length > 8) {
+          toolLimitReached = true;
+          for (const call of output.toolCalls) denied.push({ tool: call.tool, reason: 'TOOL_LIMIT' });
+          output = { ...output, text: '', confidence: 0 };
+          break;
+        }
+        const calls = output.toolCalls.map((call, index) => ({ ...call, id: call.id ?? `tool_${round}_${index}` }));
+        const results: ModelToolRound['results'][number][] = [];
+        for (const call of calls) {
+          // Cache outcomes within this visitor turn, including failures: a
+          // provider retry must not book, notify, or write a second time.
+          const key = stableKey({ tool: call.tool, args: call.args });
+          let result = completed.get(key);
+          if (!result) {
+            try {
+              const outcome = await this.deps.executor.execute(session, config, catalogue, call);
+              executed.push(call.tool);
+              const reference = outcome.internal?.['retrievedText'];
+              if (typeof reference === 'string') retrievedText += ` ${reference}`;
+              result = { toolUseId: call.id, content: outcome.modelVisible };
+            } catch (cause) {
+              const error = isAwaError(cause) ? cause : new AwaError({ kind: 'INTERNAL', message: String(cause), cause });
+              denied.push({ tool: call.tool, reason: error.kind });
+              result = { toolUseId: call.id, content: { status: 'failed', reason: error.kind }, isError: true };
+            }
+            completed.set(key, result);
+          }
+          results.push({ ...result, toolUseId: call.id });
+        }
+        rounds.push({ text: output.text, calls, results });
       }
     } catch (cause) {
       // Degrade, never fail (section 8.1).
@@ -200,41 +246,21 @@ export class TurnOrchestrator {
       return {
         text: 'I am having trouble at my end. Rather than keep you waiting, let me get someone from the team to pick this up.',
         disclosure,
-        toolsExecuted: [], toolsDenied: [], escalated: true,
+        toolsExecuted: executed, toolsDenied: denied, escalated: true,
         outputViolations: [], injectionDetected: injection.detected,
         correlationId: session.correlationId,
         nextAction: this.handoffAction(config, false),
       };
     }
 
-    await this.deps.metering.record(session.tenantId, 'llm_token', output.tokensUsed);
-    await this.deps.metering.record(session.tenantId, 'text_message', 1);
-
     session.consecutiveNegativeTurns = output.sentiment === 'negative' ? session.consecutiveNegativeTurns + 1 : 0;
-
-    // --- Steps 4 to 8, per proposed tool call.
-    const executed: string[] = [];
-    const denied: { tool: string; reason: string }[] = [];
-    let retrievedText = '';
-
-    for (const call of output.toolCalls) {
-      try {
-        const result = await this.deps.executor.execute(session, config, catalogue, call as ProposedToolCall);
-        executed.push(call.tool);
-        const text = result.internal?.['retrievedText'];
-        if (typeof text === 'string') retrievedText += ` ${text}`;
-      } catch (cause) {
-        const error = isAwaError(cause) ? cause : new AwaError({ kind: 'INTERNAL', message: String(cause), cause });
-        denied.push({ tool: call.tool, reason: error.kind });
-      }
-    }
 
     // --- Escalation. The model recognises the signal; the platform decides.
     const escalation = evaluateEscalation(config.escalation, {
       modelConfidence: output.confidence,
-      factualQuestion: /\?$/.test(visitorInput.trim()),
+      factualQuestion: toolLimitReached || /\?$/.test(visitorInput.trim()),
       consecutiveNegativeTurns: session.consecutiveNegativeTurns,
-      detectedTopics: output.detectedTopics,
+      detectedTopics: [...detectedTopics],
       classification: session.classification,
       visitorAskedForHuman: session.humanRequested,
       securityClassifierFired: injection.detected,
@@ -399,4 +425,13 @@ function summarise(session: Session): string {
     .map(([key, value]) => `${key}: ${String(value)}`)
     .join('; ');
   return `Conversation ${session.id}. Captured: ${captured || 'nothing yet'}. Turns: ${session.history.length}.`;
+}
+
+function stableKey(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableKey).join(',')}]`;
+  if (value !== null && typeof value === 'object') {
+    return `{${Object.entries(value).sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableKey(item)}`).join(',')}}`;
+  }
+  return JSON.stringify(value) ?? 'null';
 }

@@ -45,8 +45,10 @@ describe('UX-1 · the panel can be left from the keyboard', () => {
   it('returns focus to the launcher on close', async () => {
     const launcher = await read(resolve(here, '../packages/widget/src/launcher.ts'));
     expect(launcher).toContain('button.focus();');
-    // And only honours a close message from the panel's own origin.
-    expect(launcher).toContain('event.origin !== panelOrigin');
+    // Only the owned, sandboxed frame can drive the launcher bridge.
+    const bridge = await read(resolve(here, '../packages/widget/src/panel-bridge.ts'));
+    expect(bridge).toContain('event.source !== frame.contentWindow');
+    expect(bridge).toContain("event.origin !== 'null'");
   });
 });
 

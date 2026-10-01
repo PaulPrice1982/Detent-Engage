@@ -35,15 +35,18 @@ async function consoleWith(roles: readonly string[], enrolMfa: boolean) {
   // one (see the handover note on user management).
   await sites.users.setRoles(user.userId, roles);
 
+  let mfaCode = '';
   if (enrolMfa) {
     const { secret } = await sites.users.beginMfaEnrolment(user.userId);
     const { totpAt, stepAt } = await import('@detent/awa-auth');
     await sites.users.confirmMfaEnrolment(user.userId, totpAt(secret, stepAt(clock.nowMs())));
+    clock.advance(30_000);
+    mfaCode = totpAt(secret, stepAt(clock.nowMs()));
   }
 
   const signIn = await sites.consoleRouter.handle({
     method: 'POST', path: '/console/signin', query: {}, headers: {},
-    rawBody: new URLSearchParams({ email: OPERATOR, password: PASSWORD }).toString(),
+    rawBody: new URLSearchParams({ email: OPERATOR, password: PASSWORD, mfaCode }).toString(),
   });
   const cookie = (signIn?.cookies ?? []).map((one) => one.split(';')[0]).join('; ');
   expect(cookie, 'sign-in did not produce a session').toMatch(/detent_console=/);

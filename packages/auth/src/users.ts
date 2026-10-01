@@ -186,7 +186,7 @@ export class UserService {
    * time does not reveal which addresses exist. Returns a reason for the caller
    * to log, and a single message for the screen.
    */
-  async login(realm: Realm, email: string, password: string): Promise<LoginOutcome> {
+  async login(realm: Realm, email: string, password: string, mfaCode = ''): Promise<LoginOutcome> {
     const user = await this.store.findByEmail(realm, email.trim().toLowerCase());
     if (!user) {
       // A hash comparison against a throwaway value, so an unknown address
@@ -200,7 +200,9 @@ export class UserService {
     }
 
     const correct = await verifyPassword(password, user.passwordHash);
-    if (!correct) {
+    // A correct password alone must neither authenticate nor reset MFA failures.
+    const secondFactor = correct && (!user.mfaEnrolled || await this.verifyMfa(user.userId, mfaCode));
+    if (!correct || !secondFactor) {
       const failedAttempts = user.failedAttempts + 1;
       await this.store.put({
         ...user,
@@ -219,7 +221,8 @@ export class UserService {
       : user.passwordHash;
 
     const updated: AuthUser = {
-      ...user, passwordHash, failedAttempts: 0,
+      // Verification consumes a TOTP step or recovery code; preserve that write.
+      ...await this.require(user.userId), passwordHash, failedAttempts: 0,
       lockedUntil: undefined, lastLoginAt: this.clock.iso(),
     };
     await this.store.put(updated);

@@ -1,5 +1,6 @@
 import { readHostConsent, type ConsentSignal } from './consent-signal.js';
 import { BRAND, detentMark } from './brand.js';
+import { bindPanelBridge } from './panel-bridge.js';
 
 /**
  * The launcher: a Web Component with Shadow DOM (section 26, table 37).
@@ -115,7 +116,7 @@ export class DetentAssistantLauncher extends HTMLElement {
   private consent: ConsentSignal = { identityResolution: false, source: 'none' };
   private readonly shadow: ShadowRoot;
   private button?: HTMLButtonElement;
-  private messageListener?: (event: MessageEvent) => void;
+  private bridgeCleanup?: () => void;
   private keyListener?: (event: KeyboardEvent) => void;
 
   constructor() {
@@ -131,7 +132,7 @@ export class DetentAssistantLauncher extends HTMLElement {
   disconnectedCallback(): void {
     // Listeners are removed on teardown. A widget removed by a single-page
     // application used to leave a document-level keydown handler behind.
-    if (this.messageListener) window.removeEventListener('message', this.messageListener);
+    this.bridgeCleanup?.();
     if (this.keyListener) document.removeEventListener('keydown', this.keyListener);
   }
 
@@ -210,17 +211,7 @@ export class DetentAssistantLauncher extends HTMLElement {
     this.shadow.replaceChildren(style, button, live);
     if (config.greeting) this.renderGreeting(config.greeting);
 
-    // The panel is a cross-origin iframe, so it reports its own close (UX-1).
-    // Only messages from the panel's own origin are honoured; a host page or a
-    // third-party script cannot drive the widget by posting to the window.
-    const panelOrigin = originOf(config.panelUrl);
-    this.messageListener = (event: MessageEvent) => {
-      if (panelOrigin && event.origin !== panelOrigin) return;
-      const data = event.data as { source?: string; type?: string } | undefined;
-      if (data?.source !== 'detent-assistant') return;
-      if (data.type === 'close' && this.open) this.toggle();
-    };
-    window.addEventListener('message', this.messageListener);
+    // The per-frame bridge installed on open handles close and API requests.
 
     // Escape on the host document still closes the panel when focus has not
     // moved into the iframe. It is a convenience; the panel's own handler is
@@ -274,6 +265,7 @@ export class DetentAssistantLauncher extends HTMLElement {
 
     const existing = this.shadow.getElementById('awa-panel');
     if (!this.open) {
+      this.bridgeCleanup?.();
       existing?.remove();
       // Focus returns to the control that opened the panel (WCAG 2.4.3).
       button.focus();
@@ -291,14 +283,17 @@ export class DetentAssistantLauncher extends HTMLElement {
 
     const frame = document.createElement('iframe');
     frame.title = 'AI assistant conversation';
-    // A genuine security boundary. allow-same-origin is deliberately absent
-    // relative to the host: the panel is served from the platform origin, so it
-    // gets its own partitioned storage and no access to the host page's DOM.
+    // An opaque origin, with no access to the host DOM or platform cookies.
+    // API requests travel through the narrowly scoped launcher bridge.
     frame.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox');
     frame.setAttribute('referrerpolicy', 'no-referrer');
     frame.setAttribute('loading', 'lazy');
 
-    const url = new URL(config.panelUrl);
+    const url = new URL(config.panelUrl, location.href);
+    url.searchParams.set('host_origin', location.origin);
+    this.bridgeCleanup = bindPanelBridge(frame, {
+      api: config.apiBaseUrl, key: config.publicKey, close: () => { if (this.open) this.toggle(); },
+    });
     url.searchParams.set('key', config.publicKey);
     url.searchParams.set('api', config.apiBaseUrl);
     // The host's consent decision travels to the panel. The panel never decides
@@ -313,10 +308,6 @@ export class DetentAssistantLauncher extends HTMLElement {
     this.shadow.append(panel);
     frame.focus();
   }
-}
-
-function originOf(url: string): string | undefined {
-  try { return new URL(url, location.href).origin; } catch { return undefined; }
 }
 
 export function registerLauncher(): void {

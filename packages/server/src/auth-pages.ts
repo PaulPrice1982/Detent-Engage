@@ -69,6 +69,10 @@ export function signInPage(options: SignInPageOptions): string {
            required value="${escape(options.email ?? '')}">
     <label for="password">Password</label>
     <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <label for="mfaCode">Authenticator or recovery code</label>
+    <input id="mfaCode" name="mfaCode" type="text" autocomplete="one-time-code"
+           aria-describedby="mfaHelp" maxlength="64">
+    <p class="note" id="mfaHelp">Required if you have set up multi-factor authentication.</p>
     <button class="submit" type="submit">Sign in</button>
   </form>
   ${federatedBlock(options.federated)}
@@ -160,7 +164,7 @@ export function signInError(reason: 'invalid' | 'locked' | 'disabled'): string {
     case 'disabled':
       return 'This account has been disabled. Contact your administrator.';
     default:
-      return 'That email and password do not match.';
+      return 'Check your email, password and authenticator or recovery code, then try again.';
   }
 }
 

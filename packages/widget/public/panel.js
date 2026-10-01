@@ -1,5 +1,5 @@
 const params = new URLSearchParams(location.search);
-  const api = params.get('api') ?? '';
+  const api = (params.get('api') ?? '').replace(/\/$/, '');
   const key = params.get('key') ?? '';
   const jurisdiction = params.get('jurisdiction') ?? 'UK';
   const requestedLocale = params.get('locale') ?? document.documentElement.lang ?? 'en-GB';
@@ -138,8 +138,30 @@ const params = new URLSearchParams(location.search);
 
   // --- transport -----------------------------------------------------------
 
+  function panelFetch(url, options = {}) {
+    if (parent === window) return fetch(url, options);
+    const hostOrigin = params.get('host_origin');
+    if (!hostOrigin || !/^https?:\/\//.test(hostOrigin)) return Promise.reject(new Error('Missing embedding origin.'));
+    return new Promise((resolve, reject) => {
+      const channel = new MessageChannel();
+      const timer = setTimeout(() => { channel.port1.close(); reject(new Error('Panel request timed out.')); }, 65_000);
+      channel.port1.onmessage = event => {
+        clearTimeout(timer);
+        channel.port1.close();
+        const reply = event.data;
+        try {
+          resolve(new Response([204, 205, 304].includes(reply.status) ? null : reply.body,
+            { status: reply.status, headers: { 'content-type': reply.contentType } }));
+        } catch (error) { reject(error); }
+      };
+      parent.postMessage({ source: 'detent-assistant', type: 'request',
+        path: url.slice(api.length), method: options.method ?? 'GET', body: options.body,
+      }, hostOrigin, [channel.port2]);
+    });
+  }
+
   async function call(path, body, method = 'POST') {
-    const response = await fetch(`${api}${path}`, {
+    const response = await panelFetch(`${api}${path}`, {
       method,
       headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -156,7 +178,7 @@ const params = new URLSearchParams(location.search);
 
   async function loadLocale(locale) {
     try {
-      const bundle = await (await fetch(`${api}/v1/locales/${encodeURIComponent(locale)}`)).json();
+      const bundle = await (await panelFetch(`${api}/v1/locales/${encodeURIComponent(locale)}`)).json();
       strings = { ...bundle.strings, __locale: bundle.locale };
       document.documentElement.lang = bundle.locale;
       document.documentElement.dir = bundle.dir ?? 'ltr';
@@ -492,7 +514,7 @@ const params = new URLSearchParams(location.search);
    * failure must never cost the visitor their answer.
    */
   async function streamTurn(text, typing) {
-    const response = await fetch(`${api}/v1/sessions/${sessionId}/stream`, {
+    const response = await panelFetch(`${api}/v1/sessions/${sessionId}/stream`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
       body: JSON.stringify({ text }),
@@ -517,7 +539,13 @@ const params = new URLSearchParams(location.search);
         log.scrollTop = log.scrollHeight;
       } else if (event === 'done') {
         clearTyping();
-        if (!bubble && data.text) append('assistant', data.text);
+        // The completed answer is authoritative, even if it replaces earlier text.
+        if (typeof data.text === 'string') {
+          if (bubble) {
+            if (data.text) bubble.firstChild.textContent = data.text;
+            else { bubble.remove(); bubble = undefined; }
+          } else if (data.text) bubble = append('assistant', data.text);
+        }
         renderNextAction(data.next_action);
       } else if (event === 'error') {
         clearTyping();
@@ -557,7 +585,8 @@ const params = new URLSearchParams(location.search);
   function close() {
     // The launcher owns the frame, so closing is a message to it. It removes
     // the panel and returns focus to the launcher button.
-    parent.postMessage({ source: 'detent-assistant', type: 'close' }, '*');
+    const hostOrigin = params.get('host_origin');
+    if (hostOrigin) parent.postMessage({ source: 'detent-assistant', type: 'close' }, hostOrigin);
   }
 
   document.getElementById('close').addEventListener('click', close);

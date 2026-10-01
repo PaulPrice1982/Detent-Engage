@@ -1,5 +1,6 @@
 import { readHostConsent } from './consent-signal.js';
 import { BRAND, detentMark } from './brand.js';
+import { bindPanelBridge } from './panel-bridge.js';
 import { LAUNCHER_BOX, monogramOf, planLogo, } from './tenant-brand.js';
 const STYLES = `
   :host { all: initial; font: inherit; }
@@ -65,6 +66,9 @@ export class DetentAssistantLauncher extends HTMLElement {
     connectedCallback() {
         this.consent = readHostConsent(window, this);
         this.render();
+    }
+    disconnectedCallback() {
+        this.bridgeCleanup?.();
     }
     config() {
         return {
@@ -206,6 +210,7 @@ export class DetentAssistantLauncher extends HTMLElement {
             live.textContent = this.open ? 'Assistant opened.' : 'Assistant closed.';
         const existing = this.shadow.getElementById('awa-panel');
         if (!this.open) {
+            this.bridgeCleanup?.();
             existing?.remove();
             button.focus();
             return;
@@ -221,9 +226,8 @@ export class DetentAssistantLauncher extends HTMLElement {
         panel.setAttribute('aria-modal', 'false');
         const frame = document.createElement('iframe');
         frame.title = 'AI assistant conversation';
-        // A genuine security boundary. allow-same-origin is deliberately absent
-        // relative to the host: the panel is served from the platform origin, so it
-        // gets its own partitioned storage and no access to the host page's DOM.
+        // Opaque origin; API calls use the launcher bridge without granting
+        // the panel access to host DOM or platform cookies.
         frame.setAttribute('sandbox', 'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox');
         frame.setAttribute('referrerpolicy', 'no-referrer');
         frame.setAttribute('loading', 'lazy');
@@ -233,6 +237,11 @@ export class DetentAssistantLauncher extends HTMLElement {
         // our own site uses. Without the base, a relative URL throws and the panel
         // never opens at all.
         const url = new URL(config.panelUrl, window.location.href);
+        url.searchParams.set('host_origin', location.origin);
+        this.bridgeCleanup = bindPanelBridge(frame, {
+            api: config.apiBaseUrl, key: config.publicKey,
+            close: () => { if (this.open) this.toggle(button); },
+        });
         url.searchParams.set('key', config.publicKey);
         url.searchParams.set('api', config.apiBaseUrl);
         // The host's consent decision travels to the panel. The panel never decides

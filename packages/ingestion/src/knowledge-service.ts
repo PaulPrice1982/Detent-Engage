@@ -31,6 +31,7 @@ export interface ManualKnowledgeInput {
 }
 
 export interface ReviewDecision {
+  readonly tenantId: string;
   readonly draftId: string;
   readonly reviewedBy: string;
   /** Set to publish a corrected version rather than the agent's wording. */
@@ -67,7 +68,8 @@ export class DetentKnowledgeService {
    * confirmation of that number.
    */
   async approve(decision: ReviewDecision): Promise<DraftKnowledge> {
-    const draft = await this.require(decision.draftId);
+    const draft = await this.require(decision.tenantId, decision.draftId);
+    if (draft.sourceWithdrawn) throw new AwaError({ kind: 'CONFLICT', message: 'The source document was removed.' });
     if (draft.state === 'approved') {
       throw new AwaError({ kind: 'CONFLICT', message: 'That has already been approved.' });
     }
@@ -100,10 +102,11 @@ export class DetentKnowledgeService {
       text: question ? `${question}\n\n${body}` : body,
       shipped: true,
     });
-    this.corpus.publish(draft.tenantId, chunk.id, decision.reviewedBy);
+    await this.corpus.publishDurably(draft.tenantId, chunk.id, decision.reviewedBy);
 
     const approved: DraftKnowledge = {
       ...draft,
+      publishedChunkId: chunk.id,
       state: 'approved',
       reviewedBy: decision.reviewedBy,
       reviewedAt: this.clock.iso(),
@@ -128,8 +131,8 @@ export class DetentKnowledgeService {
     return approved;
   }
 
-  async reject(draftId: string, reviewedBy: string, reason: string): Promise<DraftKnowledge> {
-    const draft = await this.require(draftId);
+  async reject(tenantId: string, draftId: string, reviewedBy: string, reason: string): Promise<DraftKnowledge> {
+    const draft = await this.require(tenantId, draftId);
     if (!reason.trim()) {
       // The reason is what tells the next reviewer, and us, why the agent got
       // it wrong. Rejections without reasons make the agent unimprovable.
@@ -142,6 +145,10 @@ export class DetentKnowledgeService {
       reviewedAt: this.clock.iso(),
       quarantineReason: reason,
     };
+    if (draft.publishedChunkId) {
+      this.corpus.retire(tenantId, draft.publishedChunkId);
+      await this.corpus.flush();
+    }
     await this.drafts.put(rejected);
     await this.audit.write({
       tenantId: draft.tenantId,
@@ -188,9 +195,10 @@ export class DetentKnowledgeService {
         : input.body.trim(),
       shipped: true,
     });
-    this.corpus.publish(input.tenantId, chunk.id, input.authoredBy);
+    await this.corpus.publishDurably(input.tenantId, chunk.id, input.authoredBy);
 
     const draft: DraftKnowledge = {
+      publishedChunkId: chunk.id,
       draftId: `km_${randomBytes(9).toString('base64url')}`,
       tenantId: input.tenantId,
       kind: input.kind,
@@ -224,6 +232,18 @@ export class DetentKnowledgeService {
     return draft;
   }
 
+  async withdrawDocument(tenantId: string, documentId: string, reviewedBy: string): Promise<void> {
+    for (const chunk of this.corpus.all(tenantId)) {
+      if (chunk.sourceRef.startsWith(`${documentId}#`)) this.corpus.retire(tenantId, chunk.id);
+    }
+    await this.corpus.flush();
+    for (const draft of await this.drafts.listByTenant(tenantId)) {
+      if (draft.citation.documentId !== documentId) continue;
+      await this.drafts.put({ ...draft, state: 'rejected', sourceWithdrawn: true,
+        reviewedBy, reviewedAt: this.clock.iso(), quarantineReason: 'Source document removed.' });
+    }
+  }
+
   async awaitingReview(tenantId: string): Promise<readonly DraftKnowledge[]> {
     const proposed = await this.drafts.listByTenant(tenantId, 'proposed');
     const quarantined = await this.drafts.listByTenant(tenantId, 'quarantined');
@@ -249,9 +269,12 @@ export class DetentKnowledgeService {
     };
   }
 
-  private async require(draftId: string): Promise<DraftKnowledge> {
+  private async require(tenantId: string, draftId: string): Promise<DraftKnowledge> {
     const draft = await this.drafts.get(draftId);
-    if (!draft) throw new AwaError({ kind: 'NOT_FOUND', message: 'No such knowledge item.' });
+    // Foreign and missing IDs give the same answer, without disclosing ownership.
+    if (!tenantId || !draft || draft.tenantId !== tenantId) {
+      throw new AwaError({ kind: 'NOT_FOUND', message: 'No such knowledge item.' });
+    }
     return draft;
   }
 }

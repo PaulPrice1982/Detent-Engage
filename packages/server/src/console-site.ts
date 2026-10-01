@@ -185,7 +185,8 @@ ${pending.length === 0
 <th class="num">Amount</th><th>Reason</th><th></th></tr></thead>
 <tbody>${pending.map((action) => `<tr class="dual">
   <td><a class="link" href="/console/accounts/${encodeURIComponent(action.accountId)}">${escape(action.accountId)}</a></td>
-  <td>${escape(action.summary)}</td>
+  <td>${escape(action.summary)}${action.arguments['operation'] === 'catalogue.publish'
+    ? `<details><summary>Review exact pricing terms</summary><pre>${escape(JSON.stringify(action.arguments['draft'], null, 2))}</pre></details>` : ''}</td>
   <td>${escape(action.requestedBy)}</td>
   <td class="num">${escape(action.amount ? format(action.amount) : ', ')}</td>
   <td>${escape(action.reason)}</td>

@@ -91,6 +91,24 @@ export class Database {
   }
 
   /** One statement, on any connection. */
+  async acquireRuntimeLease(onLost: () => void): Promise<() => Promise<void>> {
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query<{ acquired: boolean }>(
+        'SELECT pg_try_advisory_lock(184237, 1) AS acquired',
+      );
+      if (!result.rows[0]?.acquired) throw new Error('Another runtime is active. This release requires one serving instance.');
+    } catch (error) { client.release(); throw error; }
+    client.on('error', onLost);
+    client.on('end', onLost);
+    return async () => {
+      client.removeListener('error', onLost);
+      client.removeListener('end', onLost);
+      try { await client.query('SELECT pg_advisory_unlock(184237, 1)'); }
+      finally { client.release(); }
+    };
+  }
+
   async query<T extends pg.QueryResultRow = pg.QueryResultRow>(
     text: string,
     values: readonly unknown[] = [],

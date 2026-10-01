@@ -13,14 +13,14 @@ import {
 import {
   ConnectorRegistry, CrmAdapter, EncryptedConnectionStore, InMemoryParkedWriteStore,
   InMemoryWriteReceiptStore, RateLimiter, ReconciliationWorker, WriteReceiptService,
-  type ConnectionStore, type CrmConnector, type Credential, type ParkedWriteStore,
+  type ConnectionStore, type CrmConnector, type Credential, type ParkedWriteStore, type WriteReceiptStore,
 } from '@detent/awa-connectors';
 import {
   VoiceNotConfigured, assertApprovedForSpeech,
   type SpeechSynthesiser, type SpokenAudio,
 } from '@detent/awa-voice';
 import { IdentityResolutionService } from '@detent/awa-identity';
-import { KnowledgeCorpus, RetrievalService } from '@detent/awa-knowledge';
+import { KnowledgeCorpus, RetrievalService, type KnowledgeArchive } from '@detent/awa-knowledge';
 import {
   HandoffService, InMemoryCalendarService, InMemoryNotificationService, SessionManager,
   ToolExecutor, TurnOrchestrator, type ModelProvider, type Session,
@@ -32,13 +32,13 @@ import {
   PlaybookVersionStore, SimulationHarness, type ScenarioDriver,
 } from '@detent/awa-studio';
 import {
-  InMemoryOutcomeStore, OutcomeService, type OutcomeDispatcher,
+  InMemoryOutcomeStore, OutcomeService, type OutcomeDispatcher, type OutcomeStore,
 } from '@detent/awa-outcomes';
 import {
   ComplianceScorecardService, DailyRollupCache, DataQualityScorecardService, FunnelService,
 } from '@detent/awa-analytics';
 import {
-  FollowUpEngine, FrequencyLedger, InMemoryMessageSender, InMemorySuppressionStore, SuppressionList,
+  FollowUpEngine, FrequencyLedger, InMemoryMessageSender, InMemorySuppressionStore, SuppressionList, type SuppressionStore,
 } from '@detent/awa-followup';
 import {
   AccountMatcher, EngagementRulesEngine, EnrichmentOrchestrator, SignalStore, VisitorSignalService,
@@ -53,7 +53,7 @@ import { GroupIdentityService, HierarchyService, PartnerRegistry } from '@detent
 import { MachineSurface } from '@detent/awa-machine';
 import { AssurancePackGenerator, type AccessibilityStatement } from '@detent/awa-assurance';
 import {
-  CreditLedger, InMemoryLedgerStore, InMemorySubscriptionStore, SubscriptionService,
+  CreditLedger, InMemoryLedgerStore, InMemorySubscriptionStore, SubscriptionService, type LedgerStore, type SubscriptionStore, type PlanCatalogueService,
 } from '@detent/awa-billing';
 import { TenantStore } from './tenant-store.js';
 
@@ -75,6 +75,13 @@ import { TenantStore } from './tenant-store.js';
  * not a thing a buyer should have to discover for themselves.
  */
 export interface PlatformOptions {
+  readonly receiptStore?: WriteReceiptStore;
+  readonly knowledgeArchive?: KnowledgeArchive;
+  readonly outcomeStore?: OutcomeStore;
+  readonly suppressionStore?: SuppressionStore;
+  readonly ledgerStore?: LedgerStore;
+  readonly subscriptionStore?: SubscriptionStore;
+  readonly catalogue?: PlanCatalogueService;
   readonly model: ModelProvider;
   readonly clock?: Clock;
   readonly auditStore?: AuditStore;
@@ -291,7 +298,7 @@ export class Platform {
       () => this.clock.iso(),
     );
     this.connections = options.connectionStore ?? new EncryptedConnectionStore(this.keyring);
-    this.receipts = new WriteReceiptService(new InMemoryWriteReceiptStore(), this.clock);
+    this.receipts = new WriteReceiptService(options.receiptStore ?? new InMemoryWriteReceiptStore(), this.clock);
     const parked = options.parkedWriteStore ?? new InMemoryParkedWriteStore();
     this.adapter = new CrmAdapter(
       this.registry, this.connections, this.receipts, this.audit,
@@ -303,7 +310,7 @@ export class Platform {
     );
 
     this.identity = new IdentityResolutionService(this.consent, this.adapter, this.audit, this.clock);
-    this.corpus = new KnowledgeCorpus(this.clock);
+    this.corpus = new KnowledgeCorpus(this.clock, options.knowledgeArchive);
     this.retrieval = new RetrievalService(this.corpus);
     this.calendar = new InMemoryCalendarService(this.clock);
     this.notifications = new InMemoryNotificationService(this.clock);
@@ -315,7 +322,7 @@ export class Platform {
     this.staging = new StagingLedger(this.clock);
     this.playbooks = new PlaybookVersionStore(this.audit, this.clock);
     this.outcomes = new OutcomeService(
-      new InMemoryOutcomeStore(),
+      options.outcomeStore ?? new InMemoryOutcomeStore(),
       this.metering,
       this.audit,
       options.outcomeDispatcher ?? { async post() { return { status: 204 }; } },
@@ -363,7 +370,7 @@ export class Platform {
     this.compliance = new ComplianceScorecardService(this.audit, this.rollups);
 
     const salt = options.suppressionSalt ?? 'awa-platform-suppression-salt';
-    this.suppression = new SuppressionList(new InMemorySuppressionStore(), salt, this.clock);
+    this.suppression = new SuppressionList(options.suppressionStore ?? new InMemorySuppressionStore(), salt, this.clock);
     this.messages = new InMemoryMessageSender();
     this.followUp = new FollowUpEngine(
       this.messages,
@@ -408,8 +415,8 @@ export class Platform {
 
     // --- commercial. The billing package was built, tested and a dependency of
     // nothing (audit BIZ-1); it is now wired to the plan catalogue here.
-    this.subscriptions = new SubscriptionService(new InMemorySubscriptionStore(), this.audit, this.clock);
-    this.credits = new CreditLedger(new InMemoryLedgerStore(), this.audit, this.clock);
+    this.subscriptions = new SubscriptionService(options.subscriptionStore ?? new InMemorySubscriptionStore(), this.audit, this.clock, options.catalogue);
+    this.credits = new CreditLedger(options.ledgerStore ?? new InMemoryLedgerStore(), this.audit, this.clock);
   }
 
   /**

@@ -2,6 +2,7 @@ import { AwaError, newId, type Clock, systemClock } from '@detent/awa-core';
 import type { AuditLog } from '@detent/awa-audit';
 import { allocate, money, type CurrencyCode, type Money } from './money.js';
 import { PLAN_CATALOGUE, effectivePlan, validatePlan, type BillingInterval, type Plan, type PlanCode, type PlanOverride } from './plans.js';
+import type { PlanCatalogueService } from './plan-catalogue.js';
 
 /**
  * Subscription lifecycle.
@@ -38,6 +39,8 @@ export interface Subscription {
   status: SubscriptionStatus;
   planCode: PlanCode;
   planVersion: number;
+  /** Base terms agreed at sale, before any explicitly recorded override. */
+  planSnapshot?: Plan;
   interval: BillingInterval;
   currency: CurrencyCode;
   override?: PlanOverride;
@@ -110,11 +113,26 @@ export class SubscriptionService {
     private readonly store: SubscriptionStore,
     private readonly audit: AuditLog,
     private readonly clock: Clock = systemClock,
+    private readonly catalogue?: PlanCatalogueService,
   ) {}
 
-  planFor(subscription: Subscription): Plan {
-    const base = PLAN_CATALOGUE[subscription.planCode];
+  async planFor(subscription: Subscription): Promise<Plan> {
+    let base = subscription.planSnapshot;
+    if (!base && this.catalogue) {
+      const version = await this.catalogue.versionFor(subscription.planCode, subscription.planVersion);
+      if (version?.publishedAt) base = this.catalogue.asPlan(version);
+    }
+    if (!base && !this.catalogue && PLAN_CATALOGUE[subscription.planCode].version === subscription.planVersion) {
+      base = PLAN_CATALOGUE[subscription.planCode];
+    }
+    if (!base || base.version !== subscription.planVersion || base.code !== subscription.planCode) {
+      throw new AwaError({ kind: 'CONFLICT', message: 'Agreed subscription terms are unavailable; refusing to use current prices.' });
+    }
     return effectivePlan(base, subscription.override);
+  }
+
+  private async salePlan(code: PlanCode): Promise<Plan> {
+    return structuredClone(this.catalogue ? await this.catalogue.salePlan(code) : PLAN_CATALOGUE[code]);
   }
 
   async create(input: CreateSubscriptionInput): Promise<Subscription> {
@@ -122,7 +140,8 @@ export class SubscriptionService {
       throw new AwaError({ kind: 'CONFLICT', message: `tenant ${input.tenantId} already has a subscription` });
     }
 
-    const plan = effectivePlan(PLAN_CATALOGUE[input.planCode], input.override);
+    const base = await this.salePlan(input.planCode);
+    const plan = effectivePlan(base, input.override);
     const problems = validatePlan(plan, input.interval);
     if (problems.length > 0) {
       throw new AwaError({
@@ -145,7 +164,8 @@ export class SubscriptionService {
       tenantId: input.tenantId,
       status: trialing ? 'trialing' : 'active',
       planCode: input.planCode,
-      planVersion: PLAN_CATALOGUE[input.planCode].version,
+      planVersion: base.version,
+      planSnapshot: base,
       interval: input.interval,
       currency: plan.currency,
       override: input.override,
@@ -163,7 +183,7 @@ export class SubscriptionService {
 
     await this.store.put(subscription);
     await this.record(subscription, 'subscription_created', {
-      planCode: input.planCode, interval: input.interval, trialDays: input.trialDays ?? 0,
+      planCode: input.planCode, planVersion: base.version, interval: input.interval, trialDays: input.trialDays ?? 0,
       overridden: Boolean(input.override), actor: input.actor,
     }, input.correlationId);
     return subscription;
@@ -176,10 +196,14 @@ export class SubscriptionService {
    * plan change that silently produces an unexpected charge is the fastest way
    * to turn a routine upgrade into a chargeback.
    */
-  preview(subscription: Subscription, to: { planCode: PlanCode; interval?: BillingInterval }): ChangePreview {
+  async preview(subscription: Subscription, to: { planCode: PlanCode; interval?: BillingInterval }): Promise<ChangePreview> {
+    return this.previewWithPlan(subscription, to, await this.salePlan(to.planCode));
+  }
+
+  private async previewWithPlan(subscription: Subscription, to: { planCode: PlanCode; interval?: BillingInterval }, base: Plan): Promise<ChangePreview> {
     const interval = to.interval ?? subscription.interval;
-    const currentPlan = this.planFor(subscription);
-    const nextPlan = effectivePlan(PLAN_CATALOGUE[to.planCode], subscription.override);
+    const currentPlan = await this.planFor(subscription);
+    const nextPlan = effectivePlan(base, subscription.override);
     const warnings: string[] = [...validatePlan(nextPlan, interval)];
 
     const currentFee = currentPlan.platformFee[subscription.interval];
@@ -225,11 +249,12 @@ export class SubscriptionService {
     actor: string; correlationId: string; acknowledgedNetDue: Money;
   }): Promise<{ subscription: Subscription; preview: ChangePreview }> {
     const subscription = await this.require(input.subscriptionId);
-    const preview = this.preview(subscription, { planCode: input.planCode, interval: input.interval });
+    const base = await this.salePlan(input.planCode);
+    const preview = await this.previewWithPlan(subscription, { planCode: input.planCode, interval: input.interval }, base);
 
     // The operator confirmed a figure; if it has moved since, refuse rather than
     // charge a number nobody agreed to.
-    if (preview.netDueNow.amount !== input.acknowledgedNetDue.amount) {
+    if (preview.netDueNow.amount !== input.acknowledgedNetDue.amount || preview.netDueNow.currency !== input.acknowledgedNetDue.currency) {
       throw new AwaError({
         kind: 'CONFLICT',
         message: `the net amount changed from ${input.acknowledgedNetDue.amount} to ${preview.netDueNow.amount} since the preview; re-check and confirm again`,
@@ -238,14 +263,15 @@ export class SubscriptionService {
 
     if (preview.immediate) {
       subscription.planCode = input.planCode;
-      subscription.planVersion = PLAN_CATALOGUE[input.planCode].version;
+      subscription.planVersion = base.version;
+      subscription.planSnapshot = base;
       subscription.interval = preview.to.interval;
     }
     subscription.updatedAt = this.clock.iso();
     await this.store.put(subscription);
 
     await this.record(subscription, 'subscription_plan_changed', {
-      from: preview.from, to: preview.to, immediate: preview.immediate,
+      from: preview.from, to: preview.to, planVersion: subscription.planVersion, immediate: preview.immediate,
       netDuePence: preview.netDueNow.amount, actor: input.actor,
     }, input.correlationId);
 
